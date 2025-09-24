@@ -24,9 +24,9 @@
 - [x] REST: Weather (Note: Default location logic has been implemented)
 - [x] REST: Languages
 - [x] REST: Currencies
-- [~] REST: Coupon Check
+- [x] REST: Coupon Check
   - [x] Verified existing `check_coupon` logic against Laravel original (2024-09-21).
-  - [ ] API endpoint in `api.py` needs to be updated to use `name` instead of `code` and `qty` instead of `quantity`.
+  - [x] API endpoint in `api.py` needs to be updated to use `name` instead of `code` and `qty` instead of `quantity`.
 - [x] REST: Products
   - [x] Custom fields for Item doctype created.
   - [x] `get_products` API in `api.py` has been updated with new filters and logic.

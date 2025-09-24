@@ -257,16 +257,16 @@ def get_currencies():
 
 
 @frappe.whitelist(allow_guest=True)
-def check_coupon(coupon_code: str, shop_id: str):
+def check_coupon(name: str, qty: int = 1):
     """
-    Checks if a coupon is valid for a given shop.
+    Checks if a coupon is valid.
     """
-    if not coupon_code or not shop_id:
-        frappe.throw("Coupon code and shop ID are required.")
+    if not name:
+        frappe.throw("Coupon code is required.")
 
     coupon = frappe.db.get_value(
         "Coupon",
-        filters={"code": coupon_code, "shop": shop_id},
+        filters={"name": name},
         fieldname=["name", "expired_at", "quantity"],
         as_dict=True
     )
@@ -277,7 +277,7 @@ def check_coupon(coupon_code: str, shop_id: str):
     if coupon.get("expired_at") and coupon.get("expired_at") < frappe.utils.now_datetime():
         return {"status": "error", "message": "Coupon expired"}
 
-    if coupon.get("quantity") is not None and coupon.get("quantity") <= 0:
+    if coupon.get("quantity") is not None and coupon.get("quantity") < qty:
         return {"status": "error", "message": "Coupon has been fully used"}
 
     # Check if the user has already used this coupon
