@@ -1,0 +1,93 @@
+import 'package:admin_desktop/src/repository/discount_repository.dart';
+import 'package:admin_desktop/src/repository/impl/discounts_repository_impl.dart';
+import 'package:admin_desktop/src/repository/impl/notification_repo_impl.dart';
+import 'package:admin_desktop/src/repository/impl/stock_repository_impl.dart';
+import 'package:admin_desktop/src/repository/impl/stories_repository_impl.dart';
+import 'package:admin_desktop/src/repository/impl/table_repository_iml.dart';
+import 'package:admin_desktop/src/repository/notification_repository.dart';
+import 'package:admin_desktop/src/repository/stock_repository.dart';
+import 'package:admin_desktop/src/repository/stories_repository.dart';
+import 'package:admin_desktop/src/repository/table_repository.dart';
+import 'package:get_it/get_it.dart';
+import '../../presentation/pages/main/widgets/JuvoONE/widgets/dashboard/providers/personal_mastery_provider.dart';
+import '../../presentation/pages/main/widgets/JuvoONE/widgets/dashboard/providers/plan_provider.dart';
+import '../../presentation/pages/main/widgets/JuvoONE/widgets/dashboard/providers/roadmap_provider.dart';
+import '../../presentation/pages/main/widgets/JuvoONE/widgets/dashboard/providers/task_provider.dart';
+//import '../../presentation/pages/main/widgets/JuvoONE/widgets/dashboard/providers/tender_provider.dart';
+import '../../presentation/pages/main/widgets/JuvoONE/widgets/dashboard/repository/impl/personal_mastery_repository_impl.dart';
+import '../../presentation/pages/main/widgets/JuvoONE/widgets/dashboard/repository/impl/plan_repository_impl.dart';
+import '../../presentation/pages/main/widgets/JuvoONE/widgets/dashboard/repository/impl/roadmap_repository_impl.dart';
+import '../../presentation/pages/main/widgets/JuvoONE/widgets/dashboard/repository/impl/task_repository_impl.dart';
+import '../../presentation/pages/main/widgets/JuvoONE/widgets/dashboard/repository/personal_mastery_repository.dart';
+import '../../presentation/pages/main/widgets/JuvoONE/widgets/dashboard/repository/plan_repository.dart';
+import '../../presentation/pages/main/widgets/JuvoONE/widgets/dashboard/repository/roadmap_repository.dart';
+import '../../presentation/pages/main/widgets/JuvoONE/widgets/dashboard/repository/task_repository.dart';
+//import '../../presentation/pages/main/widgets/JuvoONE/widgets/dashboard/repository/tender_repository.dart';
+import '../../presentation/pages/main/widgets/JuvoONE/widgets/expenses/repository/expense_repository.dart';
+import '../../presentation/pages/main/widgets/JuvoONE/widgets/expenses/repository/expenses_api.dart';
+import '../../repository/impl/gallery_repository.dart';
+import '../../repository/repository.dart';
+import '../handlers/handlers.dart';
+
+
+final GetIt getIt = GetIt.instance;
+
+void setUpDependencies() {
+  getIt.registerLazySingleton<HttpService>(() => HttpService());
+  getIt.registerSingleton<SettingsRepository>(SettingsSettingsRepositoryImpl());
+  getIt.registerSingleton<AuthRepository>(AuthRepositoryImpl());
+  getIt.registerSingleton<ProductsRepository>(ProductsRepositoryImpl());
+  getIt.registerSingleton<ShopsRepository>(ShopsRepositoryImpl());
+  getIt.registerSingleton<BrandsRepository>(BrandsRepositoryImpl());
+  getIt.registerSingleton<GalleryRepositoryFacade>(GalleryRepository());
+  getIt.registerSingleton<CategoriesRepository>(CategoriesRepositoryImpl());
+  getIt.registerSingleton<CurrenciesRepository>(CurrenciesRepositoryImpl());
+  getIt.registerSingleton<PaymentsRepository>(PaymentsRepositoryImpl());
+  getIt.registerSingleton<OrdersRepository>(OrdersRepositoryImpl());
+  getIt.registerSingleton<NotificationRepository>(NotificationRepositoryImpl());
+  getIt.registerSingleton<UsersRepository>(UsersRepositoryImpl());
+  getIt.registerSingleton<TableRepository>(TableRepositoryIml());
+  getIt.registerSingleton<DiscountsRepository>(DiscountsRepositoryImpl());
+  getIt.registerSingleton<StockRepository>(StockRepositoryImpl());
+  getIt.registerSingleton<StoriesRepository>(StoriesRepositoryImpl());
+  getIt.registerSingleton<ExpenseRepository>(ExpenseRepository(ExpenseService()));
+  getIt.registerSingleton<ExpenseService>(ExpenseService());
+  getIt.registerSingleton<PlanRepository>(PlanRepositoryImpl(dioHttp));
+  getIt.registerSingleton<TaskRepository>(TaskRepositoryImpl(dioHttp));
+  getIt.registerSingleton<PersonalMasteryRepository>(PersonalMasteryRepositoryImpl(dioHttp));
+  getIt.registerSingleton<RoadmapRepository>(RoadmapRepositoryImpl(dioHttp));
+
+  getIt.registerSingleton<PlanProvider>(PlanProvider(getIt<PlanRepository>()));
+  getIt.registerSingleton<TaskProvider>(TaskProvider(getIt<TaskRepository>()));
+  getIt.registerSingleton<PersonalMasteryProvider>(PersonalMasteryProvider(getIt<PersonalMasteryRepository>()));
+  getIt.registerSingleton<RoadmapProvider>(RoadmapProvider(getIt<RoadmapRepository>()));
+  //getIt.registerSingleton<TenderRepository>(TenderRepository());
+  //getIt.registerSingleton<TenderProvider>(TenderProvider(getIt<TenderRepository>(),getIt<TaskProvider>()));
+
+}
+
+final dioHttp = getIt.get<HttpService>();
+final settingsRepository = getIt.get<SettingsRepository>();
+final authRepository = getIt.get<AuthRepository>();
+final productsRepository = getIt.get<ProductsRepository>();
+final shopsRepository = getIt.get<ShopsRepository>();
+final brandsRepository = getIt.get<BrandsRepository>();
+final galleryRepository = getIt.get<GalleryRepositoryFacade>();
+final categoriesRepository = getIt.get<CategoriesRepository>();
+final currenciesRepository = getIt.get<CurrenciesRepository>();
+final paymentsRepository = getIt.get<PaymentsRepository>();
+final ordersRepository = getIt.get<OrdersRepository>();
+final notificationRepository = getIt.get<NotificationRepository>();
+final usersRepository = getIt.get<UsersRepository>();
+final tableRepository = getIt.get<TableRepository>();
+final discountRepository = getIt.get<DiscountsRepository>();
+final stockRepository = getIt.get<StockRepository>();
+final storiesRepository = getIt.get<StoriesRepository>();
+final expenseRepository = getIt.get<ExpenseRepository>();
+final planRepository = getIt.get<PlanRepository>();
+final personalMasteryRepository = getIt.get<PersonalMasteryRepository>();
+final roadmapRepository = getIt.get<RoadmapRepository>();
+final taskRepository = getIt.get<TaskRepository>();
+//final tenderRepository = getIt.get<TenderRepository>();
+//final tenderProvider = getIt.get<TenderProvider>();
+

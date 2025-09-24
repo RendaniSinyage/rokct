@@ -1,0 +1,11 @@
+{
+    "doctype": "Custom Field",
+    "dt": "Subscription Plan",
+    "fieldname": "item",
+    "fieldtype": "Link",
+    "label": "Billing Item",
+    "options": "Item",
+    "insert_after": "plan_name",
+    "reqd": 1
+}
+

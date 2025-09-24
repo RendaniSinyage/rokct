@@ -1,0 +1,13 @@
+[
+ {
+  "doctype": "Property Setter",
+  "name": "User-desk_theme-default",
+  "doctype_or_field": "DocField",
+  "doc_type": "User",
+  "field_name": "desk_theme",
+  "property": "default",
+  "value": "Dark",
+  "property_type": "Data"
+ }
+]
+

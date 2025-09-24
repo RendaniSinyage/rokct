@@ -1,0 +1,10 @@
+{
+    "doctype": "Custom Field",
+    "dt": "Subscription Plan",
+    "fieldname": "rate",
+    "fieldtype": "Currency",
+    "label": "Rate",
+    "insert_after": "item",
+    "reqd": 1
+}
+

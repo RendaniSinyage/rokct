@@ -1,0 +1,10 @@
+[
+    {
+        "doctype": "Dashboard Chart Source",
+        "name": "New Subscriptions Chart Source",
+        "owner": "Administrator",
+        "source_type": "Method",
+        "method_name": "rokct.control_panel.dashboard_charts.get_new_subscriptions_chart_data"
+    }
+]
+

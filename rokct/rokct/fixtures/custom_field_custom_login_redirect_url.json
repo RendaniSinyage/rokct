@@ -1,0 +1,12 @@
+[
+    {
+        "doctype": "Custom Field",
+        "dt": "Company Subscription",
+        "fieldname": "custom_login_redirect_url",
+        "fieldtype": "Data",
+        "label": "Custom Login Redirect URL",
+        "description": "Optional: A custom URL to redirect this specific tenant's /login page to. Overrides the global setting.",
+        "insert_after": "api_secret"
+    }
+]
+

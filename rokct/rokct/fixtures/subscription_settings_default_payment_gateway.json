@@ -1,0 +1,10 @@
+{
+    "doctype": "Custom Field",
+    "dt": "Subscription Settings",
+    "fieldname": "default_payment_gateway",
+    "fieldtype": "Link",
+    "label": "Default Payment Gateway",
+    "options": "Payment Gateway",
+    "insert_after": "default_free_plan"
+}
+

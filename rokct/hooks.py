@@ -1,7 +1,10 @@
+import frappe
+
 app_name = "rokct"
-app_title = "ROKCT CUSTOMIZATIONS"
-app_publisher = "ROKCT.ai"
-app_description = "We will put all customization for the Rokct Backend in this App"
+app_title = "The ROKCT app"
+app_publisher = "ROKCT Holdings"
+app_description = "All custom work lives here"
+app_logo_url = "/assets/rokct/images/logo_dark.svg"
 app_email = "admin@rokct.ai"
 app_license = "mit"
 
@@ -12,13 +15,13 @@ app_license = "mit"
 
 # Each item in the list will be shown as an app in the apps page
 # add_to_apps_screen = [
-# 	{
-# 		"name": "rokct",
-# 		"logo": "/assets/rokct/logo.png",
-# 		"title": "ROKCT CUSTOMIZATIONS",
-# 		"route": "/rokct",
-# 		"has_permission": "rokct.api.permission.has_app_permission"
-# 	}
+#       {
+#               "name": "rokct",
+#               "logo": "/assets/rokct/logo.png",
+#               "title": "ROKCT CUSTOMIZATIONS",
+#               "route": "/rokct",
+#               "has_permission": "rokct.api.permission.has_app_permission"
+#       }
 # ]
 
 # Includes in <head>
@@ -35,16 +38,14 @@ app_license = "mit"
 # include custom scss in every website theme (without file extension ".scss")
 # website_theme_scss = "rokct/public/scss/website"
 
-# include js, css files in header of web form
-# webform_include_js = {"doctype": "public/js/doctype.js"}
-# webform_include_css = {"doctype": "public/css/doctype.css"}
-
 # include js in page
 # page_js = {"page" : "public/js/file.js"}
 
 # include js in doctype views
 # doctype_js = {"doctype" : "public/js/doctype.js"}
-# doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
+doctype_list_js = {
+    "Company Subscription": "public/js/company_subscription_list.js"
+}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
 
@@ -57,11 +58,11 @@ app_license = "mit"
 # ----------
 
 # application home page (will override Website Settings)
-# home_page = "login"
+home_page = "swagger"
 
 # website user home page (by Role)
 # role_home_page = {
-# 	"Role": "home_page"
+#       "Role": "home_page"
 # }
 
 # Generators
@@ -75,20 +76,20 @@ app_license = "mit"
 
 # add methods and filters to jinja environment
 # jinja = {
-# 	"methods": "rokct.utils.jinja_methods",
-# 	"filters": "rokct.utils.jinja_filters"
+#       "methods": "rokct.utils.jinja_methods",
+#       "filters": "rokct.utils.jinja_filters"
 # }
 
 # Installation
 # ------------
 
 # before_install = "rokct.install.before_install"
-# after_install = "rokct.install.after_install"
+after_install = "rokct.rokct.utils.update_site_apps_txt"
 
 # Uninstallation
 # ------------
 
-# before_uninstall = "rokct.uninstall.before_uninstall"
+before_uninstall = "rokct.rokct.flutter_builder.utils.prevent_uninstall_if_build_active"
 # after_uninstall = "rokct.uninstall.after_uninstall"
 
 # Integration Setup
@@ -97,7 +98,7 @@ app_license = "mit"
 # Name of the app being installed is passed as an argument
 
 # before_app_install = "rokct.utils.before_app_install"
-# after_app_install = "rokct.utils.after_app_install"
+after_app_install = "rokct.rokct.utils.update_site_apps_txt"
 
 # Integration Cleanup
 # -------------------
@@ -105,7 +106,7 @@ app_license = "mit"
 # Name of the app being uninstalled is passed as an argument
 
 # before_app_uninstall = "rokct.utils.before_app_uninstall"
-# after_app_uninstall = "rokct.utils.after_app_uninstall"
+after_app_uninstall = "rokct.rokct.utils.update_site_apps_txt"
 
 # Desk Notifications
 # ------------------
@@ -117,12 +118,8 @@ app_license = "mit"
 # -----------
 # Permissions evaluated in scripted ways
 
-# permission_query_conditions = {
-# 	"Event": "frappe.desk.doctype.event.event.get_permission_query_conditions",
-# }
-#
 # has_permission = {
-# 	"Event": "frappe.desk.doctype.event.event.has_permission",
+#       "Event": "frappe.desk.doctype.event.event.has_permission",
 # }
 
 # DocType Class
@@ -130,7 +127,7 @@ app_license = "mit"
 # Override standard doctype classes
 
 # override_doctype_class = {
-# 	"ToDo": "custom_app.overrides.CustomToDo"
+#       "ToDo": "custom_app.overrides.CustomToDo"
 # }
 
 # Document Events
@@ -138,33 +135,46 @@ app_license = "mit"
 # Hook on document methods and events
 
 # doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-# 	}
+#       "*": {
+#               "on_update": "method",
+#               "on_cancel": "method",
+#               "on_trash": "method"
+#       }
 # }
 
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-# 	"all": [
-# 		"rokct.tasks.all"
-# 	],
-# 	"daily": [
-# 		"rokct.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"rokct.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"rokct.tasks.weekly"
-# 	],
-# 	"monthly": [
-# 		"rokct.tasks.monthly"
-# 	],
-# }
+def get_safe_scheduler_events():
+	"""
+	Safely get scheduler events by checking if frappe.conf exists.
+	This prevents crashes during installation where frappe.conf is not yet available.
+	"""
+	# This function is called at import time, so we must be defensive.
+	if not hasattr(frappe, "conf") or not frappe.conf:
+		return {}
+
+	app_role = frappe.conf.get("app_role", "tenant")
+	events = {}
+	if app_role == "control_panel":
+		events["daily"] = [
+			"rokct.rokct.control_panel.tasks.manage_daily_subscriptions",
+			"rokct.rokct.control_panel.tasks.cleanup_unverified_tenants",
+			"rokct.rokct.tasks.manage_daily_tenders",
+			"rokct.rokct.control_panel.tasks.cleanup_failed_provisions",
+		]
+		events["weekly"] = ["rokct.rokct.control_panel.tasks.run_weekly_maintenance"]
+		events["monthly"] = ["rokct.rokct.control_panel.tasks.generate_subscription_invoices"]
+	else:  # tenant
+		events["daily"] = [
+			"rokct.rokct.tasks.manage_daily_tenders",
+			"rokct.rokct.tenant.tasks.disable_expired_support_users",
+			"rokct.paas.tasks.remove_expired_stories"
+		]
+	return events
+
+scheduler_events = get_safe_scheduler_events()
+
 
 # Testing
 # -------
@@ -174,16 +184,50 @@ app_license = "mit"
 # Overriding Methods
 # ------------------------------
 #
-# override_whitelisted_methods = {
-# 	"frappe.desk.doctype.event.event.get_events": "rokct.event.get_events"
-# }
+override_whitelisted_methods = {
+       "frappe.utils.change_log.get_versions": "rokct.rokct.api.get_versions"
+}
+
+whitelisted_methods = {
+    # Control Panel APIs
+    "rokct.rokct.control_panel.api.get_subscription_status": "rokct.rokct.control_panel.api.get_subscription_status",
+    "rokct.rokct.control_panel.provisioning.provision_new_tenant": "rokct.rokct.control_panel.provisioning.provision_new_tenant",
+    "rokct.rokct.control_panel.billing.save_payment_method": "rokct.rokct.control_panel.billing.save_payment_method",
+    "rokct.rokct.control_panel.support.grant_support_access": "rokct.rokct.control_panel.support.grant_support_access",
+    "rokct.rokct.control_panel.support.revoke_support_access": "rokct.rokct.control_panel.support.revoke_support_access",
+
+    # Tenant APIs
+    "rokct.rokct.tenant.api.initial_setup": "rokct.rokct.tenant.api.initial_setup",
+    "rokct.rokct.tenant.api.create_temporary_support_user": "rokct.rokct.tenant.api.create_temporary_support_user",
+    "rokct.rokct.tenant.api.disable_temporary_support_user": "rokct.rokct.tenant.api.disable_temporary_support_user",
+    "rokct.rokct.tenant.api.create_sales_invoice": "rokct.rokct.tenant.api.create_sales_invoice",
+    "rokct.rokct.tenant.api.log_frontend_error": "rokct.rokct.tenant.api.log_frontend_error",
+    "rokct.rokct.tenant.api.get_subscription_details": "rokct.rokct.tenant.api.get_subscription_details"
+}
 #
 # each overriding function accepts a `data` argument;
 # generated from the base implementation of the doctype dashboard,
 # along with any modifications made in other Frappe apps
 # override_doctype_dashboards = {
-# 	"Task": "rokct.task.get_dashboard_data"
+#       "Task": "rokct.task.get_dashboard_data"
 # }
+
+fixtures = [
+    "Property Setter",
+    "Role",
+    "Role Permission",
+    "Custom Field",
+    "Workspace",
+    "DocType Card",
+    "Dashboard Chart",
+    "Dashboard Chart Source",
+    "Shortcut",
+    "Tender Category",
+    "Province",
+    "Organ of State",
+    "Tender Type",
+    "Email Template"
+]
 
 # exempt linked doctypes from being automatically cancelled
 #
@@ -208,37 +252,44 @@ app_license = "mit"
 # --------------------
 
 # user_data_fields = [
-# 	{
-# 		"doctype": "{doctype_1}",
-# 		"filter_by": "{filter_by}",
-# 		"redact_fields": ["{field_1}", "{field_2}"],
-# 		"partial": 1,
-# 	},
-# 	{
-# 		"doctype": "{doctype_2}",
-# 		"filter_by": "{filter_by}",
-# 		"partial": 1,
-# 	},
-# 	{
-# 		"doctype": "{doctype_3}",
-# 		"strict": False,
-# 	},
-# 	{
-# 		"doctype": "{doctype_4}"
-# 	}
+#       {
+#               "doctype": "{doctype_1}",
+#               "filter_by": "{filter_by}",
+#               "redact_fields": ["{field_1}", "{field_2}"],
+#               "partial": 1,
+#       },
+#       {
+#               "doctype": "{doctype_2}",
+#               "filter_by": "{filter_by}",
+#               "partial": 1,
+#       },
+#       {
+#               "doctype": "{doctype_3}",
+#               "strict": False,
+#       },
+#       {
+#               "doctype": "{doctype_4}"
+#       }
 # ]
 
 # Authentication and authorization
 # --------------------------------
 
+on_login = "rokct.rokct.permissions.sync_user_roles_on_login"
+
 # auth_hooks = [
-# 	"rokct.auth.validate"
+#       "rokct.auth.validate"
 # ]
 
 # Automatically update python controller files with type annotations for this app.
 # export_python_type_annotations = True
 
 # default_log_clearing_doctypes = {
-# 	"Logging DocType Name": 30  # days to retain logs
+#       "Logging DocType Name": 30  # days to retain logs
 # }
 
+# Add API v1 routes for DocType resources
+website_route_rules = [
+    {"from_route": "/api/v1/resource/<doctype>", "to_route": "frappe.api.handle_api_request"},
+    {"from_route": "/api/v1/resource/<doctype>/<name>", "to_route": "frappe.api.handle_api_request"},
+]

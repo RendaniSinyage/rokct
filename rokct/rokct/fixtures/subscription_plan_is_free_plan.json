@@ -1,0 +1,9 @@
+{
+ "dt": "Subscription Plan",
+ "doctype": "Custom Field",
+ "fieldname": "is_free_plan",
+ "fieldtype": "Check",
+ "label": "Is Free Plan",
+ "insert_after": "billing_cycle"
+}
+

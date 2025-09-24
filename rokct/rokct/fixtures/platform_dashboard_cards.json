@@ -1,0 +1,36 @@
+[
+    {
+        "doctype": "DocType Card",
+        "label": "Active Subscriptions",
+        "doc_type": "Company Subscription",
+        "owner": "Administrator",
+        "parent": "Platform Dashboard",
+        "parentfield": "cards",
+        "parenttype": "Workspace",
+        "idx": 1,
+        "filters_json": "[[\"status\",\"=\",\"Active\"]]"
+    },
+    {
+        "doctype": "DocType Card",
+        "label": "Trialing Subscriptions",
+        "doc_type": "Company Subscription",
+        "owner": "Administrator",
+        "parent": "Platform Dashboard",
+        "parentfield": "cards",
+        "parenttype": "Workspace",
+        "idx": 2,
+        "filters_json": "[[\"status\",\"=\",\"Trialing\"]]"
+    },
+    {
+        "doctype": "DocType Card",
+        "label": "Past Due Subscriptions",
+        "doc_type": "Company Subscription",
+        "owner": "Administrator",
+        "parent": "Platform Dashboard",
+        "parentfield": "cards",
+        "parenttype": "Workspace",
+        "idx": 3,
+        "filters_json": "[[\"status\",\"=\",\"Past Due\"]]"
+    }
+]
+

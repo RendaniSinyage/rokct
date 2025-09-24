@@ -1,0 +1,15 @@
+[
+    {
+        "doctype": "Custom Field",
+        "dt": "User",
+        "fieldname": "temporary_user_expires_on",
+        "fieldtype": "Datetime",
+        "label": "Temporary User Expires On",
+        "description": "The date and time when a temporary support user's access will expire.",
+        "no_copy": 1,
+        "print_hide": 1,
+        "report_hide": 1,
+        "read_only": 1
+    }
+]
+

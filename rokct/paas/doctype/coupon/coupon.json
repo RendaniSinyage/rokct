@@ -1,0 +1,86 @@
+{
+    "doctype": "DocType",
+    "name": "Coupon",
+    "engine": "InnoDB",
+    "is_submittable": 0,
+    "issingle": 0,
+    "istable": 0,
+    "module": "Paas",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 1,
+            "email": 1,
+            "export": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "role": "System Manager",
+            "share": 1,
+            "write": 1
+        }
+    ],
+    "sort_field": "modified",
+    "sort_order": "DESC",
+    "track_changes": 1,
+    "fields": [
+        {
+            "fieldname": "shop",
+            "fieldtype": "Link",
+            "label": "Shop",
+            "options": "Shop",
+            "reqd": 1
+        },
+        {
+            "fieldname": "code",
+            "fieldtype": "Data",
+            "label": "Code",
+            "reqd": 1,
+            "unique": 1
+        },
+        {
+            "fieldname": "name",
+            "fieldtype": "Data",
+            "label": "Name",
+            "reqd": 1
+        },
+        {
+            "fieldname": "type",
+            "fieldtype": "Select",
+            "label": "Type",
+            "options": "fix\npercent"
+        },
+        {
+            "fieldname": "for_what",
+            "fieldtype": "Data",
+            "label": "For"
+        },
+        {
+            "fieldname": "qty",
+            "fieldtype": "Int",
+            "label": "Qty"
+        },
+        {
+            "fieldname": "price",
+            "fieldtype": "Float",
+            "label": "Price"
+        },
+        {
+            "fieldname": "expired_at",
+            "fieldtype": "Datetime",
+            "label": "Expired At"
+        },
+        {
+            "fieldname": "image",
+            "fieldtype": "Attach Image",
+            "label": "Image"
+        },
+        {
+            "fieldname": "translations",
+            "fieldtype": "Table",
+            "label": "Translations",
+            "options": "Coupon Translation"
+        }
+    ]
+}
+

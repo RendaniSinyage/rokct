@@ -1,0 +1,12 @@
+[
+    {
+        "doctype": "Custom Field",
+        "dt": "Subscription Settings",
+        "fieldname": "stripe_publishable_key",
+        "fieldtype": "Password",
+        "label": "Stripe Publishable Key",
+        "no_copy": 1,
+        "name": "Subscription Settings-stripe_publishable_key"
+    }
+]
+

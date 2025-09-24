@@ -1,0 +1,68 @@
+{
+    "doctype": "DocType",
+    "name": "Order",
+    "module": "Paas",
+    "engine": "InnoDB",
+    "is_submittable": 1,
+    "permissions": [
+        {
+            "role": "System Manager",
+            "read": 1,
+            "write": 1,
+            "create": 1,
+            "delete": 1,
+            "submit": 1,
+            "cancel": 1
+        }
+    ],
+    "fields": [
+        {
+            "fieldname": "customer",
+            "fieldtype": "Link",
+            "label": "Customer",
+            "options": "Customer",
+            "reqd": 1
+        },
+        {
+            "fieldname": "order_date",
+            "fieldtype": "Date",
+            "label": "Order Date",
+            "reqd": 1
+        },
+        {
+            "fieldname": "status",
+            "fieldtype": "Select",
+            "label": "Status",
+            "options": "Pending\\nConfirmed\\nDelivered\\nCancelled",
+            "default": "Pending"
+        },
+        {
+            "fieldname": "grand_total",
+            "fieldtype": "Currency",
+            "label": "Grand Total",
+            "read_only": 1
+        },
+        {
+            "fieldname": "delivery_date",
+            "fieldtype": "Date",
+            "label": "Delivery Date"
+        },
+        {
+            "fieldname": "delivery_time",
+            "fieldtype": "Time",
+            "label": "Delivery Time"
+        },
+        {
+            "fieldname": "note",
+            "fieldtype": "Text",
+            "label": "Note"
+        },
+        {
+            "fieldname": "order_items",
+            "fieldtype": "Table",
+            "label": "Order Items",
+            "options": "Order Item",
+            "reqd": 1
+        }
+    ]
+}

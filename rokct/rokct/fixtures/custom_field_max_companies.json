@@ -1,0 +1,15 @@
+[
+    {
+        "doctype": "Custom Field",
+        "dt": "Company Subscription",
+        "fieldname": "max_companies",
+        "fieldtype": "Int",
+        "label": "Max Companies",
+        "default": "1",
+        "reqd": 1,
+        "no_copy": 1,
+        "print_hide": 1,
+        "name": "Company Subscription-max_companies"
+    }
+]
+

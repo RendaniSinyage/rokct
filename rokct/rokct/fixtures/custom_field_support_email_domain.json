@@ -1,0 +1,13 @@
+[
+    {
+        "doctype": "Custom Field",
+        "dt": "Subscription Settings",
+        "fieldname": "support_email_domain",
+        "fieldtype": "Data",
+        "label": "Support Email Domain",
+        "default": "rokct.ai",
+        "description": "The domain to use for temporary support user emails (e.g., rokct.ai).",
+        "insert_after": "marketing_site_login_url"
+    }
+]
+

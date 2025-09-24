@@ -1,0 +1,11 @@
+[
+    {"doctype": "Tender Type", "tender_type_name": "Open Tendering"},
+    {"doctype": "Tender Type", "tender_type_name": "Limited Tendering"},
+    {"doctype": "Tender Type", "tender_type_name": "Request for Quotation"},
+    {"doctype": "Tender Type", "tender_type_name": "Request for Proposal"},
+    {"doctype": "Tender Type", "tender_type_name": "Two-Stage Tendering"},
+    {"doctype": "Tender Type", "tender_type_name": "Direct Procurement"},
+    {"doctype": "Tender Type", "tender_type_name": "Competitive Dialogue"},
+    {"doctype": "Tender Type", "tender_type_name": "Selective Tendering"}
+]
+

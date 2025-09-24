@@ -1,0 +1,11 @@
+{
+    "doctype": "Custom Field",
+    "dt": "Subscription Settings",
+    "fieldname": "default_free_plan",
+    "fieldtype": "Link",
+    "label": "Default Free Plan",
+    "options": "Subscription Plan",
+    "insert_after": "default_trial_plan",
+    "reqd": 1
+}
+

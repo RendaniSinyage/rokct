@@ -1,0 +1,12 @@
+[
+    {
+        "doctype": "Custom Field",
+        "dt": "Subscription Settings",
+        "fieldname": "marketing_site_login_url",
+        "fieldtype": "Data",
+        "label": "Marketing Site Login URL",
+        "description": "The URL to redirect users to when they try to access the /login page on a tenant site. This is the global default.",
+        "insert_after": "subscription_cache_duration"
+    }
+]
+

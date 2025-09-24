@@ -1,0 +1,95 @@
+[
+    {
+        "doctype": "Custom Field",
+        "filters": [
+            [
+                "dt",
+                "in",
+                [
+                    "Address",
+                    "Bank",
+                    "Bank Account",
+                    "Brand",
+                    "Campaign",
+                    "Company",
+                    "Contact",
+                    "Contract",
+                    "Customer",
+                    "Customer Group",
+                    "Delivery Note",
+                    "Delivery Note Item",
+                    "Department",
+                    "Designation",
+                    "Employee",
+                    "Employee Education",
+                    "GL Entry",
+                    "GoCardless Mandate",
+                    "Item",
+                    "Item Barcode",
+                    "Item Default",
+                    "Item Group",
+                    "Job Card",
+                    "Journal Entry",
+                    "Journal Entry Account",
+                    "Lead Source",
+                    "Loan",
+                    "Loan Repayment",
+                    "Material Request",
+                    "Mode of Payment",
+                    "Notification Log",
+                    "POS Invoice",
+                    "POS Invoice Item",
+                    "Packed Item",
+                    "Payment Entry",
+                    "Pick List",
+                    "Price List",
+                    "Print Format",
+                    "Print Settings",
+                    "Project",
+                    "Purchase Invoice",
+                    "Purchase Invoice Item",
+                    "Purchase Order",
+                    "Purchase Receipt",
+                    "Purchase Receipt Item",
+                    "Quotation",
+                    "Salary Slip",
+                    "Sales Invoice",
+                    "Sales Invoice Item",
+                    "Sales Order",
+                    "Sales Partner",
+                    "Sales Person",
+                    "Stock Entry",
+                    "Stock Entry Detail",
+                    "Stock Reconciliation",
+                    "Stock Reconciliation Item",
+                    "Supplier",
+                    "Supplier Group",
+                    "Supplier Quotation",
+                    "Task",
+                    "Terms and Conditions",
+                    "Territory",
+                    "Timesheet",
+                    "Web Form"
+                ]
+            ]
+        ]
+    },
+    {
+        "doctype": "Property Setter"
+    },
+    {
+        "doctype": "Print Format"
+    },
+    {
+        "doctype": "Client Script"
+    },
+    {
+        "doctype": "Server Script"
+    },
+    {
+        "doctype": "Report"
+    },
+    {
+        "doctype": "Workspace"
+    }
+]

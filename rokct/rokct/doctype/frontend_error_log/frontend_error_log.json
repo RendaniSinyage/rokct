@@ -1,0 +1,57 @@
+{
+    "name": "Frontend Error Log",
+    "owner": "Administrator",
+    "module": "rokct",
+    "creation": "2025-09-13 04:12:00.000000",
+    "modified": "2025-09-13 04:12:00.000000",
+    "modified_by": "Administrator",
+    "doctype": "DocType",
+    "engine": "InnoDB",
+    "field_order": [
+        "error_message",
+        "context",
+        "user",
+        "timestamp"
+    ],
+    "fields": [
+        {
+            "fieldname": "error_message",
+            "fieldtype": "Small Text",
+            "label": "Error Message",
+            "reqd": 1
+        },
+        {
+            "fieldname": "context",
+            "fieldtype": "Code",
+            "label": "Context / Stack Trace"
+        },
+        {
+            "fieldname": "user",
+            "fieldtype": "Link",
+            "label": "User",
+            "options": "User"
+        },
+        {
+            "fieldname": "timestamp",
+            "fieldtype": "Datetime",
+            "label": "Timestamp",
+            "reqd": 1
+        }
+    ],
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 1,
+            "email": 1,
+            "export": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "role": "System Manager",
+            "share": 1,
+            "write": 1
+        }
+    ],
+    "track_changes": 1
+}
+

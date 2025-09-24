@@ -1,0 +1,50 @@
+{
+    "doctype": "DocType",
+    "name": "Order Item",
+    "module": "Paas",
+    "engine": "InnoDB",
+    "istable": 1,
+    "permissions": [
+        {
+            "role": "System Manager",
+            "read": 1
+        }
+    ],
+    "fields": [
+        {
+            "fieldname": "item",
+            "fieldtype": "Link",
+            "label": "Item",
+            "options": "Item",
+            "reqd": 1
+        },
+        {
+            "fieldname": "quantity",
+            "fieldtype": "Int",
+            "label": "Quantity",
+            "reqd": 1
+        },
+        {
+            "fieldname": "price",
+            "fieldtype": "Currency",
+            "label": "Price",
+            "reqd": 1
+        },
+        {
+            "fieldname": "total_price",
+            "fieldtype": "Currency",
+            "label": "Total Price",
+            "read_only": 1
+        },
+        {
+            "fieldname": "discount",
+            "fieldtype": "Currency",
+            "label": "Discount"
+        },
+        {
+            "fieldname": "note",
+            "fieldtype": "Text",
+            "label": "Note"
+        }
+    ]
+}

@@ -1,0 +1,88 @@
+# Laravel standard
+/node_modules
+/public/hot
+/public/storage
+/vendor
+.env.*
+.env.backup
+.env.production
+.phpunit.result.cache
+Homestead.json
+Homestead.yaml
+auth.json
+npm-debug.log
+yarn-error.log
+
+# Specific protection for Google service account keys and other credentials
+/storage/app/google-service-account.json
+/storage/app/*.json.key
+/storage/app/*-service-account.json
+/storage/app/service-account-*.json
+/storage/app/credentials.json
+/storage/app/*.p12
+/storage/app/*.pem
+/storage/app/oauth-*.json
+/storage/app/api-*.json
+/storage/app/firebase-*.json
+/storage/app/aws-*.json
+/storage/app/*.key
+/storage/app/*.cert
+/storage/app/*.crt
+
+# IDE specific files
+/.idea
+/.vscode
+/.fleet
+/.phpstorm.meta.php
+/_ide_helper.php
+/_ide_helper_models.php
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Storage directories (except .gitkeep)
+/storage/app/*
+!/storage/app/.gitkeep
+!/storage/app/public/.gitkeep
+/storage/framework/cache/*
+!/storage/framework/cache/.gitkeep
+/storage/framework/sessions/*
+!/storage/framework/sessions/.gitkeep
+/storage/framework/testing/*
+!/storage/framework/testing/.gitkeep
+/storage/framework/views/*
+!/storage/framework/views/.gitkeep
+/storage/logs/*
+!/storage/logs/.gitkeep
+/storage/debugbar/*
+
+# Build files
+/public/build
+/public/dist
+/public/mix-manifest.json
+
+# Local development configurations
+docker-compose.override.yml
+
+# Branch specific exclusions
+.github/workflows/main.yml
+updated_files.txt
+updated_files.zip
+
+# Project specific exclusions
+/scripts/gethashes.txt
+/scripts/manual.txt
+
+# Ignore all backup files
+*.bak
+*.swp
+*~
+
+# Composer files
+composer.phar

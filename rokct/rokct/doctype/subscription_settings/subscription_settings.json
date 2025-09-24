@@ -1,0 +1,79 @@
+{
+ "actions": [],
+ "creation": "2025-09-09 09:05:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "default_trial_plan",
+  "default_trial_days",
+  "grace_period_days",
+  "subscription_cache_duration",
+  "marketing_site_login_url",
+  "default_login_redirect_url"
+ ],
+ "fields": [
+  {
+   "fieldname": "default_trial_plan",
+   "fieldtype": "Link",
+   "label": "Default Trial Plan",
+   "options": "Subscription Plan"
+  },
+  {
+   "fieldname": "default_trial_days",
+   "fieldtype": "Int",
+   "label": "Default Trial Days"
+  },
+  {
+   "fieldname": "grace_period_days",
+   "fieldtype": "Int",
+   "label": "Grace Period Days",
+   "default": "7"
+  },
+  {
+   "default": "86400",
+   "description": "The duration in seconds for which a tenant's subscription details are cached. Default is 24 hours.",
+   "fieldname": "subscription_cache_duration",
+   "fieldtype": "Int",
+   "label": "Subscription Cache Duration (Seconds)"
+  },
+  {
+   "fieldname": "marketing_site_login_url",
+   "fieldtype": "Data",
+   "label": "Marketing Site Login URL",
+   "options": "URL",
+   "description": "The URL to redirect users to when they try to access the tenant's /login page. e.g. https://rokct.ai/login"
+  },
+  {
+   "fieldname": "default_login_redirect_url",
+   "fieldtype": "Data",
+   "label": "Default Login Redirect URL",
+   "options": "URL",
+   "description": "A fallback URL for login redirection if the marketing site URL is not set."
+  }
+ ],
+ "issingle": 1,
+ "links": [],
+ "modified": "2025-09-09 09:05:00.000000",
+ "modified_by": "Administrator",
+ "module": "rokct",
+ "name": "Subscription Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}
+

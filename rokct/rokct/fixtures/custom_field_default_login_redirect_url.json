@@ -1,0 +1,13 @@
+[
+    {
+        "doctype": "Custom Field",
+        "dt": "Subscription Settings",
+        "fieldname": "default_login_redirect_url",
+        "fieldtype": "Data",
+        "label": "Default Login Redirect URL",
+        "default": "https://rokct.ai/login",
+        "description": "The final fallback URL for the tenant login redirect if no global or per-tenant URL is set.",
+        "insert_after": "support_email_domain"
+    }
+]
+

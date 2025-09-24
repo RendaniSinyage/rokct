@@ -1,0 +1,25 @@
+[
+    {
+        "doctype": "Shortcut",
+        "label": "All Subscriptions",
+        "link_to": "Company Subscription",
+        "type": "DocType",
+        "owner": "Administrator",
+        "parent": "Platform Dashboard",
+        "parentfield": "shortcuts",
+        "parenttype": "Workspace",
+        "idx": 1
+    },
+    {
+        "doctype": "Shortcut",
+        "label": "All Customers",
+        "link_to": "Customer",
+        "type": "DocType",
+        "owner": "Administrator",
+        "parent": "Platform Dashboard",
+        "parentfield": "shortcuts",
+        "parenttype": "Workspace",
+        "idx": 2
+    }
+]
+

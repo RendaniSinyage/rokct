@@ -1,0 +1,11 @@
+[
+    {
+        "doctype": "Property Setter",
+        "doc_type": "System Settings",
+        "field_name": "ignore_user_permissions_if_missing",
+        "property": "default",
+        "value": "1",
+        "property_type": "Check"
+    }
+]
+

@@ -1,0 +1,19 @@
+{
+ "allow_self_subscription": 1,
+ "billing_cycle": "Yearly",
+ "billing_interval": 1,
+ "cost": 180.0,
+ "currency": "USD",
+ "doctype": "Subscription Plan",
+ "is_ai": 1,
+ "item": "Pro Plan",
+ "plan_name": "Pro (Yearly)",
+ "price_determination": "Fixed Rate",
+ "trial_period_days": 0,
+ "subscription_plan_module": [
+  {
+   "module": "rokct"
+  }
+ ]
+}
+

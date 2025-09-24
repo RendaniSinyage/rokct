@@ -1,0 +1,9 @@
+{
+ "dt": "Subscription Plan",
+ "doctype": "Custom Field",
+ "fieldname": "is_ai",
+ "fieldtype": "Check",
+ "label": "Is AI Plan",
+ "insert_after": "is_free_plan"
+}
+

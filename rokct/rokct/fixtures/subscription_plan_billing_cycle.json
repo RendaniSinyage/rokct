@@ -1,0 +1,10 @@
+{
+ "dt": "Subscription Plan",
+ "doctype": "Custom Field",
+ "fieldname": "billing_cycle",
+ "fieldtype": "Select",
+ "label": "Billing Cycle",
+ "options": "Monthly\nYearly",
+ "insert_after": "trial_period_days"
+}
+

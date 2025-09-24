@@ -1,0 +1,120 @@
+{
+ "doctype": "DocType",
+ "name": "Parcel Order",
+ "engine": "InnoDB",
+ "is_submittable": 1,
+ "issingle": 0,
+ "istable": 0,
+ "module": "Paas",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1,
+ "fields": [
+  {
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "label": "User",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fieldname": "total_price",
+   "fieldtype": "Currency",
+   "label": "Total Price"
+  },
+  {
+   "fieldname": "currency",
+   "fieldtype": "Link",
+   "label": "Currency",
+   "options": "Currency"
+  },
+  {
+   "fieldname": "type",
+   "fieldtype": "Link",
+   "label": "Type",
+   "options": "Parcel Order Setting"
+  },
+  {
+   "fieldname": "note",
+   "fieldtype": "Text",
+   "label": "Note"
+  },
+  {
+   "fieldname": "tax",
+   "fieldtype": "Currency",
+   "label": "Tax"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "New\nPending\nAccepted\nReady\nOn A Way\nDelivered\nCanceled"
+  },
+  {
+   "fieldname": "address_from",
+   "fieldtype": "Small Text",
+   "label": "Address From"
+  },
+  {
+   "fieldname": "phone_from",
+   "fieldtype": "Data",
+   "label": "Phone From"
+  },
+  {
+   "fieldname": "username_from",
+   "fieldtype": "Data",
+   "label": "Username From"
+  },
+  {
+   "fieldname": "address_to",
+   "fieldtype": "Small Text",
+   "label": "Address To"
+  },
+  {
+   "fieldname": "phone_to",
+   "fieldtype": "Data",
+   "label": "Phone To"
+  },
+  {
+   "fieldname": "username_to",
+   "fieldtype": "Data",
+   "label": "Username To"
+  },
+  {
+   "fieldname": "delivery_fee",
+   "fieldtype": "Currency",
+   "label": "Delivery Fee"
+  },
+  {
+   "fieldname": "deliveryman",
+   "fieldtype": "Link",
+   "label": "Deliveryman",
+   "options": "User"
+  },
+  {
+   "fieldname": "delivery_date",
+   "fieldtype": "Date",
+   "label": "Delivery Date"
+  },
+  {
+   "fieldname": "delivery_time",
+   "fieldtype": "Time",
+   "label": "Delivery Time"
+  }
+ ]
+}
+

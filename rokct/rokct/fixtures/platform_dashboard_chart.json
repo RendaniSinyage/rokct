@@ -1,0 +1,14 @@
+[
+    {
+        "doctype": "Dashboard Chart",
+        "chart_name": "New Subscriptions This Month",
+        "chart_type": "Bar",
+        "owner": "Administrator",
+        "parent": "Platform Dashboard",
+        "parentfield": "charts",
+        "parenttype": "Workspace",
+        "source": "New Subscriptions Chart Source",
+        "idx": 1
+    }
+]
+

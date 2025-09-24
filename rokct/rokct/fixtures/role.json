@@ -1,0 +1,35 @@
+[
+    {
+        "doctype": "Role",
+        "role_name": "Company User",
+        "desk_access": 1
+    },
+    {
+        "doctype": "Role",
+        "role_name": "Company Employee",
+        "desk_access": 1
+    },
+    { "doctype": "Role", "role_name": "Module: EDI", "desk_access": 1 },
+    { "doctype": "Role", "role_name": "Module: Subcontracting", "desk_access": 1 },
+    { "doctype": "Role", "role_name": "Module: E-commerce", "desk_access": 1 },
+    { "doctype": "Role", "role_name": "Module: Bulk Transaction", "desk_access": 1 },
+    { "doctype": "Role", "role_name": "Module: Telephony", "desk_access": 1 },
+    { "doctype": "Role", "role_name": "Module: Communication", "desk_access": 1 },
+    { "doctype": "Role", "role_name": "Module: Quality Management", "desk_access": 1 },
+    { "doctype": "Role", "role_name": "Module: ERPNext Integrations", "desk_access": 1 },
+    { "doctype": "Role", "role_name": "Module: Regional", "desk_access": 1 },
+    { "doctype": "Role", "role_name": "Module: Maintenance", "desk_access": 1 },
+    { "doctype": "Role", "role_name": "Module: Portal", "desk_access": 1 },
+    { "doctype": "Role", "role_name": "Module: Assets", "desk_access": 1 },
+    { "doctype": "Role", "role_name": "Module: Utilities", "desk_access": 1 },
+    { "doctype": "Role", "role_name": "Module: Support", "desk_access": 1 },
+    { "doctype": "Role", "role_name": "Module: Stock", "desk_access": 1 },
+    { "doctype": "Role", "role_name": "Module: Manufacturing", "desk_access": 1 },
+    { "doctype": "Role", "role_name": "Module: Setup", "desk_access": 1 },
+    { "doctype": "Role", "role_name": "Module: Selling", "desk_access": 1 },
+    { "doctype": "Role", "role_name": "Module: Projects", "desk_access": 1 },
+    { "doctype": "Role", "role_name": "Module: Buying", "desk_access": 1 },
+    { "doctype": "Role", "role_name": "Module: CRM", "desk_access": 1 },
+    { "doctype": "Role", "role_name": "Module: Accounts", "desk_access": 1 }
+]
+

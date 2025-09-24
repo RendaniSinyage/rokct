@@ -1,0 +1,50 @@
+[
+    {
+        "doctype": "Workspace",
+        "name": "ROKCT Platform",
+        "label": "ROKCT Platform",
+        "module": "rokct",
+        "public": 0,
+        "is_standard": 1,
+        "sequence_id": 1,
+        "icon": "rocket",
+        "extends_another_page": 0,
+        "hide_custom": 0,
+        "charts": [],
+        "shortcuts": [
+            {
+                "label": "Subscription Settings",
+                "type": "Link",
+                "link_to": "Subscription Settings"
+            },
+            {
+                "label": "Company Subscriptions",
+                "type": "Link",
+                "link_to": "Company Subscription"
+            },
+            {
+                "label": "Subscription Plans",
+                "type": "Link",
+                "link_to": "Subscription Plan"
+            },
+            {
+                "label": "Customers",
+                "type": "Link",
+                "link_to": "Customer"
+            },
+            {
+                "label": "Email Templates",
+                "type": "Link",
+                "link_to": "Email Template"
+            },
+            {
+                "label": "Users",
+                "type": "Link",
+                "link_to": "User"
+            }
+        ],
+        "cards": [],
+        "links": []
+    }
+]
+

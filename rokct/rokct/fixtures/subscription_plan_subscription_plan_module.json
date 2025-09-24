@@ -1,0 +1,10 @@
+{
+ "dt": "Subscription Plan",
+ "doctype": "Custom Field",
+ "fieldname": "subscription_plan_module",
+ "fieldtype": "Table",
+ "label": "Subscription Plan Module",
+ "options": "Subscription Plan Module",
+ "insert_after": "is_free_plan"
+}
+
