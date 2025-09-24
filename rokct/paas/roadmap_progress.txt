@@ -110,8 +110,8 @@
 ## Seller Dashboard
 - [x] Dashboard (Seller): Dashboard & Statistics
 - [x] Dashboard (Seller): Sales History & Reports
-- [ ] Dashboard (Seller): Extras (Groups & Values)
-- [ ] Dashboard (Seller): Units
+- [x] Dashboard (Seller): Extras (Groups & Values)
+- [x] Dashboard (Seller): Units
 - [x] Dashboard (Seller): Shop Management
 - [x] Dashboard (Seller): Categories
 - [x] Dashboard (Seller): Brands
@@ -124,16 +124,16 @@
 - [x] Dashboard (Seller): Discounts
 - [x] Dashboard (Seller): Banners
 - [x] Dashboard (Seller): Orders
-- [ ] Dashboard (Seller): Transactions
-- [ ] Dashboard (Seller): Bonuses
+- [x] Dashboard (Seller): Transactions
+- [x] Dashboard (Seller): Bonuses
 - [ ] Dashboard (Seller): Stories
-- [ ] Dashboard (Seller): Tags
+- [x] Dashboard (Seller): Tags
 - [ ] Dashboard (Seller): Delivery Zones
-- [ ] Dashboard (Seller): Shop Payments
+- [x] Dashboard (Seller): Shop Payments
 - [ ] Dashboard (Seller): Order Refunds
 - [x] Dashboard (Seller): Shop Working Days
 - [x] Dashboard (Seller): Shop Closed Days
-- [ ] Dashboard (Seller): Payouts
+- [x] Dashboard (Seller): Payouts
 - [ ] Dashboard (Seller): Reviews
 - [ ] Dashboard (Seller): Receipts
 - [ ] Dashboard (Seller): Shop Galleries

@@ -3404,6 +3404,416 @@ def delete_seller_banner(banner_name):
 
 
 @frappe.whitelist()
+def get_seller_extra_groups(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of product extra groups for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    extra_groups = frappe.get_list(
+        "Product Extra Group",
+        filters={"shop": shop},
+        fields=["name"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length,
+        order_by="name"
+    )
+    return extra_groups
+
+
+@frappe.whitelist()
+def create_seller_extra_group(group_data):
+    """
+    Creates a new product extra group for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    if isinstance(group_data, str):
+        group_data = json.loads(group_data)
+
+    group_data["shop"] = shop
+
+    new_group = frappe.get_doc({
+        "doctype": "Product Extra Group",
+        **group_data
+    })
+    new_group.insert(ignore_permissions=True)
+    return new_group.as_dict()
+
+
+@frappe.whitelist()
+def update_seller_extra_group(group_name, group_data):
+    """
+    Updates a product extra group for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    if isinstance(group_data, str):
+        group_data = json.loads(group_data)
+
+    group = frappe.get_doc("Product Extra Group", group_name)
+
+    if group.shop != shop:
+        frappe.throw("You are not authorized to update this group.", frappe.PermissionError)
+
+    group.update(group_data)
+    group.save(ignore_permissions=True)
+    return group.as_dict()
+
+
+@frappe.whitelist()
+def delete_seller_extra_group(group_name):
+    """
+    Deletes a product extra group for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    group = frappe.get_doc("Product Extra Group", group_name)
+
+    if group.shop != shop:
+        frappe.throw("You are not authorized to delete this group.", frappe.PermissionError)
+
+    frappe.delete_doc("Product Extra Group", group_name, ignore_permissions=True)
+    return {"status": "success", "message": "Group deleted successfully."}
+
+
+@frappe.whitelist()
+def get_seller_extra_values(group_name, limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of product extra values for a given group.
+    """
+    extra_values = frappe.get_list(
+        "Product Extra Value",
+        filters={"product_extra_group": group_name},
+        fields=["name", "value", "price"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length,
+        order_by="name"
+    )
+    return extra_values
+
+
+@frappe.whitelist()
+def create_seller_extra_value(value_data):
+    """
+    Creates a new product extra value.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    if isinstance(value_data, str):
+        value_data = json.loads(value_data)
+
+    group = frappe.get_doc("Product Extra Group", value_data["product_extra_group"])
+    if group.shop != shop:
+        frappe.throw("You are not authorized to add a value to this group.", frappe.PermissionError)
+
+    new_value = frappe.get_doc({
+        "doctype": "Product Extra Value",
+        **value_data
+    })
+    new_value.insert(ignore_permissions=True)
+    return new_value.as_dict()
+
+
+@frappe.whitelist()
+def update_seller_extra_value(value_name, value_data):
+    """
+    Updates a product extra value.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    if isinstance(value_data, str):
+        value_data = json.loads(value_data)
+
+    value = frappe.get_doc("Product Extra Value", value_name)
+    group = frappe.get_doc("Product Extra Group", value.product_extra_group)
+
+    if group.shop != shop:
+        frappe.throw("You are not authorized to update this value.", frappe.PermissionError)
+
+    value.update(value_data)
+    value.save(ignore_permissions=True)
+    return value.as_dict()
+
+
+@frappe.whitelist()
+def delete_seller_extra_value(value_name):
+    """
+    Deletes a product extra value.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    value = frappe.get_doc("Product Extra Value", value_name)
+    group = frappe.get_doc("Product Extra Group", value.product_extra_group)
+
+    if group.shop != shop:
+        frappe.throw("You are not authorized to delete this value.", frappe.PermissionError)
+
+    frappe.delete_doc("Product Extra Value", value_name, ignore_permissions=True)
+    return {"status": "success", "message": "Value deleted successfully."}
+
+
+@frappe.whitelist()
+def get_seller_units(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of units for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    units = frappe.get_list(
+        "Shop Unit",
+        filters={"shop": shop},
+        fields=["name", "active"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length,
+        order_by="name"
+    )
+    return units
+
+
+@frappe.whitelist()
+def create_seller_unit(unit_data):
+    """
+    Creates a new unit for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    if isinstance(unit_data, str):
+        unit_data = json.loads(unit_data)
+
+    unit_data["shop"] = shop
+
+    new_unit = frappe.get_doc({
+        "doctype": "Shop Unit",
+        **unit_data
+    })
+    new_unit.insert(ignore_permissions=True)
+    return new_unit.as_dict()
+
+
+@frappe.whitelist()
+def update_seller_unit(unit_name, unit_data):
+    """
+    Updates a unit for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    if isinstance(unit_data, str):
+        unit_data = json.loads(unit_data)
+
+    unit = frappe.get_doc("Shop Unit", unit_name)
+
+    if unit.shop != shop:
+        frappe.throw("You are not authorized to update this unit.", frappe.PermissionError)
+
+    unit.update(unit_data)
+    unit.save(ignore_permissions=True)
+    return unit.as_dict()
+
+
+@frappe.whitelist()
+def delete_seller_unit(unit_name):
+    """
+    Deletes a unit for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    unit = frappe.get_doc("Shop Unit", unit_name)
+
+    if unit.shop != shop:
+        frappe.throw("You are not authorized to delete this unit.", frappe.PermissionError)
+
+    frappe.delete_doc("Shop Unit", unit_name, ignore_permissions=True)
+    return {"status": "success", "message": "Unit deleted successfully."}
+
+
+@frappe.whitelist()
+def get_seller_tags(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of tags for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    tags = frappe.get_list(
+        "Shop Tag",
+        filters={"shop": shop},
+        fields=["name"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length,
+        order_by="name"
+    )
+    return tags
+
+
+@frappe.whitelist()
+def create_seller_tag(tag_data):
+    """
+    Creates a new tag for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    if isinstance(tag_data, str):
+        tag_data = json.loads(tag_data)
+
+    tag_data["shop"] = shop
+
+    new_tag = frappe.get_doc({
+        "doctype": "Shop Tag",
+        **tag_data
+    })
+    new_tag.insert(ignore_permissions=True)
+    return new_tag.as_dict()
+
+
+@frappe.whitelist()
+def update_seller_tag(tag_name, tag_data):
+    """
+    Updates a tag for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    if isinstance(tag_data, str):
+        tag_data = json.loads(tag_data)
+
+    tag = frappe.get_doc("Shop Tag", tag_name)
+
+    if tag.shop != shop:
+        frappe.throw("You are not authorized to update this tag.", frappe.PermissionError)
+
+    tag.update(tag_data)
+    tag.save(ignore_permissions=True)
+    return tag.as_dict()
+
+
+@frappe.whitelist()
+def delete_seller_tag(tag_name):
+    """
+    Deletes a tag for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    tag = frappe.get_doc("Shop Tag", tag_name)
+
+    if tag.shop != shop:
+        frappe.throw("You are not authorized to delete this tag.", frappe.PermissionError)
+
+    frappe.delete_doc("Shop Tag", tag_name, ignore_permissions=True)
+    return {"status": "success", "message": "Tag deleted successfully."}
+
+
+@frappe.whitelist()
+def get_seller_transactions(limit_start=0, limit_page_length=20):
+    """
+    Retrieves a list of transactions for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    orders = frappe.get_all(
+        "Order",
+        filters={"shop": shop},
+        pluck="name"
+    )
+
+    if not orders:
+        return []
+
+    transactions = frappe.get_all(
+        "Transaction",
+        filters={"reference_name": ["in", orders]},
+        fields=["name", "transaction_date", "reference_doctype", "reference_name", "debit", "credit", "currency"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length,
+        order_by="creation desc"
+    )
+    return transactions
+
+
+@frappe.whitelist()
+def get_seller_shop_payments(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of shop payments for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    orders = frappe.get_all(
+        "Order",
+        filters={"shop": shop},
+        pluck="name"
+    )
+
+    if not orders:
+        return []
+
+    payments = frappe.get_all(
+        "Transaction",
+        filters={
+            "reference_name": ["in", orders],
+            "credit": [">", 0]
+        },
+        fields=["name", "transaction_date", "reference_doctype", "reference_name", "credit", "currency"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length,
+        order_by="creation desc"
+    )
+    return payments
+
+
+@frappe.whitelist()
+def get_seller_payouts(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of payouts for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    payouts = frappe.get_list(
+        "Seller Payout",
+        filters={"shop": shop},
+        fields=["name", "amount", "payout_date", "status"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length,
+        order_by="payout_date desc"
+    )
+    return payouts
+
+
+@frappe.whitelist()
+def get_seller_bonuses(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of bonuses for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    bonuses = frappe.get_list(
+        "Shop Bonus",
+        filters={"shop": shop},
+        fields=["name", "amount", "bonus_date", "reason"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length,
+        order_by="bonus_date desc"
+    )
+    return bonuses
+
+
+@frappe.whitelist()
 def get_user_transactions(limit_start=0, limit_page_length=20):
     """
     Retrieve the list of transactions for the currently logged-in user.
