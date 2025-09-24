@@ -59,7 +59,7 @@
   - [x] Get Order Details
   - [x] Update Order Status
   - [x] Review Order
-- [ ] REST: Push Notifications
+- [x] REST: Push Notifications
 - [x] REST: Parcel Orders
 - [x] REST: Payment Gateways
   - [x] Implemented PayFast (including tokenization)
@@ -78,15 +78,15 @@
 - [x] Dashboard (User): Addresses
 - [x] Dashboard (User): Invites
 - [x] Dashboard (User): Wallet
-- [ ] Dashboard (User): Transactions
+- [x] Dashboard (User): Transactions
 - [x] Dashboard (User): Shop Management
 - [x] Dashboard (User): Request Models
 - [x] Dashboard (User): Tickets
-- [ ] Dashboard (User): Export Orders
+- [x] Dashboard (User): Export Orders
 - [x] Dashboard (User): Carts
 - [x] Dashboard (User): Order Refunds
 - [x] Dashboard (User): Notifications
-- [ ] Dashboard (User): PayFast Card Management
+- [x] Dashboard (User): PayFast Card Management
 
 ## Deliveryman Dashboard
 - [ ] Dashboard (Deliveryman): Orders

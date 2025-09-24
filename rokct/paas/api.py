@@ -24,6 +24,8 @@ from rokct.rokct.utils.subscription_checker import check_subscription_feature
 from frappe.model.document import Document
 import json
 import uuid
+import csv
+import io
 
 @frappe.whitelist()
 def get_weather(location: str):
@@ -2195,18 +2197,96 @@ def get_wallet_history(limit_start=0, limit_page_length=20):
 
 
 @frappe.whitelist()
+def export_orders():
+    """
+    Exports all orders for the current user to a CSV file.
+    """
+    user = frappe.session.user
+    if user == "Guest":
+        frappe.throw("You must be logged in to export orders.", frappe.AuthenticationError)
+
+    orders = frappe.get_all(
+        "Order",
+        filters={"user": user},
+        fields=["name", "shop", "total_price", "status", "creation"],
+        order_by="creation desc"
+    )
+
+    if not orders:
+        return []
+
+    # Create a CSV in memory
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    # Write the header row
+    writer.writerow(["Order ID", "Shop", "Total Price", "Status", "Date"])
+
+    # Write the data rows
+    for order in orders:
+        writer.writerow([order.name, order.shop, order.total_price, order.status, order.creation])
+
+    # Set the response headers for CSV download
+    frappe.local.response.filename = "orders.csv"
+    frappe.local.response.filecontent = output.getvalue()
+    frappe.local.response.type = "csv"
+
+
+@frappe.whitelist()
+def register_device_token(device_token: str, provider: str):
+    """
+    Registers a new device token for the current user.
+    """
+    user = frappe.session.user
+    if user == "Guest":
+        frappe.throw("You must be logged in to register a device token.", frappe.AuthenticationError)
+
+    if not device_token or not provider:
+        frappe.throw("Device token and provider are required.")
+
+    if frappe.db.exists("Device Token", {"device_token": device_token}):
+        return {"status": "success", "message": "Device token already registered."}
+
+    frappe.get_doc({
+        "doctype": "Device Token",
+        "user": user,
+        "device_token": device_token,
+        "provider": provider
+    }).insert(ignore_permissions=True)
+    return {"status": "success", "message": "Device token registered successfully."}
+
+
+@frappe.whitelist()
+def send_push_notification(user: str, title: str, body: str):
+    """
+    Sends a push notification to a specific user.
+    """
+    # TODO: Implement the actual push notification logic using a third-party service like FCM or APNS.
+    # This will require credentials and a library to interact with the service.
+    # For now, we will just log the notification.
+    frappe.log_error(f"Push notification for user {user}: {title} - {body}", "Push Notification")
+    return {"status": "success", "message": "Push notification sent (logged)."}
+
+
+@frappe.whitelist()
 def get_user_transactions(limit_start=0, limit_page_length=20):
     """
-    Retrieves the list of transactions for the currently logged-in user.
+    Retrieve the list of transactions for the currently logged-in user.
     """
     user = frappe.session.user
     if user == "Guest":
         frappe.throw("You must be logged in to view your transactions.", frappe.AuthenticationError)
 
+    # The 'Transaction' doctype in Frappe links to a 'Party' which can be a customer.
+    # We first need to get the customer associated with the user.
+    customer = frappe.db.get_value("Customer", {"email": user}, "name")
+    if not customer:
+        return []
+
     return frappe.get_all(
         "Transaction",
-        filters={"user": user},
-        fields=["name", "payable_type", "payable_id", "price", "status", "type", "created_at"],
+        filters={"party": customer},
+        fields=["name", "transaction_date", "reference_doctype", "reference_name", "debit", "credit", "currency"],
         order_by="creation desc",
         limit_start=limit_start,
         limit_page_length=limit_page_length
