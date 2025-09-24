@@ -32,6 +32,12 @@
    "reqd": 1
   },
   {
+   "fieldname": "deliveryman",
+   "fieldtype": "Link",
+   "label": "Deliveryman",
+   "options": "User"
+  },
+  {
    "fieldname": "total_price",
    "fieldtype": "Currency",
    "label": "Total Price"

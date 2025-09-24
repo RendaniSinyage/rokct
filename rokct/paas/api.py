@@ -2269,6 +2269,84 @@ def send_push_notification(user: str, title: str, body: str):
 
 
 @frappe.whitelist()
+def get_deliveryman_orders(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of orders assigned to the current deliveryman.
+    """
+    user = frappe.session.user
+    if user == "Guest":
+        frappe.throw("You must be logged in to view your orders.", frappe.AuthenticationError)
+
+    orders = frappe.get_list(
+        "Order",
+        filters={"deliveryman": user},
+        fields=["name", "shop", "total_price", "status", "creation"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length,
+        order_by="creation desc"
+    )
+    return orders
+
+
+@frappe.whitelist()
+def get_deliveryman_parcel_orders(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of parcel orders assigned to the current deliveryman.
+    """
+    user = frappe.session.user
+    if user == "Guest":
+        frappe.throw("You must be logged in to view your parcel orders.", frappe.AuthenticationError)
+
+    orders = frappe.get_list(
+        "Parcel Order",
+        filters={"deliveryman": user},
+        fields=["name", "status", "total_price", "delivery_date"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length,
+        order_by="creation desc"
+    )
+    return orders
+
+
+@frappe.whitelist()
+def get_deliveryman_settings():
+    """
+    Retrieves the settings for the current deliveryman.
+    """
+    user = frappe.session.user
+    if user == "Guest":
+        frappe.throw("You must be logged in to view your settings.", frappe.AuthenticationError)
+
+    if not frappe.db.exists("Deliveryman Settings", {"user": user}):
+        return {}
+
+    return frappe.get_doc("Deliveryman Settings", {"user": user}).as_dict()
+
+
+@frappe.whitelist()
+def update_deliveryman_settings(settings_data):
+    """
+    Updates the settings for the current deliveryman.
+    """
+    user = frappe.session.user
+    if user == "Guest":
+        frappe.throw("You must be logged in to update your settings.", frappe.AuthenticationError)
+
+    if isinstance(settings_data, str):
+        settings_data = json.loads(settings_data)
+
+    if not frappe.db.exists("Deliveryman Settings", {"user": user}):
+        settings = frappe.new_doc("Deliveryman Settings")
+        settings.user = user
+    else:
+        settings = frappe.get_doc("Deliveryman Settings", {"user": user})
+
+    settings.update(settings_data)
+    settings.save(ignore_permissions=True)
+    return settings.as_dict()
+
+
+@frappe.whitelist()
 def get_user_transactions(limit_start=0, limit_page_length=20):
     """
     Retrieve the list of transactions for the currently logged-in user.

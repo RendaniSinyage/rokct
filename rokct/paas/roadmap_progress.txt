@@ -89,13 +89,13 @@
 - [x] Dashboard (User): PayFast Card Management
 
 ## Deliveryman Dashboard
-- [ ] Dashboard (Deliveryman): Orders
+- [x] Dashboard (Deliveryman): Orders
 - [ ] Dashboard (Deliveryman): Statistics
-- [ ] Dashboard (Deliveryman): Settings
+- [x] Dashboard (Deliveryman): Settings
 - [ ] Dashboard (Deliveryman): Shop Bans
 - [ ] Dashboard (Deliveryman): Payouts
 - [ ] Dashboard (Deliveryman): Order Reports
-- [ ] Dashboard (Deliveryman): Parcel Orders
+- [x] Dashboard (Deliveryman): Parcel Orders
 - [ ] Dashboard (Deliveryman): Payment to Partners
 - [ ] Dashboard (Deliveryman): Delivery Zones
 

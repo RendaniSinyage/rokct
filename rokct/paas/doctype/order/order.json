@@ -41,6 +41,12 @@
             "reqd": 1
         },
         {
+            "fieldname": "deliveryman",
+            "fieldtype": "Link",
+            "label": "Deliveryman",
+            "options": "User"
+        },
+        {
             "fieldname": "status",
             "fieldtype": "Select",
             "label": "Status",
