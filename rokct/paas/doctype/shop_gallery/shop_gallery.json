@@ -1,6 +1,6 @@
 {
     "doctype": "DocType",
-    "name": "Story",
+    "name": "Shop Gallery",
     "engine": "InnoDB",
     "is_submittable": 0,
     "issingle": 0,
@@ -32,25 +32,10 @@
             "reqd": 1
         },
         {
-            "fieldname": "title",
-            "fieldtype": "Data",
-            "label": "Title",
-            "reqd": 1
-        },
-        {
             "fieldname": "image",
             "fieldtype": "Attach Image",
-            "label": "Image"
-        },
-        {
-            "fieldname": "content",
-            "fieldtype": "Text Editor",
-            "label": "Content"
-        },
-        {
-            "fieldname": "expires_at",
-            "fieldtype": "Datetime",
-            "label": "Expires At"
+            "label": "Image",
+            "reqd": 1
         }
     ]
 }

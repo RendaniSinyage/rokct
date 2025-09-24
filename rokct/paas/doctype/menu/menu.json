@@ -1,6 +1,6 @@
 {
     "doctype": "DocType",
-    "name": "Story",
+    "name": "Menu",
     "engine": "InnoDB",
     "is_submittable": 0,
     "issingle": 0,
@@ -32,25 +32,16 @@
             "reqd": 1
         },
         {
-            "fieldname": "title",
+            "fieldname": "name",
             "fieldtype": "Data",
-            "label": "Title",
+            "label": "Name",
             "reqd": 1
         },
         {
-            "fieldname": "image",
-            "fieldtype": "Attach Image",
-            "label": "Image"
-        },
-        {
-            "fieldname": "content",
-            "fieldtype": "Text Editor",
-            "label": "Content"
-        },
-        {
-            "fieldname": "expires_at",
-            "fieldtype": "Datetime",
-            "label": "Expires At"
+            "fieldname": "menu_items",
+            "fieldtype": "Table",
+            "label": "Menu Items",
+            "options": "Menu Item"
         }
     ]
 }

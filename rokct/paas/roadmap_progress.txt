@@ -126,19 +126,19 @@
 - [x] Dashboard (Seller): Orders
 - [x] Dashboard (Seller): Transactions
 - [x] Dashboard (Seller): Bonuses
-- [ ] Dashboard (Seller): Stories
+- [x] Dashboard (Seller): Stories
 - [x] Dashboard (Seller): Tags
 - [ ] Dashboard (Seller): Delivery Zones
 - [x] Dashboard (Seller): Shop Payments
-- [ ] Dashboard (Seller): Order Refunds
+- [x] Dashboard (Seller): Order Refunds
 - [x] Dashboard (Seller): Shop Working Days
 - [x] Dashboard (Seller): Shop Closed Days
 - [x] Dashboard (Seller): Payouts
-- [ ] Dashboard (Seller): Reviews
+- [x] Dashboard (Seller): Reviews
 - [ ] Dashboard (Seller): Receipts
-- [ ] Dashboard (Seller): Shop Galleries
+- [x] Dashboard (Selle): Shop Galleries
 - [ ] Dashboard (Seller): Shop Deliveryman Settings
-- [ ] Dashboard (Seller): Menus
+- [x] Dashboard (Seller): Menus
 - [ ] Dashboard (Seller): Branches
 - [ ] Dashboard (Seller): Inventory
 - [ ] Dashboard (Seller): Inventory Items
