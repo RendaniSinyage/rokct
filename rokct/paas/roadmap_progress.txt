@@ -159,7 +159,7 @@
 - [x] Dashboard (Admin): Currencies
 - [x] Dashboard (Admin): Categories
 - [x] Dashboard (Admin): Brands
-- [ ] Dashboard (Admin): Landing Pages
+- [x] Dashboard (Admin): Landing Pages
 - [x] Dashboard (Admin): Banners
 - [x] Dashboard (Admin): Units
 - [x] Dashboard (Admin): Shops
@@ -170,46 +170,46 @@
 - [x] Dashboard (Admin): Parcel Options
 - [x] Dashboard (Admin): Parcel Order Settings
 - [x] Dashboard (Admin): Users
-- [ ] Dashboard (Admin): Roles
+- [x] Dashboard (Admin): Roles
 - [x] Dashboard (Admin): Wallet Histories
-- [ ] Dashboard (Admin): Points
+- [x] Dashboard (Admin): Points
 - [x] Dashboard (Admin): Payments
-- [ ] Dashboard (Admin): Translations
+- [x] Dashboard (Admin): Translations
 - [x] Dashboard (Admin): Transactions
 - [x] Dashboard (Admin): Payment to Partners
 - [x] Dashboard (Admin): Tickets
 - [x] Dashboard (Admin): FAQs
 - [x] Dashboard (Admin): Blogs
 - [x] Dashboard (Admin): Settings
-- [ ] Dashboard (Admin): Backups
-- [ ] Dashboard (Admin): Project Upload/Update
+- [x] Dashboard (Admin): Backups
+- [x] Dashboard (Admin): Project Upload/Update
 - [x] Dashboard (Admin): Stories
 - [x] Dashboard (Admin): Order Statuses
 - [x] Dashboard (Admin): Tags
 - [x] Dashboard (Admin): Delivery Zones
-- [ ] Dashboard (Admin): Delivery Man Delivery Zones
+- [x] Dashboard (Admin): Delivery Man Delivery Zones
 - [x] Dashboard (Admin): Email Settings
 - [x] Dashboard (Admin): DeliveryMan Settings
-- [ ] Dashboard (Admin): Delivery Vehicle Types
-- [ ] Dashboard (Admin): Email Templates
+- [x] Dashboard (Admin): Delivery Vehicle Types
+- [x] Dashboard (Admin): Email Templates
 - [x] Dashboard (Admin): Order Refunds
-- [ ] Dashboard (Admin): Shop Working Days
-- [ ] Dashboard (Admin): Shop Closed Days
+- [x] Dashboard (Admin): Shop Working Days
+- [x] Dashboard (Admin): Shop Closed Days
 - [x] Dashboard (Admin): Notifications
-- [ ] Dashboard (Admin): Email Subscriptions
+- [x] Dashboard (Admin): Email Subscriptions
 - [x] Dashboard (Admin): Payouts
-- [ ] Dashboard (Admin): Shop Tags
-- [ ] Dashboard (Admin): Payment Payloads
-- [ ] Dashboard (Admin): SMS Payloads
+- [x] Dashboard (Admin): Shop Tags
+- [x] Dashboard (Admin): Payment Payloads
+- [x] Dashboard (Admin): SMS Payloads
 - [x] Dashboard (Admin): Bonuses
-- [ ] Dashboard (Admin): Referrals
-- [ ] Dashboard (Admin): Reports
+- [x] Dashboard (Admin): Referrals
+- [x] Dashboard (Admin): Reports
 - [x] Dashboard (Admin): Receipts
 - [x] Dashboard (Admin): Menus
 - [x] Dashboard (Admin): Careers
 - [x] Dashboard (Admin): Pages
-- [ ] Dashboard (Admin): Booking Module
-- [ ] Dashboard (Admin): Model Logs
+- [x] Dashboard (Admin): Booking Module
+- [x] Dashboard (Admin): Model Logs
 - [x] Dashboard (Admin): Inventory
 - [x] Dashboard (Admin): Ads Packages
 - [x] Dashboard (Admin): Kitchens
@@ -220,7 +220,7 @@
 ## Webhooks
 - [x] Webhook: PayPal
 - [ ] Webhook: Razorpay (exclude this feature)
-- [ ] Webhook: Stripe
+- [x] Webhook: Stripe
 - [ ] Webhook: MyFatoorah (exclude this feature)
 - [ ] Webhook: Iyzico (exclude this afeature)
 - [x] Webhook: FlutterWave
