@@ -30,13 +30,13 @@
 - [x] REST: Products
   - [x] Custom fields for Item doctype created.
   - [x] `get_products` API in `api.py` has been updated with new filters and logic.
-  - [ ] New product-related API endpoints from patch need to be implemented.
-- [~] REST: Categories
+  - [x] New product-related API endpoints from patch need to be implemented.
+- [x] REST: Categories
   - [x] Doctype and `category_translation` doctype created.
-  - [ ] API endpoints in `api.py` need to be implemented.
-- [~] REST: Brands
+  - [x] API endpoints in `api.py` need to be implemented.
+- [x] REST: Brands
   - [x] Doctype created.
-  - [ ] API endpoints in `api.py` need to be implemented.
+  - [x] API endpoints in `api.py` need to be implemented.
 - [-] REST: Landing Pages (Skipped as per user request)
 - [x] REST: Shops (Superseded by Multi-Company Architecture)
 - [x] REST: Banners

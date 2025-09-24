@@ -19,12 +19,11 @@
 # SOFTWARE.
 
 import frappe
-import requests
 import random
-import json
-import uuid
 from rokct.rokct.utils.subscription_checker import check_subscription_feature
 from frappe.model.document import Document
+import json
+import uuid
 
 @frappe.whitelist()
 def get_weather(location: str):
@@ -257,16 +256,16 @@ def get_currencies():
 
 
 @frappe.whitelist(allow_guest=True)
-def check_coupon(name: str, qty: int = 1):
+def check_coupon(code: str, shop_id: str, qty: int = 1):
     """
-    Checks if a coupon is valid.
+    Checks if a coupon is valid for a given shop.
     """
-    if not name:
-        frappe.throw("Coupon code is required.")
+    if not code or not shop_id:
+        frappe.throw("Code and shop ID are required.")
 
     coupon = frappe.db.get_value(
         "Coupon",
-        filters={"name": name},
+        filters={"code": code, "shop": shop_id},
         fieldname=["name", "expired_at", "quantity"],
         as_dict=True
     )
@@ -431,18 +430,18 @@ def get_products(
 
 
 @frappe.whitelist(allow_guest=True)
-def get_most_sold_products(limit_start: int = 0, limit_page_length: int = 20):
+def most_sold_products(limit_start: int = 0, limit_page_length: int = 20):
     """
     Retrieves a list of most sold products.
     """
-    most_sold_items = frappe.db.sql(f"""
+    most_sold_items = frappe.db.sql("""
         SELECT item_code, SUM(qty) as total_qty
         FROM `tabSales Invoice Item`
         GROUP BY item_code
         ORDER BY total_qty DESC
-        LIMIT {limit_page_length}
-        OFFSET {limit_start}
-    """, as_dict=True)
+        LIMIT %(limit_page_length)s
+        OFFSET %(limit_start)s
+    """, {"limit_start": limit_start, "limit_page_length": limit_page_length}, as_dict=True)
 
     item_codes = [d.item_code for d in most_sold_items]
 
@@ -455,6 +454,7 @@ def get_most_sold_products(limit_start: int = 0, limit_page_length: int = 20):
         filters={"name": ("in", item_codes)},
         order_by="name"
     )
+
 
 @frappe.whitelist(allow_guest=True)
 def get_discounted_products(limit_start: int = 0, limit_page_length: int = 20):
@@ -504,11 +504,62 @@ def get_discounted_products(limit_start: int = 0, limit_page_length: int = 20):
 
 
 @frappe.whitelist(allow_guest=True)
-def get_product_reviews(product_id: str, limit_start: int = 0, limit_page_length: int = 20):
+def get_products_by_ids(ids: list):
     """
-    Retrieves reviews for a specific product.
+    Retrieves a list of products by their IDs.
     """
-    if not frappe.db.exists("Item", product_id):
+    if not ids:
+        return []
+
+    return frappe.get_list(
+        "Item",
+        fields=["name", "item_name", "description", "image", "standard_rate"],
+        filters={"name": ("in", ids)},
+        order_by="name"
+    )
+
+
+@frappe.whitelist(allow_guest=True)
+def get_product_by_uuid(uuid: str):
+    """
+    Retrieves a single product by its UUID.
+    """
+    product = frappe.get_doc("Item", {"uuid": uuid})
+    return product.as_dict()
+
+
+@frappe.whitelist(allow_guest=True)
+def get_product_by_slug(slug: str):
+    """
+    Retrieves a single product by its slug.
+    """
+    product = frappe.get_doc("Item", {"route": slug})
+    return product.as_dict()
+
+
+@frappe.whitelist(allow_guest=True)
+def read_product_file(uuid: str):
+    """
+    Reads a product file.
+    """
+    product = frappe.get_doc("Item", {"uuid": uuid})
+    if not product.image:
+        frappe.throw("Product does not have an image.")
+
+    try:
+        file = frappe.get_doc("File", {"file_url": product.image})
+        return file.get_content()
+    except frappe.DoesNotExistError:
+        frappe.throw("File not found.")
+
+
+@frappe.whitelist(allow_guest=True)
+def get_product_reviews(uuid: str, limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves reviews for a specific product by its UUID.
+    """
+    product_name = frappe.db.get_value("Item", {"uuid": uuid}, "name")
+    if not product_name:
         frappe.throw("Product not found.")
 
     reviews = frappe.get_list(
@@ -516,7 +567,7 @@ def get_product_reviews(product_id: str, limit_start: int = 0, limit_page_length
         fields=["name", "user", "rating", "comment", "creation"],
         filters={
             "reviewable_type": "Item",
-            "reviewable_id": product_id,
+            "reviewable_id": product_name,
             "published": 1
         },
         limit_start=limit_start,
@@ -526,24 +577,95 @@ def get_product_reviews(product_id: str, limit_start: int = 0, limit_page_length
     return reviews
 
 
-@frappe.whitelist()
-def add_product_review(product_id: str, rating: float, comment: str = None):
+@frappe.whitelist(allow_guest=True)
+def order_products_calculate(products: list):
     """
-    Adds a review for a product, but only if the user has purchased it.
+    Calculates the total price of a list of products.
+    """
+    total_price = 0
+    for product in products:
+        item = frappe.get_doc("Item", product.get("product_id"))
+        total_price += item.standard_rate * product.get("quantity", 1)
+    return {"total_price": total_price}
+
+
+@frappe.whitelist(allow_guest=True)
+def get_products_by_brand(brand_id: str, limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of products for a given brand.
+    """
+    products = frappe.get_list(
+        "Item",
+        fields=["name", "item_name", "description", "image", "standard_rate"],
+        filters={"brand": brand_id},
+        limit_start=limit_start,
+        limit_page_length=limit_page_length,
+        order_by="name"
+    )
+    return products
+
+
+@frappe.whitelist(allow_guest=True)
+def products_search(search: str, limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Searches for products by a search term.
+    """
+    products = frappe.get_list(
+        "Item",
+        fields=["name", "item_name", "description", "image", "standard_rate"],
+        filters=[
+            ["Item", "item_name", "like", f"%{search}%"],
+        ],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length,
+        order_by="name"
+    )
+    return products
+
+
+@frappe.whitelist(allow_guest=True)
+def get_products_by_category(uuid: str, limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of products for a given category.
+    """
+    category_name = frappe.db.get_value("Category", {"uuid": uuid}, "name")
+    if not category_name:
+        frappe.throw("Category not found.")
+
+    products = frappe.get_list(
+        "Item",
+        fields=["name", "item_name", "description", "image", "standard_rate"],
+        filters={"item_group": category_name},
+        limit_start=limit_start,
+        limit_page_length=limit_page_length,
+        order_by="name"
+    )
+    return products
+
+
+# TODO: Revisit this function. It is not clear if the Item doctype has a `shop` field.
+# It is possible that it should be filtering on `company` instead.
+
+
+@frappe.whitelist()
+def add_product_review(uuid: str, rating: float, comment: str = None):
+    """
+    Adds a review for a product by its UUID, but only if the user has purchased it.
     """
     user = frappe.session.user
 
     if user == "Guest":
         frappe.throw("You must be logged in to leave a review.")
 
-    if not frappe.db.exists("Item", product_id):
+    product_name = frappe.db.get_value("Item", {"uuid": uuid}, "name")
+    if not product_name:
         frappe.throw("Product not found.")
 
     # Check if user has purchased this item
     has_purchased = frappe.db.exists(
         "Sales Invoice Item",
         {
-            "item_code": product_id,
+            "item_code": product_name,
             "parent": ("in", frappe.get_all("Sales Invoice", filters={"customer": user}, pluck="name"))
         }
     )
@@ -552,13 +674,13 @@ def add_product_review(product_id: str, rating: float, comment: str = None):
         frappe.throw("You can only review products you have purchased.")
 
     # Check if user has already reviewed this item
-    if frappe.db.exists("Review", {"reviewable_type": "Item", "reviewable_id": product_id, "user": user}):
+    if frappe.db.exists("Review", {"reviewable_type": "Item", "reviewable_id": product_name, "user": user}):
         frappe.throw("You have already reviewed this product.")
 
     review = frappe.get_doc({
         "doctype": "Review",
         "reviewable_type": "Item",
-        "reviewable_id": product_id,
+        "reviewable_id": product_name,
         "user": user,
         "rating": rating,
         "comment": comment,
@@ -2517,3 +2639,177 @@ def get_category_by_uuid(uuid: str):
     """
     category = frappe.get_doc("Category", {"uuid": uuid})
     return category.as_dict()
+
+
+@frappe.whitelist()
+def create_category(category_data):
+    """
+    Creates a new category.
+    """
+    if isinstance(category_data, str):
+        category_data = json.loads(category_data)
+
+    category_uuid = category_data.get("uuid") or str(uuid.uuid4())
+
+    if not category_data.get("type"):
+        frappe.throw("Category type is required.")
+
+    if frappe.db.exists("Category", {"uuid": category_uuid}):
+        frappe.throw("Category with this UUID already exists.")
+
+    category = frappe.get_doc({
+        "doctype": "Category",
+        "uuid": category_uuid,
+        "slug": category_data.get("slug"),
+        "keywords": category_data.get("keywords"),
+        "parent_category": category_data.get("parent_category"),
+        "type": category_data.get("type"),
+        "image": category_data.get("image"),
+        "active": category_data.get("active", 1),
+        "status": category_data.get("status", "pending"),
+        "shop": category_data.get("shop"),
+        "input": category_data.get("input"),
+    })
+    category.insert(ignore_permissions=True)
+    return category.as_dict()
+
+
+@frappe.whitelist()
+def update_category(uuid, category_data):
+    """
+    Updates an existing category by its UUID.
+    """
+    if not uuid:
+        frappe.throw("UUID is required to update a category.")
+
+    if isinstance(category_data, str):
+        category_data = json.loads(category_data)
+
+    category_name = frappe.db.get_value("Category", {"uuid": uuid}, "name")
+    if not category_name:
+        frappe.throw("Category not found.")
+
+    category = frappe.get_doc("Category", category_name)
+
+    updatable_fields = ["slug", "keywords", "parent_category", "type", "image", "active", "status", "shop", "input"]
+
+    for key, value in category_data.items():
+        if key in updatable_fields:
+            category.set(key, value)
+
+    category.save(ignore_permissions=True)
+    return category.as_dict()
+
+
+@frappe.whitelist()
+def delete_category(uuid):
+    """
+    Deletes a category by its UUID.
+    """
+    if not uuid:
+        frappe.throw("UUID is required to delete a category.")
+
+    category_name = frappe.db.get_value("Category", {"uuid": uuid}, "name")
+    if not category_name:
+        frappe.throw("Category not found.")
+
+    frappe.delete_doc("Category", category_name, ignore_permissions=True)
+
+    return {"status": "success", "message": "Category deleted successfully."}
+
+
+@frappe.whitelist()
+def get_brands(limit_start: int = 0, limit_page_length: int = 10):
+    """
+    Retrieves a list of brands.
+    """
+    brands = frappe.get_list(
+        "Brand",
+        fields=["name", "uuid", "title", "slug", "active", "image", "shop"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length,
+        order_by="name desc"
+    )
+    return brands
+
+
+@frappe.whitelist()
+def get_brand_by_uuid(uuid: str):
+    """
+    Retrieves a single brand by its UUID.
+    """
+    brand = frappe.get_doc("Brand", {"uuid": uuid})
+    return brand.as_dict()
+
+
+@frappe.whitelist()
+def create_brand(brand_data):
+    """
+    Creates a new brand.
+    """
+    if isinstance(brand_data, str):
+        brand_data = json.loads(brand_data)
+
+    brand_uuid = brand_data.get("uuid") or str(uuid.uuid4())
+
+    if not brand_data.get("title"):
+        frappe.throw("Brand title is required.")
+
+    if frappe.db.exists("Brand", {"uuid": brand_uuid}):
+        frappe.throw("Brand with this UUID already exists.")
+
+    brand = frappe.get_doc({
+        "doctype": "Brand",
+        "uuid": brand_uuid,
+        "title": brand_data.get("title"),
+        "slug": brand_data.get("slug"),
+        "active": brand_data.get("active", 1),
+        "image": brand_data.get("image"),
+        "shop": brand_data.get("shop"),
+    })
+    brand.insert(ignore_permissions=True)
+    return brand.as_dict()
+
+
+@frappe.whitelist()
+def update_brand(uuid, brand_data):
+    """
+    Updates an existing brand by its UUID.
+    """
+    if not uuid:
+        frappe.throw("UUID is required to update a brand.")
+
+    if isinstance(brand_data, str):
+        brand_data = json.loads(brand_data)
+
+    brand_name = frappe.db.get_value("Brand", {"uuid": uuid}, "name")
+    if not brand_name:
+        frappe.throw("Brand not found.")
+
+    brand = frappe.get_doc("Brand", brand_name)
+
+    updatable_fields = ["title", "slug", "active", "image", "shop"]
+
+    for key, value in brand_data.items():
+        if key in updatable_fields:
+            brand.set(key, value)
+
+    brand.save(ignore_permissions=True)
+    return brand.as_dict()
+
+
+@frappe.whitelist()
+def delete_brand(uuid):
+    """
+    Deletes a brand by its UUID.
+    """
+    if not uuid:
+        frappe.throw("UUID is required to delete a brand.")
+
+    brand_name = frappe.db.get_value("Brand", {"uuid": uuid}, "name")
+    if not brand_name:
+        frappe.throw("Brand not found.")
+
+    frappe.delete_doc("Brand", brand_name, ignore_permissions=True)
+
+    return {"status": "success", "message": "Brand deleted successfully."}
