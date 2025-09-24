@@ -151,28 +151,25 @@
 - [x] Dashboard (Seller): Combos
 
 ## Admin Dashboard
-- [ ] Dashboard (Admin): Dashboard & Statistics
-- [ ] Dashboard (Admin): Terms & Conditions
-- [ ] Dashboard (Admin): Privacy & Policy
+- [x] Dashboard (Admin): Dashboard & Statistics
+- [x] Dashboard (Admin): Terms & Conditions
+- [x] Dashboard (Admin): Privacy & Policy
 - [ ] Dashboard (Admin): Reviews
 - [ ] Dashboard (Admin): Languages
 - [ ] Dashboard (Admin): Currencies
-- [~] Dashboard (Admin): Categories
-  - [ ] Dependent on REST: Categories API implementation.
-- [~] Dashboard (Admin): Brands
-  - [ ] Dependent on REST: Brands API implementation.
+- [x] Dashboard (Admin): Categories
+- [x] Dashboard (Admin): Brands
 - [ ] Dashboard (Admin): Landing Pages
-- [ ] Dashboard (Admin): Banners
+- [x] Dashboard (Admin): Banners
 - [ ] Dashboard (Admin): Units
-- [ ] Dashboard (Admin): Shops
+- [x] Dashboard (Admin): Shops
 - [ ] Dashboard (Admin): Extras (Groups & Values)
-- [~] Dashboard (Admin): Products
-  - [ ] Dependent on REST: Products API implementation.
-- [ ] Dashboard (Admin): Orders
-- [ ] Dashboard (Admin): Parcel Orders
+- [x] Dashboard (Admin): Products
+- [x] Dashboard (Admin): Orders
+- [x] Dashboard (Admin): Parcel Orders
 - [ ] Dashboard (Admin): Parcel Options
 - [ ] Dashboard (Admin): Parcel Order Settings
-- [ ] Dashboard (Admin): Users
+- [x] Dashboard (Admin): Users
 - [ ] Dashboard (Admin): Roles
 - [ ] Dashboard (Admin): Wallet Histories
 - [ ] Dashboard (Admin): Points

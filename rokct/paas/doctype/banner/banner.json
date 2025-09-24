@@ -28,8 +28,7 @@
             "fieldname": "shop",
             "fieldtype": "Link",
             "label": "Shop",
-            "options": "Company",
-            "reqd": 1
+            "options": "Company"
         },
         {
             "fieldname": "title",

@@ -4612,6 +4612,347 @@ def get_seller_request_models(limit_start: int = 0, limit_page_length: int = 20)
     return request_models
 
 
+# --- Admin Dashboard APIs ---
+
+def _require_admin():
+    """Helper function to ensure the user has the System Manager role."""
+    if "System Manager" not in frappe.get_roles():
+        frappe.throw("You are not authorized to perform this action.", frappe.PermissionError)
+
+
+@frappe.whitelist()
+def get_admin_statistics():
+    """
+    Retrieves high-level statistics for the admin dashboard.
+    """
+    _require_admin()
+
+    total_users = frappe.db.count("User")
+    total_shops = frappe.db.count("Company")
+    total_orders = frappe.db.count("Order")
+    total_sales = frappe.db.sql("SELECT SUM(grand_total) FROM `tabOrder` WHERE status = 'Delivered'")[0][0] or 0
+
+    return {
+        "total_users": total_users,
+        "total_shops": total_shops,
+        "total_orders": total_orders,
+        "total_sales": total_sales,
+    }
+
+
+@frappe.whitelist()
+def get_all_shops(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of all shops on the platform (for admins).
+    """
+    _require_admin()
+    return frappe.get_list(
+        "Company",
+        fields=["name", "company_name", "user_id"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length
+    )
+
+
+@frappe.whitelist()
+def create_shop(shop_data):
+    """
+    Creates a new shop (for admins).
+    """
+    _require_admin()
+    if isinstance(shop_data, str):
+        shop_data = json.loads(shop_data)
+
+    new_shop = frappe.get_doc({
+        "doctype": "Company",
+        **shop_data
+    })
+    new_shop.insert(ignore_permissions=True)
+    return new_shop.as_dict()
+
+
+@frappe.whitelist()
+def update_shop(shop_name, shop_data):
+    """
+    Updates a shop (for admins).
+    """
+    _require_admin()
+    if isinstance(shop_data, str):
+        shop_data = json.loads(shop_data)
+
+    shop = frappe.get_doc("Company", shop_name)
+    shop.update(shop_data)
+    shop.save(ignore_permissions=True)
+    return shop.as_dict()
+
+
+@frappe.whitelist()
+def delete_shop(shop_name):
+    """
+    Deletes a shop (for admins).
+    """
+    _require_admin()
+    frappe.delete_doc("Company", shop_name, ignore_permissions=True)
+    return {"status": "success", "message": "Shop deleted successfully."}
+
+
+@frappe.whitelist()
+def get_all_users(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of all users on the platform (for admins).
+    """
+    _require_admin()
+    return frappe.get_list(
+        "User",
+        fields=["name", "full_name", "email", "enabled"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length
+    )
+
+
+@frappe.whitelist()
+def get_admin_web_page(route: str):
+    """
+    Retrieves a web page for admin management.
+    """
+    _require_admin()
+    return frappe.get_doc("Web Page", {"route": route}).as_dict()
+
+
+@frappe.whitelist()
+def update_admin_web_page(route: str, page_data):
+    """
+    Updates a web page (for admins).
+    """
+    _require_admin()
+    if isinstance(page_data, str):
+        page_data = json.loads(page_data)
+
+    page = frappe.get_doc("Web Page", {"route": route})
+    page.update(page_data)
+    page.save(ignore_permissions=True)
+    return page.as_dict()
+
+
+@frappe.whitelist()
+def get_admin_banners(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of platform-wide banners (for admins).
+    """
+    _require_admin()
+    return frappe.get_list(
+        "Banner",
+        filters={"shop": None},
+        fields=["name", "title", "image", "link", "is_active"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length
+    )
+
+
+@frappe.whitelist()
+def create_admin_banner(banner_data):
+    """
+    Creates a new platform-wide banner (for admins).
+    """
+    _require_admin()
+    if isinstance(banner_data, str):
+        banner_data = json.loads(banner_data)
+
+    banner_data["shop"] = None
+
+    new_banner = frappe.get_doc({
+        "doctype": "Banner",
+        **banner_data
+    })
+    new_banner.insert(ignore_permissions=True)
+    return new_banner.as_dict()
+
+
+@frappe.whitelist()
+def update_admin_banner(banner_name, banner_data):
+    """
+    Updates a platform-wide banner (for admins).
+    """
+    _require_admin()
+    if isinstance(banner_data, str):
+        banner_data = json.loads(banner_data)
+
+    banner = frappe.get_doc("Banner", banner_name)
+    banner.update(banner_data)
+    banner.save(ignore_permissions=True)
+    return banner.as_dict()
+
+
+@frappe.whitelist()
+def delete_admin_banner(banner_name):
+    """
+    Deletes a platform-wide banner (for admins).
+    """
+    _require_admin()
+    frappe.delete_doc("Banner", banner_name, ignore_permissions=True)
+    return {"status": "success", "message": "Banner deleted successfully."}
+
+
+@frappe.whitelist()
+def get_admin_faqs(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of all FAQs (for admins).
+    """
+    _require_admin()
+    return frappe.get_list(
+        "FAQ",
+        fields=["name", "question", "faq_category", "is_active"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length
+    )
+
+
+@frappe.whitelist()
+def create_admin_faq(faq_data):
+    """
+    Creates a new FAQ (for admins).
+    """
+    _require_admin()
+    if isinstance(faq_data, str):
+        faq_data = json.loads(faq_data)
+
+    new_faq = frappe.get_doc({
+        "doctype": "FAQ",
+        **faq_data
+    })
+    new_faq.insert(ignore_permissions=True)
+    return new_faq.as_dict()
+
+
+@frappe.whitelist()
+def update_admin_faq(faq_name, faq_data):
+    """
+    Updates an FAQ (for admins).
+    """
+    _require_admin()
+    if isinstance(faq_data, str):
+        faq_data = json.loads(faq_data)
+
+    faq = frappe.get_doc("FAQ", faq_name)
+    faq.update(faq_data)
+    faq.save(ignore_permissions=True)
+    return faq.as_dict()
+
+
+@frappe.whitelist()
+def delete_admin_faq(faq_name):
+    """
+    Deletes an FAQ (for admins).
+    """
+    _require_admin()
+    frappe.delete_doc("FAQ", faq_name, ignore_permissions=True)
+    return {"status": "success", "message": "FAQ deleted successfully."}
+
+
+@frappe.whitelist()
+def get_admin_faq_categories(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of all FAQ categories (for admins).
+    """
+    _require_admin()
+    return frappe.get_list(
+        "FAQ Category",
+        fields=["name", "category_name"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length
+    )
+
+
+@frappe.whitelist()
+def create_admin_faq_category(category_data):
+    """
+    Creates a new FAQ category (for admins).
+    """
+    _require_admin()
+    if isinstance(category_data, str):
+        category_data = json.loads(category_data)
+
+    new_category = frappe.get_doc({
+        "doctype": "FAQ Category",
+        **category_data
+    })
+    new_category.insert(ignore_permissions=True)
+    return new_category.as_dict()
+
+
+@frappe.whitelist()
+def update_admin_faq_category(category_name, category_data):
+    """
+    Updates an FAQ category (for admins).
+    """
+    _require_admin()
+    if isinstance(category_data, str):
+        category_data = json.loads(category_data)
+
+    category = frappe.get_doc("FAQ Category", category_name)
+    category.update(category_data)
+    category.save(ignore_permissions=True)
+    return category.as_dict()
+
+
+@frappe.whitelist()
+def delete_admin_faq_category(category_name):
+    """
+    Deletes an FAQ category (for admins).
+    """
+    _require_admin()
+    frappe.delete_doc("FAQ Category", category_name, ignore_permissions=True)
+    return {"status": "success", "message": "FAQ category deleted successfully."}
+
+
+@frappe.whitelist()
+def get_all_orders(limit_start: int = 0, limit_page_length: int = 20, status: str = None, from_date: str = None, to_date: str = None):
+    """
+    Retrieves a list of all orders on the platform (for admins).
+    """
+    _require_admin()
+
+    filters = {}
+    if status:
+        filters["status"] = status
+    if from_date and to_date:
+        filters["creation"] = ["between", [from_date, to_date]]
+
+    orders = frappe.get_list(
+        "Order",
+        filters=filters,
+        fields=["name", "user", "shop", "grand_total", "status", "creation"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length,
+        order_by="creation desc"
+    )
+    return orders
+
+
+@frappe.whitelist()
+def get_all_parcel_orders(limit_start: int = 0, limit_page_length: int = 20, status: str = None, from_date: str = None, to_date: str = None):
+    """
+    Retrieves a list of all parcel orders on the platform (for admins).
+    """
+    _require_admin()
+
+    filters = {}
+    if status:
+        filters["status"] = status
+    if from_date and to_date:
+        filters["creation"] = ["between", [from_date, to_date]]
+
+    parcel_orders = frappe.get_list(
+        "Parcel Order",
+        filters=filters,
+        fields=["name", "user", "total_price", "status", "delivery_date"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length,
+        order_by="creation desc"
+    )
+    return parcel_orders
+
+
 @frappe.whitelist()
 def get_user_transactions(limit_start=0, limit_page_length=20):
     """
