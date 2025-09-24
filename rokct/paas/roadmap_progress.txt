@@ -90,14 +90,14 @@
 
 ## Deliveryman Dashboard
 - [x] Dashboard (Deliveryman): Orders
-- [ ] Dashboard (Deliveryman): Statistics
+- [x] Dashboard (Deliveryman): Statistics
 - [x] Dashboard (Deliveryman): Settings
-- [ ] Dashboard (Deliveryman): Shop Bans
-- [ ] Dashboard (Deliveryman): Payouts
-- [ ] Dashboard (Deliveryman): Order Reports
+- [x] Dashboard (Deliveryman): Shop Bans
+- [x] Dashboard (Deliveryman): Payouts
+- [x] Dashboard (Deliveryman): Order Reports
 - [x] Dashboard (Deliveryman): Parcel Orders
 - [ ] Dashboard (Deliveryman): Payment to Partners
-- [ ] Dashboard (Deliveryman): Delivery Zones
+- [x] Dashboard (Deliveryman): Delivery Zones
 
 ## Waiter Dashboard
 - [ ] Dashboard (Waiter): Orders
