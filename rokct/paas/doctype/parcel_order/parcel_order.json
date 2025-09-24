@@ -44,9 +44,8 @@
   },
   {
    "fieldname": "type",
-   "fieldtype": "Link",
-   "label": "Type",
-   "options": "Parcel Order Setting"
+   "fieldtype": "Data",
+   "label": "Type"
   },
   {
    "fieldname": "note",
@@ -100,12 +99,6 @@
    "label": "Delivery Fee"
   },
   {
-   "fieldname": "deliveryman",
-   "fieldtype": "Link",
-   "label": "Deliveryman",
-   "options": "User"
-  },
-  {
    "fieldname": "delivery_date",
    "fieldtype": "Date",
    "label": "Delivery Date"
@@ -117,4 +110,3 @@
   }
  ]
 }
-

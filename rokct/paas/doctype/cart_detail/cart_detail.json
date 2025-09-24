@@ -7,9 +7,7 @@
  "field_order": [
   "item",
   "quantity",
-  "price",
-  "discount",
-  "parent_detail"
+  "price"
  ],
  "fields": [
   {
@@ -29,17 +27,6 @@
    "fieldname": "price",
    "fieldtype": "Currency",
    "label": "Price"
-  },
-  {
-   "fieldname": "discount",
-   "fieldtype": "Currency",
-   "label": "Discount"
-  },
-  {
-   "fieldname": "parent_detail",
-   "fieldtype": "Link",
-   "label": "Parent Detail",
-   "options": "Cart Detail"
   }
  ],
  "index_web_pages_for_search": 0,
@@ -55,4 +42,3 @@
  "sort_order": "DESC",
  "track_changes": 1
 }
-

@@ -25,24 +25,11 @@
  "track_changes": 1,
  "fields": [
   {
-   "fieldname": "uuid",
-   "fieldtype": "Data",
-   "label": "UUID",
-   "unique": 1,
-   "reqd": 1
-  },
-  {
    "fieldname": "wallet",
    "fieldtype": "Link",
    "label": "Wallet",
    "options": "Wallet",
    "reqd": 1
-  },
-  {
-   "fieldname": "transaction",
-   "fieldtype": "Link",
-   "label": "Transaction",
-   "options": "GL Entry"
   },
   {
    "fieldname": "type",
@@ -56,22 +43,15 @@
    "label": "Price"
   },
   {
-   "fieldname": "note",
-   "fieldtype": "Text",
-   "label": "Note"
-  },
-  {
    "fieldname": "status",
    "fieldtype": "Select",
    "label": "Status",
    "options": "Processed\nPaid\nRejected\nCanceled"
   },
   {
-   "fieldname": "created_by",
-   "fieldtype": "Link",
-   "label": "Created By",
-   "options": "User"
+   "fieldname": "created_at",
+   "fieldtype": "Datetime",
+   "label": "Created At"
   }
  ]
 }
-

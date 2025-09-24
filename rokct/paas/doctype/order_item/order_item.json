@@ -1,9 +1,9 @@
 {
     "doctype": "DocType",
     "name": "Order Item",
-    "module": "Paas",
     "engine": "InnoDB",
     "istable": 1,
+    "module": "Paas",
     "permissions": [
         {
             "role": "System Manager",
@@ -12,9 +12,9 @@
     ],
     "fields": [
         {
-            "fieldname": "item",
+            "fieldname": "product",
             "fieldtype": "Link",
-            "label": "Item",
+            "label": "Product",
             "options": "Item",
             "reqd": 1
         },
@@ -29,22 +29,6 @@
             "fieldtype": "Currency",
             "label": "Price",
             "reqd": 1
-        },
-        {
-            "fieldname": "total_price",
-            "fieldtype": "Currency",
-            "label": "Total Price",
-            "read_only": 1
-        },
-        {
-            "fieldname": "discount",
-            "fieldtype": "Currency",
-            "label": "Discount"
-        },
-        {
-            "fieldname": "note",
-            "fieldtype": "Text",
-            "label": "Note"
         }
     ]
 }

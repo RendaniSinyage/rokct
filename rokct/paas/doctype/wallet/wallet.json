@@ -25,31 +25,12 @@
  "track_changes": 1,
  "fields": [
   {
-   "fieldname": "uuid",
-   "fieldtype": "Data",
-   "label": "UUID",
-   "unique": 1,
-   "reqd": 1
-  },
-  {
    "fieldname": "user",
    "fieldtype": "Link",
    "label": "User",
    "options": "User",
-   "reqd": 1
-  },
-  {
-   "fieldname": "currency",
-   "fieldtype": "Link",
-   "label": "Currency",
-   "options": "Currency",
-   "reqd": 1
-  },
-  {
-   "fieldname": "price",
-   "fieldtype": "Currency",
-   "label": "Price"
+   "reqd": 1,
+   "unique": 1
   }
  ]
 }
-

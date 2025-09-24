@@ -1,0 +1,39 @@
+[
+    {
+        "doctype": "Custom Field",
+        "dt": "Item",
+        "fieldname": "shop",
+        "fieldtype": "Link",
+        "label": "Shop",
+        "options": "Company"
+    },
+    {
+        "doctype": "Custom Field",
+        "dt": "Item",
+        "fieldname": "is_visible_in_website",
+        "fieldtype": "Check",
+        "label": "Is Visible in Website"
+    },
+    {
+        "doctype": "Custom Field",
+        "dt": "Item",
+        "fieldname": "status",
+        "fieldtype": "Select",
+        "label": "Status",
+        "options": "Published\nUnpublished"
+    },
+    {
+        "doctype": "Custom Field",
+        "dt": "Item",
+        "fieldname": "has_variants",
+        "fieldtype": "Check",
+        "label": "Has Variants"
+    },
+    {
+        "doctype": "Custom Field",
+        "dt": "Item",
+        "fieldname": "disabled",
+        "fieldtype": "Check",
+        "label": "Disabled"
+    }
+]

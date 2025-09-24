@@ -8,7 +8,6 @@
   "shop",
   "owner",
   "status",
-  "is_group_cart",
   "total_price"
  ],
  "fields": [
@@ -32,24 +31,12 @@
    "label": "Total Price"
   },
   {
-   "fieldname": "is_group_cart",
-   "fieldtype": "Check",
-   "label": "Is Group Cart",
-   "default": "0"
-  },
-  {
    "fieldname": "status",
    "fieldtype": "Select",
    "label": "Status",
    "options": "Active\nMerged\nOrdered",
    "default": "Active",
    "reqd": 1
-  },
-  {
-   "fieldname": "items",
-   "fieldtype": "Table",
-   "label": "Items",
-   "options": "Cart Detail"
   }
  ],
  "index_web_pages_for_search": 1,
@@ -77,4 +64,3 @@
  "sort_order": "DESC",
  "track_changes": 1
 }
-

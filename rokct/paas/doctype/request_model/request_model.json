@@ -57,10 +57,9 @@
    "default": "Pending"
   },
   {
-   "fieldname": "status_note",
-   "fieldtype": "Text",
-   "label": "Status Note"
+   "fieldname": "created_at",
+   "fieldtype": "Datetime",
+   "label": "Created At"
   }
  ]
 }
-

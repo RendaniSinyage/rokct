@@ -1,0 +1,61 @@
+{
+    "doctype": "DocType",
+    "name": "Branch",
+    "engine": "InnoDB",
+    "is_submittable": 0,
+    "issingle": 0,
+    "istable": 0,
+    "module": "Paas",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 1,
+            "email": 1,
+            "export": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "role": "System Manager",
+            "share": 1,
+            "write": 1
+        }
+    ],
+    "sort_field": "modified",
+    "sort_order": "DESC",
+    "track_changes": 1,
+    "fields": [
+        {
+            "fieldname": "branch_name",
+            "fieldtype": "Data",
+            "label": "Branch Name",
+            "reqd": 1
+        },
+        {
+            "fieldname": "address",
+            "fieldtype": "Data",
+            "label": "Address"
+        },
+        {
+            "fieldname": "latitude",
+            "fieldtype": "Float",
+            "label": "Latitude"
+        },
+        {
+            "fieldname": "longitude",
+            "fieldtype": "Float",
+            "label": "Longitude"
+        },
+        {
+            "fieldname": "shop",
+            "fieldtype": "Link",
+            "label": "Shop",
+            "options": "Company"
+        },
+        {
+            "fieldname": "owner",
+            "fieldtype": "Link",
+            "label": "Owner",
+            "options": "User"
+        }
+    ]
+}

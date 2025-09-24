@@ -25,6 +25,13 @@
  "track_changes": 1,
  "fields": [
   {
+   "fieldname": "name",
+   "fieldtype": "Data",
+   "label": "Name",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
    "fieldname": "active",
    "fieldtype": "Check",
    "label": "Active",
@@ -49,22 +56,6 @@
    "fieldname": "img",
    "fieldtype": "Attach Image",
    "label": "Image"
-  },
-  {
-   "fieldname": "r_count",
-   "fieldtype": "Int",
-   "label": "Review Count"
-  },
-  {
-   "fieldname": "r_avg",
-   "fieldtype": "Float",
-   "label": "Review Average"
-  },
-  {
-   "fieldname": "r_sum",
-   "fieldtype": "Float",
-   "label": "Review Sum"
   }
  ]
 }
-

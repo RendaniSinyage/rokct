@@ -7,7 +7,6 @@
  "field_order": [
   "cart",
   "user",
-  "status",
   "cart_details"
  ],
  "fields": [
@@ -23,14 +22,6 @@
    "fieldtype": "Link",
    "label": "User",
    "options": "User",
-   "reqd": 1
-  },
-  {
-   "fieldname": "status",
-   "fieldtype": "Select",
-   "label": "Status",
-   "options": "Active\nInactive",
-   "default": "Active",
    "reqd": 1
   },
   {
@@ -65,4 +56,3 @@
  "sort_order": "DESC",
  "track_changes": 1
 }
-

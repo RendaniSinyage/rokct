@@ -28,7 +28,7 @@
             "fieldname": "shop",
             "fieldtype": "Link",
             "label": "Shop",
-            "options": "Shop",
+            "options": "Company",
             "reqd": 1
         },
         {
@@ -39,48 +39,14 @@
             "unique": 1
         },
         {
-            "fieldname": "name",
-            "fieldtype": "Data",
-            "label": "Name",
-            "reqd": 1
-        },
-        {
-            "fieldname": "type",
-            "fieldtype": "Select",
-            "label": "Type",
-            "options": "fix\npercent"
-        },
-        {
-            "fieldname": "for_what",
-            "fieldtype": "Data",
-            "label": "For"
-        },
-        {
-            "fieldname": "qty",
+            "fieldname": "quantity",
             "fieldtype": "Int",
-            "label": "Qty"
-        },
-        {
-            "fieldname": "price",
-            "fieldtype": "Float",
-            "label": "Price"
+            "label": "Quantity"
         },
         {
             "fieldname": "expired_at",
             "fieldtype": "Datetime",
             "label": "Expired At"
-        },
-        {
-            "fieldname": "image",
-            "fieldtype": "Attach Image",
-            "label": "Image"
-        },
-        {
-            "fieldname": "translations",
-            "fieldtype": "Table",
-            "label": "Translations",
-            "options": "Coupon Translation"
         }
     ]
 }
-

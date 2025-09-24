@@ -1,0 +1,45 @@
+[
+    {
+        "doctype": "Custom Field",
+        "dt": "Company",
+        "fieldname": "user_id",
+        "fieldtype": "Link",
+        "label": "User ID",
+        "options": "User"
+    },
+    {
+        "doctype": "Custom Field",
+        "dt": "Company",
+        "fieldname": "phone",
+        "fieldtype": "Data",
+        "label": "Phone"
+    },
+    {
+        "doctype": "Custom Field",
+        "dt": "Company",
+        "fieldname": "location",
+        "fieldtype": "Data",
+        "label": "Location"
+    },
+    {
+        "doctype": "Custom Field",
+        "dt": "Company",
+        "fieldname": "delivery_time",
+        "fieldtype": "Data",
+        "label": "Delivery Time"
+    },
+    {
+        "doctype": "Custom Field",
+        "dt": "Company",
+        "fieldname": "open",
+        "fieldtype": "Check",
+        "label": "Open"
+    },
+    {
+        "doctype": "Custom Field",
+        "dt": "Company",
+        "fieldname": "description",
+        "fieldtype": "Text",
+        "label": "Description"
+    }
+]

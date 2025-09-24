@@ -318,7 +318,6 @@ def get_products(
         params["brand_id"] = brand_id
 
     if shop_id:
-        # Assuming a custom field `shop` on the Item doctype links to a Company
         conditions.append("t_item.shop = %(shop_id)s")
         params["shop_id"] = shop_id
 
@@ -643,8 +642,20 @@ def get_products_by_category(uuid: str, limit_start: int = 0, limit_page_length:
     return products
 
 
-# TODO: Revisit this function. It is not clear if the Item doctype has a `shop` field.
-# It is possible that it should be filtering on `company` instead.
+@frappe.whitelist(allow_guest=True)
+def get_products_by_shop(shop_id: str, limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of products for a given shop.
+    """
+    products = frappe.get_list(
+        "Item",
+        fields=["name", "item_name", "description", "image", "standard_rate"],
+        filters={"shop": shop_id},
+        limit_start=limit_start,
+        limit_page_length=limit_page_length,
+        order_by="name"
+    )
+    return products
 
 
 @frappe.whitelist()
