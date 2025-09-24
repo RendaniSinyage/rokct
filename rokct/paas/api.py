@@ -2570,6 +2570,455 @@ def get_cook_order_report(from_date: str, to_date: str):
     return orders
 
 
+# --- Seller Dashboard APIs ---
+
+def _get_seller_shop(user_id):
+    """Helper function to get the shop for a given user."""
+    if not user_id or user_id == "Guest":
+        frappe.throw("You must be logged in to perform this action.", frappe.AuthenticationError)
+
+    # Assuming 'user_id' is a custom field on the Company doctype linking to the User
+    shop = frappe.db.get_value("Company", {"user_id": user_id}, "name")
+    if not shop:
+        frappe.throw("User is not linked to any shop.", frappe.PermissionError)
+
+    return shop
+
+
+@frappe.whitelist()
+def get_seller_statistics():
+    """
+    Retrieves sales and order statistics for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    total_sales = frappe.db.sql("""
+        SELECT SUM(grand_total)
+        FROM `tabOrder`
+        WHERE shop = %(shop)s AND status = 'Delivered'
+    """, {"shop": shop})[0][0] or 0
+
+    total_orders = frappe.db.count("Order", {"shop": shop})
+
+    top_selling_products = frappe.db.sql("""
+        SELECT oi.product, i.item_name, SUM(oi.quantity) as total_quantity
+        FROM `tabOrder Item` as oi
+        JOIN `tabOrder` as o ON o.name = oi.parent
+        JOIN `tabItem` as i ON i.name = oi.product
+        WHERE o.shop = %(shop)s
+        GROUP BY oi.product, i.item_name
+        ORDER BY total_quantity DESC
+        LIMIT 10
+    """, {"shop": shop}, as_dict=True)
+
+    return {
+        "total_sales": total_sales,
+        "total_orders": total_orders,
+        "top_selling_products": top_selling_products
+    }
+
+
+@frappe.whitelist()
+def get_seller_sales_report(from_date: str, to_date: str):
+    """
+    Retrieves a sales report for the current seller's shop within a date range.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    sales_report = frappe.get_all(
+        "Order",
+        filters={
+            "shop": shop,
+            "creation": ["between", [from_date, to_date]]
+        },
+        fields=["name", "user", "grand_total", "status", "creation"],
+        order_by="creation desc"
+    )
+    return sales_report
+
+
+@frappe.whitelist()
+def get_seller_products(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of products for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    products = frappe.get_list(
+        "Item",
+        filters={"shop": shop},
+        fields=["name", "item_name", "description", "image", "standard_rate"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length,
+        order_by="name"
+    )
+    return products
+
+
+@frappe.whitelist()
+def create_seller_product(product_data):
+    """
+    Creates a new product for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    if isinstance(product_data, str):
+        product_data = json.loads(product_data)
+
+    product_data["shop"] = shop
+    # You might want to add more validation here
+
+    new_product = frappe.get_doc({
+        "doctype": "Item",
+        **product_data
+    })
+    new_product.insert(ignore_permissions=True)
+    return new_product.as_dict()
+
+
+@frappe.whitelist()
+def update_seller_product(product_name, product_data):
+    """
+    Updates a product for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    if isinstance(product_data, str):
+        product_data = json.loads(product_data)
+
+    product = frappe.get_doc("Item", product_name)
+
+    if product.shop != shop:
+        frappe.throw("You are not authorized to update this product.", frappe.PermissionError)
+
+    product.update(product_data)
+    product.save(ignore_permissions=True)
+    return product.as_dict()
+
+
+@frappe.whitelist()
+def delete_seller_product(product_name):
+    """
+    Deletes a product for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    product = frappe.get_doc("Item", product_name)
+
+    if product.shop != shop:
+        frappe.throw("You are not authorized to delete this product.", frappe.PermissionError)
+
+    frappe.delete_doc("Item", product_name, ignore_permissions=True)
+    return {"status": "success", "message": "Product deleted successfully."}
+
+
+@frappe.whitelist()
+def get_seller_categories(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of categories for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    categories = frappe.get_list(
+        "Category",
+        filters={"shop": shop},
+        fields=["name", "uuid", "type", "image", "active", "status"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length,
+        order_by="name desc"
+    )
+    return categories
+
+
+@frappe.whitelist()
+def create_seller_category(category_data):
+    """
+    Creates a new category for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    if isinstance(category_data, str):
+        category_data = json.loads(category_data)
+
+    category_data["shop"] = shop
+
+    # Re-using the existing create_category function logic
+    category_uuid = category_data.get("uuid") or str(uuid.uuid4())
+    if not category_data.get("type"):
+        frappe.throw("Category type is required.")
+    if frappe.db.exists("Category", {"uuid": category_uuid}):
+        frappe.throw("Category with this UUID already exists.")
+
+    category = frappe.get_doc({
+        "doctype": "Category",
+        **category_data
+    })
+    category.insert(ignore_permissions=True)
+    return category.as_dict()
+
+
+@frappe.whitelist()
+def update_seller_category(uuid, category_data):
+    """
+    Updates a category for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    category_name = frappe.db.get_value("Category", {"uuid": uuid}, "name")
+    if not category_name:
+        frappe.throw("Category not found.")
+
+    category = frappe.get_doc("Category", category_name)
+    if category.shop != shop:
+        frappe.throw("You are not authorized to update this category.", frappe.PermissionError)
+
+    if isinstance(category_data, str):
+        category_data = json.loads(category_data)
+
+    updatable_fields = ["slug", "keywords", "parent_category", "type", "image", "active", "status", "input"]
+    for key, value in category_data.items():
+        if key in updatable_fields:
+            category.set(key, value)
+
+    category.save(ignore_permissions=True)
+    return category.as_dict()
+
+
+@frappe.whitelist()
+def delete_seller_category(uuid):
+    """
+    Deletes a category for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    category_name = frappe.db.get_value("Category", {"uuid": uuid}, "name")
+    if not category_name:
+        frappe.throw("Category not found.")
+
+    category = frappe.get_doc("Category", category_name)
+    if category.shop != shop:
+        frappe.throw("You are not authorized to delete this category.", frappe.PermissionError)
+
+    frappe.delete_doc("Category", category_name, ignore_permissions=True)
+    return {"status": "success", "message": "Category deleted successfully."}
+
+
+@frappe.whitelist()
+def get_seller_brands(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of brands for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    brands = frappe.get_list(
+        "Brand",
+        filters={"shop": shop},
+        fields=["name", "uuid", "title", "slug", "active", "image"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length,
+        order_by="name desc"
+    )
+    return brands
+
+
+@frappe.whitelist()
+def create_seller_brand(brand_data):
+    """
+    Creates a new brand for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    if isinstance(brand_data, str):
+        brand_data = json.loads(brand_data)
+
+    brand_data["shop"] = shop
+
+    # Re-using the existing create_brand function logic
+    brand_uuid = brand_data.get("uuid") or str(uuid.uuid4())
+    if not brand_data.get("title"):
+        frappe.throw("Brand title is required.")
+    if frappe.db.exists("Brand", {"uuid": brand_uuid}):
+        frappe.throw("Brand with this UUID already exists.")
+
+    brand = frappe.get_doc({
+        "doctype": "Brand",
+        **brand_data
+    })
+    brand.insert(ignore_permissions=True)
+    return brand.as_dict()
+
+
+@frappe.whitelist()
+def update_seller_brand(uuid, brand_data):
+    """
+    Updates a brand for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    brand_name = frappe.db.get_value("Brand", {"uuid": uuid}, "name")
+    if not brand_name:
+        frappe.throw("Brand not found.")
+
+    brand = frappe.get_doc("Brand", brand_name)
+    if brand.shop != shop:
+        frappe.throw("You are not authorized to update this brand.", frappe.PermissionError)
+
+    if isinstance(brand_data, str):
+        brand_data = json.loads(brand_data)
+
+    updatable_fields = ["title", "slug", "active", "image"]
+    for key, value in brand_data.items():
+        if key in updatable_fields:
+            brand.set(key, value)
+
+    brand.save(ignore_permissions=True)
+    return brand.as_dict()
+
+
+@frappe.whitelist()
+def delete_seller_brand(uuid):
+    """
+    Deletes a brand for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    brand_name = frappe.db.get_value("Brand", {"uuid": uuid}, "name")
+    if not brand_name:
+        frappe.throw("Brand not found.")
+
+    brand = frappe.get_doc("Brand", brand_name)
+    if brand.shop != shop:
+        frappe.throw("You are not authorized to delete this brand.", frappe.PermissionError)
+
+    frappe.delete_doc("Brand", brand_name, ignore_permissions=True)
+    return {"status": "success", "message": "Brand deleted successfully."}
+
+
+@frappe.whitelist()
+def get_seller_orders(limit_start: int = 0, limit_page_length: int = 20, status: str = None, from_date: str = None, to_date: str = None):
+    """
+    Retrieves a list of orders for the current seller's shop, with optional filters.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    filters = {"shop": shop}
+    if status:
+        filters["status"] = status
+    if from_date and to_date:
+        filters["creation"] = ["between", [from_date, to_date]]
+
+    orders = frappe.get_list(
+        "Order",
+        filters=filters,
+        fields=["name", "user", "grand_total", "status", "creation"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length,
+        order_by="creation desc"
+    )
+    return orders
+
+
+@frappe.whitelist()
+def get_seller_shop_working_days():
+    """
+    Retrieves the working days for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    working_days = frappe.get_all(
+        "Shop Working Day",
+        filters={"shop": shop},
+        fields=["day_of_week", "opening_time", "closing_time", "is_closed"]
+    )
+    return working_days
+
+
+@frappe.whitelist()
+def update_seller_shop_working_days(working_days_data):
+    """
+    Updates the working days for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    if isinstance(working_days_data, str):
+        working_days_data = json.loads(working_days_data)
+
+    # Clear existing working days for the shop
+    frappe.db.delete("Shop Working Day", {"shop": shop})
+
+    for day_data in working_days_data:
+        frappe.get_doc({
+            "doctype": "Shop Working Day",
+            "shop": shop,
+            **day_data
+        }).insert(ignore_permissions=True)
+
+    return {"status": "success", "message": "Working days updated successfully."}
+
+
+@frappe.whitelist()
+def get_seller_shop_closed_days():
+    """
+    Retrieves the closed days for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    closed_days = frappe.get_all(
+        "Shop Closed Day",
+        filters={"shop": shop},
+        fields=["date"]
+    )
+    return [d.date for d in closed_days]
+
+
+@frappe.whitelist()
+def add_seller_shop_closed_day(date):
+    """
+    Adds a closed day for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    frappe.get_doc({
+        "doctype": "Shop Closed Day",
+        "shop": shop,
+        "date": date
+    }).insert(ignore_permissions=True)
+
+    return {"status": "success", "message": "Closed day added successfully."}
+
+
+@frappe.whitelist()
+def delete_seller_shop_closed_day(date):
+    """
+    Deletes a closed day for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    frappe.db.delete("Shop Closed Day", {"shop": shop, "date": date})
+
+    return {"status": "success", "message": "Closed day deleted successfully."}
+
+
 @frappe.whitelist()
 def get_user_transactions(limit_start=0, limit_page_length=20):
     """

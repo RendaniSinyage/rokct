@@ -108,28 +108,25 @@
 - [x] Dashboard (Cook): Order Reports
 
 ## Seller Dashboard
-- [ ] Dashboard (Seller): Dashboard & Statistics
-- [ ] Dashboard (Seller): Sales History & Reports
+- [x] Dashboard (Seller): Dashboard & Statistics
+- [x] Dashboard (Seller): Sales History & Reports
 - [ ] Dashboard (Seller): Extras (Groups & Values)
 - [ ] Dashboard (Seller): Units
 - [ ] Dashboard (Seller): Shop Management
-- [~] Dashboard (Seller): Categories
-  - [ ] Dependent on REST: Categories API implementation.
-- [~] Dashboard (Seller): Brands
-  - [ ] Dependent on REST: Brands API implementation.
+- [x] Dashboard (Seller): Categories
+- [x] Dashboard (Seller): Brands
 - [~] Dashboard (Seller): Kitchens
   - [x] Doctype created.
   - [ ] Dependent on REST: Kitchens API implementation.
 - [x] Dashboard (Seller): Shop Categories
-- [~] Dashboard (Seller): Products
-  - [ ] Dependent on REST: Products API implementation.
+- [x] Dashboard (Seller): Products
 - [~] Dashboard (Seller): Coupons
   - [ ] Dependent on REST: Coupons API implementation.
 - [ ] Dashboard (Seller): Shop Users
 - [ ] Dashboard (Seller): Invites
 - [ ] Dashboard (Seller): Discounts
 - [ ] Dashboard (Seller): Banners
-- [ ] Dashboard (Seller): Orders
+- [x] Dashboard (Seller): Orders
 - [ ] Dashboard (Seller): Transactions
 - [ ] Dashboard (Seller): Bonuses
 - [ ] Dashboard (Seller): Stories
@@ -137,8 +134,8 @@
 - [ ] Dashboard (Seller): Delivery Zones
 - [ ] Dashboard (Seller): Shop Payments
 - [ ] Dashboard (Seller): Order Refunds
-- [ ] Dashboard (Seller): Shop Working Days
-- [ ] Dashboard (Seller): Shop Closed Days
+- [x] Dashboard (Seller): Shop Working Days
+- [x] Dashboard (Seller): Shop Closed Days
 - [ ] Dashboard (Seller): Payouts
 - [ ] Dashboard (Seller): Reviews
 - [ ] Dashboard (Seller): Receipts
