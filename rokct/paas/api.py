@@ -2415,13 +2415,13 @@ def get_banned_shops():
 
 
 @frappe.whitelist()
-def get_deliveryman_payouts(limit_start: int = 0, limit_page_length: int = 20):
+def get_payment_to_partners(limit_start: int = 0, limit_page_length: int = 20):
     """
-    Retrieves a list of payouts for the current deliveryman.
+    Retrieves a list of payments to partners (deliverymen) for the current user.
     """
     user = frappe.session.user
     if user == "Guest":
-        frappe.throw("You must be logged in to view your payouts.", frappe.AuthenticationError)
+        frappe.throw("You must be logged in to view your payments.", frappe.AuthenticationError)
 
     payouts = frappe.get_list(
         "Payout",
@@ -2486,6 +2486,88 @@ def get_deliveryman_delivery_zones():
         fields=["delivery_zone"]
     )
     return [d.delivery_zone for d in delivery_zones]
+
+
+@frappe.whitelist()
+def get_waiter_orders(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of orders assigned to the current waiter.
+    """
+    user = frappe.session.user
+    if user == "Guest":
+        frappe.throw("You must be logged in to view your orders.", frappe.AuthenticationError)
+
+    orders = frappe.get_list(
+        "Order",
+        filters={"waiter": user},
+        fields=["name", "shop", "total_price", "status", "creation"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length,
+        order_by="creation desc"
+    )
+    return orders
+
+
+@frappe.whitelist()
+def get_waiter_order_report(from_date: str, to_date: str):
+    """
+    Retrieves a report of orders for the current waiter within a date range.
+    """
+    user = frappe.session.user
+    if user == "Guest":
+        frappe.throw("You must be logged in to view your order report.", frappe.AuthenticationError)
+
+    orders = frappe.get_all(
+        "Order",
+        filters={
+            "waiter": user,
+            "creation": ["between", [from_date, to_date]]
+        },
+        fields=["name", "shop", "total_price", "status", "creation"],
+        order_by="creation desc"
+    )
+    return orders
+
+
+@frappe.whitelist()
+def get_cook_orders(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of orders assigned to the current cook.
+    """
+    user = frappe.session.user
+    if user == "Guest":
+        frappe.throw("You must be logged in to view your orders.", frappe.AuthenticationError)
+
+    orders = frappe.get_list(
+        "Order",
+        filters={"cook": user},
+        fields=["name", "shop", "total_price", "status", "creation"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length,
+        order_by="creation desc"
+    )
+    return orders
+
+
+@frappe.whitelist()
+def get_cook_order_report(from_date: str, to_date: str):
+    """
+    Retrieves a report of orders for the current cook within a date range.
+    """
+    user = frappe.session.user
+    if user == "Guest":
+        frappe.throw("You must be logged in to view your order report.", frappe.AuthenticationError)
+
+    orders = frappe.get_all(
+        "Order",
+        filters={
+            "cook": user,
+            "creation": ["between", [from_date, to_date]]
+        },
+        fields=["name", "shop", "total_price", "status", "creation"],
+        order_by="creation desc"
+    )
+    return orders
 
 
 @frappe.whitelist()

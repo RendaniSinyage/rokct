@@ -96,16 +96,16 @@
 - [x] Dashboard (Deliveryman): Payouts
 - [x] Dashboard (Deliveryman): Order Reports
 - [x] Dashboard (Deliveryman): Parcel Orders
-- [ ] Dashboard (Deliveryman): Payment to Partners
+- [x] Dashboard (Deliveryman): Payment to Partners
 - [x] Dashboard (Deliveryman): Delivery Zones
 
 ## Waiter Dashboard
-- [ ] Dashboard (Waiter): Orders
-- [ ] Dashboard (Waiter): Order Reports
+- [x] Dashboard (Waiter): Orders
+- [x] Dashboard (Waiter): Order Reports
 
 ## Cook Dashboard
-- [ ] Dashboard (Cook): Orders
-- [ ] Dashboard (Cook): Order Reports
+- [x] Dashboard (Cook): Orders
+- [x] Dashboard (Cook): Order Reports
 
 ## Seller Dashboard
 - [ ] Dashboard (Seller): Dashboard & Statistics

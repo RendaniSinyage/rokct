@@ -47,6 +47,18 @@
             "options": "User"
         },
         {
+            "fieldname": "waiter",
+            "fieldtype": "Link",
+            "label": "Waiter",
+            "options": "User"
+        },
+        {
+            "fieldname": "cook",
+            "fieldtype": "Link",
+            "label": "Cook",
+            "options": "User"
+        },
+        {
             "fieldname": "status",
             "fieldtype": "Select",
             "label": "Status",
