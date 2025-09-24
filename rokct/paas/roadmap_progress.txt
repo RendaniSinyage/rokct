@@ -112,20 +112,17 @@
 - [x] Dashboard (Seller): Sales History & Reports
 - [ ] Dashboard (Seller): Extras (Groups & Values)
 - [ ] Dashboard (Seller): Units
-- [ ] Dashboard (Seller): Shop Management
+- [x] Dashboard (Seller): Shop Management
 - [x] Dashboard (Seller): Categories
 - [x] Dashboard (Seller): Brands
-- [~] Dashboard (Seller): Kitchens
-  - [x] Doctype created.
-  - [ ] Dependent on REST: Kitchens API implementation.
+- [x] Dashboard (Seller): Kitchens
 - [x] Dashboard (Seller): Shop Categories
 - [x] Dashboard (Seller): Products
-- [~] Dashboard (Seller): Coupons
-  - [ ] Dependent on REST: Coupons API implementation.
-- [ ] Dashboard (Seller): Shop Users
-- [ ] Dashboard (Seller): Invites
-- [ ] Dashboard (Seller): Discounts
-- [ ] Dashboard (Seller): Banners
+- [x] Dashboard (Seller): Coupons
+- [x] Dashboard (Seller): Shop Users
+- [x] Dashboard (Seller): Invites
+- [x] Dashboard (Seller): Discounts
+- [x] Dashboard (Seller): Banners
 - [x] Dashboard (Seller): Orders
 - [ ] Dashboard (Seller): Transactions
 - [ ] Dashboard (Seller): Bonuses

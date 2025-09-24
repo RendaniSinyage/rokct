@@ -3020,6 +3020,390 @@ def delete_seller_shop_closed_day(date):
 
 
 @frappe.whitelist()
+def get_shop_users(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of users for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    shop_users = frappe.get_all(
+        "User Shop",
+        filters={"shop": shop},
+        fields=["user", "role"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length
+    )
+    return shop_users
+
+
+@frappe.whitelist()
+def add_shop_user(user_email: str, role: str):
+    """
+    Adds a user to the current seller's shop with a specific role.
+    """
+    owner = frappe.session.user
+    shop = _get_seller_shop(owner)
+
+    user_to_add = frappe.db.get_value("User", {"email": user_email}, "name")
+    if not user_to_add:
+        frappe.throw("User not found.")
+
+    if frappe.db.exists("User Shop", {"user": user_to_add, "shop": shop}):
+        frappe.throw("User is already a member of this shop.")
+
+    frappe.get_doc({
+        "doctype": "User Shop",
+        "user": user_to_add,
+        "shop": shop,
+        "role": role
+    }).insert(ignore_permissions=True)
+
+    return {"status": "success", "message": "User added to shop successfully."}
+
+
+@frappe.whitelist()
+def remove_shop_user(user_to_remove: str):
+    """
+    Removes a user from the current seller's shop.
+    """
+    owner = frappe.session.user
+    shop = _get_seller_shop(owner)
+
+    frappe.db.delete("User Shop", {"user": user_to_remove, "shop": shop})
+
+    return {"status": "success", "message": "User removed from shop successfully."}
+
+
+@frappe.whitelist()
+def get_seller_invites():
+    """
+    Retrieves a list of invitations for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    invitations = frappe.get_all(
+        "Invitation",
+        filters={"shop": shop},
+        fields=["user", "role", "status"]
+    )
+    return invitations
+
+
+@frappe.whitelist()
+def get_seller_kitchens(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of kitchens for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    kitchens = frappe.get_list(
+        "Kitchen",
+        filters={"shop": shop},
+        fields=["name", "active"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length,
+        order_by="name"
+    )
+    return kitchens
+
+
+@frappe.whitelist()
+def create_seller_kitchen(kitchen_data):
+    """
+    Creates a new kitchen for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    if isinstance(kitchen_data, str):
+        kitchen_data = json.loads(kitchen_data)
+
+    kitchen_data["shop"] = shop
+
+    new_kitchen = frappe.get_doc({
+        "doctype": "Kitchen",
+        **kitchen_data
+    })
+    new_kitchen.insert(ignore_permissions=True)
+    return new_kitchen.as_dict()
+
+
+@frappe.whitelist()
+def update_seller_kitchen(kitchen_name, kitchen_data):
+    """
+    Updates a kitchen for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    if isinstance(kitchen_data, str):
+        kitchen_data = json.loads(kitchen_data)
+
+    kitchen = frappe.get_doc("Kitchen", kitchen_name)
+
+    if kitchen.shop != shop:
+        frappe.throw("You are not authorized to update this kitchen.", frappe.PermissionError)
+
+    kitchen.update(kitchen_data)
+    kitchen.save(ignore_permissions=True)
+    return kitchen.as_dict()
+
+
+@frappe.whitelist()
+def delete_seller_kitchen(kitchen_name):
+    """
+    Deletes a kitchen for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    kitchen = frappe.get_doc("Kitchen", kitchen_name)
+
+    if kitchen.shop != shop:
+        frappe.throw("You are not authorized to delete this kitchen.", frappe.PermissionError)
+
+    frappe.delete_doc("Kitchen", kitchen_name, ignore_permissions=True)
+    return {"status": "success", "message": "Kitchen deleted successfully."}
+
+
+@frappe.whitelist()
+def get_seller_coupons(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of coupons for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    coupons = frappe.get_list(
+        "Coupon",
+        filters={"shop": shop},
+        fields=["name", "code", "quantity", "expired_at"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length,
+        order_by="name"
+    )
+    return coupons
+
+
+@frappe.whitelist()
+def create_seller_coupon(coupon_data):
+    """
+    Creates a new coupon for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    if isinstance(coupon_data, str):
+        coupon_data = json.loads(coupon_data)
+
+    coupon_data["shop"] = shop
+
+    new_coupon = frappe.get_doc({
+        "doctype": "Coupon",
+        **coupon_data
+    })
+    new_coupon.insert(ignore_permissions=True)
+    return new_coupon.as_dict()
+
+
+@frappe.whitelist()
+def update_seller_coupon(coupon_name, coupon_data):
+    """
+    Updates a coupon for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    if isinstance(coupon_data, str):
+        coupon_data = json.loads(coupon_data)
+
+    coupon = frappe.get_doc("Coupon", coupon_name)
+
+    if coupon.shop != shop:
+        frappe.throw("You are not authorized to update this coupon.", frappe.PermissionError)
+
+    coupon.update(coupon_data)
+    coupon.save(ignore_permissions=True)
+    return coupon.as_dict()
+
+
+@frappe.whitelist()
+def delete_seller_coupon(coupon_name):
+    """
+    Deletes a coupon for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    coupon = frappe.get_doc("Coupon", coupon_name)
+
+    if coupon.shop != shop:
+        frappe.throw("You are not authorized to delete this coupon.", frappe.PermissionError)
+
+    frappe.delete_doc("Coupon", coupon_name, ignore_permissions=True)
+    return {"status": "success", "message": "Coupon deleted successfully."}
+
+
+@frappe.whitelist()
+def get_seller_discounts(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of discounts for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    discounts = frappe.get_list(
+        "Pricing Rule",
+        filters={"shop": shop},
+        fields=["name", "title", "apply_on", "valid_from", "valid_upto", "discount_percentage"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length,
+        order_by="name"
+    )
+    return discounts
+
+
+@frappe.whitelist()
+def create_seller_discount(discount_data):
+    """
+    Creates a new discount for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    if isinstance(discount_data, str):
+        discount_data = json.loads(discount_data)
+
+    discount_data["shop"] = shop
+
+    new_discount = frappe.get_doc({
+        "doctype": "Pricing Rule",
+        **discount_data
+    })
+    new_discount.insert(ignore_permissions=True)
+    return new_discount.as_dict()
+
+
+@frappe.whitelist()
+def update_seller_discount(discount_name, discount_data):
+    """
+    Updates a discount for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    if isinstance(discount_data, str):
+        discount_data = json.loads(discount_data)
+
+    discount = frappe.get_doc("Pricing Rule", discount_name)
+
+    if discount.shop != shop:
+        frappe.throw("You are not authorized to update this discount.", frappe.PermissionError)
+
+    discount.update(discount_data)
+    discount.save(ignore_permissions=True)
+    return discount.as_dict()
+
+
+@frappe.whitelist()
+def delete_seller_discount(discount_name):
+    """
+    Deletes a discount for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    discount = frappe.get_doc("Pricing Rule", discount_name)
+
+    if discount.shop != shop:
+        frappe.throw("You are not authorized to delete this discount.", frappe.PermissionError)
+
+    frappe.delete_doc("Pricing Rule", discount_name, ignore_permissions=True)
+    return {"status": "success", "message": "Discount deleted successfully."}
+
+
+@frappe.whitelist()
+def get_seller_banners(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of banners for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    banners = frappe.get_list(
+        "Banner",
+        filters={"shop": shop},
+        fields=["name", "title", "image", "link", "is_active"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length,
+        order_by="name"
+    )
+    return banners
+
+
+@frappe.whitelist()
+def create_seller_banner(banner_data):
+    """
+    Creates a new banner for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    if isinstance(banner_data, str):
+        banner_data = json.loads(banner_data)
+
+    banner_data["shop"] = shop
+
+    new_banner = frappe.get_doc({
+        "doctype": "Banner",
+        **banner_data
+    })
+    new_banner.insert(ignore_permissions=True)
+    return new_banner.as_dict()
+
+
+@frappe.whitelist()
+def update_seller_banner(banner_name, banner_data):
+    """
+    Updates a banner for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    if isinstance(banner_data, str):
+        banner_data = json.loads(banner_data)
+
+    banner = frappe.get_doc("Banner", banner_name)
+
+    if banner.shop != shop:
+        frappe.throw("You are not authorized to update this banner.", frappe.PermissionError)
+
+    banner.update(banner_data)
+    banner.save(ignore_permissions=True)
+    return banner.as_dict()
+
+
+@frappe.whitelist()
+def delete_seller_banner(banner_name):
+    """
+    Deletes a banner for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    banner = frappe.get_doc("Banner", banner_name)
+
+    if banner.shop != shop:
+        frappe.throw("You are not authorized to delete this banner.", frappe.PermissionError)
+
+    frappe.delete_doc("Banner", banner_name, ignore_permissions=True)
+    return {"status": "success", "message": "Banner deleted successfully."}
+
+
+@frappe.whitelist()
 def get_user_transactions(limit_start=0, limit_page_length=20):
     """
     Retrieve the list of transactions for the currently logged-in user.
@@ -3063,9 +3447,9 @@ def get_user_shop():
         return None
 
 @frappe.whitelist()
-def update_user_shop(shop_data):
+def update_seller_shop(shop_data):
     """
-    Updates the shop owned by the currently logged-in user.
+    Updates the shop owned by the currently logged-in seller.
     """
     if isinstance(shop_data, str):
         shop_data = json.loads(shop_data)

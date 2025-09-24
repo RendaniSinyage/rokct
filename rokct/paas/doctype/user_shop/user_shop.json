@@ -1,6 +1,6 @@
 {
     "doctype": "DocType",
-    "name": "Kitchen",
+    "name": "User Shop",
     "engine": "InnoDB",
     "is_submittable": 0,
     "issingle": 0,
@@ -25,9 +25,10 @@
     "track_changes": 1,
     "fields": [
         {
-            "fieldname": "name",
-            "fieldtype": "Data",
-            "label": "Name",
+            "fieldname": "user",
+            "fieldtype": "Link",
+            "label": "User",
+            "options": "User",
             "reqd": 1
         },
         {
@@ -38,10 +39,11 @@
             "reqd": 1
         },
         {
-            "fieldname": "active",
-            "fieldtype": "Check",
-            "label": "Active",
-            "default": "1"
+            "fieldname": "role",
+            "fieldtype": "Link",
+            "label": "Role",
+            "options": "Role",
+            "reqd": 1
         }
     ]
 }

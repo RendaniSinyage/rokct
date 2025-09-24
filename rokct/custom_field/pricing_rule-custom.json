@@ -1,0 +1,10 @@
+[
+    {
+        "doctype": "Custom Field",
+        "dt": "Pricing Rule",
+        "fieldname": "shop",
+        "fieldtype": "Link",
+        "label": "Shop",
+        "options": "Company"
+    }
+]
