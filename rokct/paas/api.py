@@ -1056,11 +1056,60 @@ def get_receipt(id: str):
 
 # --- Blog APIs ---
 
-@frappe.whitelist(allow_guest=True)
-def get_blogs(limit_start: int = 0, limit_page_length: int = 20):
+@frappe.whitelist()
+def get_admin_blogs(limit_start: int = 0, limit_page_length: int = 20):
     """
-    Retrieves a list of published blog posts, formatted for frontend compatibility.
+    Retrieves a list of all blog posts (for admins).
     """
+    _require_admin()
+    return frappe.get_list(
+        "Blog Post",
+        fields=["name", "title", "blogger", "published"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length
+    )
+
+
+@frappe.whitelist()
+def create_admin_blog(blog_data):
+    """
+    Creates a new blog post (for admins).
+    """
+    _require_admin()
+    if isinstance(blog_data, str):
+        blog_data = json.loads(blog_data)
+
+    new_blog = frappe.get_doc({
+        "doctype": "Blog Post",
+        **blog_data
+    })
+    new_blog.insert(ignore_permissions=True)
+    return new_blog.as_dict()
+
+
+@frappe.whitelist()
+def update_admin_blog(blog_name, blog_data):
+    """
+    Updates a blog post (for admins).
+    """
+    _require_admin()
+    if isinstance(blog_data, str):
+        blog_data = json.loads(blog_data)
+
+    blog = frappe.get_doc("Blog Post", blog_name)
+    blog.update(blog_data)
+    blog.save(ignore_permissions=True)
+    return blog.as_dict()
+
+
+@frappe.whitelist()
+def delete_admin_blog(blog_name):
+    """
+    Deletes a blog post (for admins).
+    """
+    _require_admin()
+    frappe.delete_doc("Blog Post", blog_name, ignore_permissions=True)
+    return {"status": "success", "message": "Blog post deleted successfully."}
     blog_posts = frappe.get_list(
         "Blog Post",
         filters={"published": 1},
@@ -1094,11 +1143,46 @@ def get_blogs(limit_start: int = 0, limit_page_length: int = 20):
     return formatted_blogs
 
 
-@frappe.whitelist(allow_guest=True)
-def get_blog(uuid: str):
+@frappe.whitelist()
+def get_admin_stories(limit_start: int = 0, limit_page_length: int = 20):
     """
-    Retrieves a single blog post by its UUID (name).
+    Retrieves a list of all stories on the platform (for admins).
     """
+    _require_admin()
+    return frappe.get_list(
+        "Story",
+        fields=["name", "title", "shop", "expires_at"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length
+    )
+
+
+@frappe.whitelist()
+def get_admin_careers(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of all careers on the platform (for admins).
+    """
+    _require_admin()
+    return frappe.get_list(
+        "Career",
+        fields=["name", "title", "location", "category", "is_active"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length
+    )
+
+
+@frappe.whitelist()
+def get_admin_pages(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of all web pages on the platform (for admins).
+    """
+    _require_admin()
+    return frappe.get_list(
+        "Web Page",
+        fields=["name", "title", "route", "published"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length
+    )
     post = frappe.get_doc("Blog Post", uuid)
     if not post.published:
         frappe.throw("Blog post not published.", frappe.PermissionError)
@@ -5067,6 +5151,300 @@ def get_all_notifications(limit_start: int = 0, limit_page_length: int = 20):
     return frappe.get_list(
         "Notification Log",
         fields=["name", "subject", "document_type", "document_name", "for_user", "creation"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length,
+        order_by="creation desc"
+    )
+
+
+@frappe.whitelist()
+def get_all_languages(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of all languages (for admins).
+    """
+    _require_admin()
+    return frappe.get_list(
+        "Language",
+        fields=["name", "language_name", "enabled"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length
+    )
+
+
+@frappe.whitelist()
+def update_language(language_name, language_data):
+    """
+    Updates a language (for admins).
+    """
+    _require_admin()
+    if isinstance(language_data, str):
+        language_data = json.loads(language_data)
+
+    language = frappe.get_doc("Language", language_name)
+    language.update(language_data)
+    language.save(ignore_permissions=True)
+    return language.as_dict()
+
+
+@frappe.whitelist()
+def get_all_currencies(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of all currencies (for admins).
+    """
+    _require_admin()
+    return frappe.get_list(
+        "Currency",
+        fields=["name", "currency_name", "symbol", "enabled"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length
+    )
+
+
+@frappe.whitelist()
+def update_currency(currency_name, currency_data):
+    """
+    Updates a currency (for admins).
+    """
+    _require_admin()
+    if isinstance(currency_data, str):
+        currency_data = json.loads(currency_data)
+
+    currency = frappe.get_doc("Currency", currency_name)
+    currency.update(currency_data)
+    currency.save(ignore_permissions=True)
+    return currency.as_dict()
+
+
+@frappe.whitelist()
+def get_all_units(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of all shop units on the platform (for admins).
+    """
+    _require_admin()
+    return frappe.get_list(
+        "Shop Unit",
+        fields=["name", "shop", "active"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length
+    )
+
+
+@frappe.whitelist()
+def get_all_tags(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of all shop tags on the platform (for admins).
+    """
+    _require_admin()
+    return frappe.get_list(
+        "Shop Tag",
+        fields=["name", "shop"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length
+    )
+
+
+@frappe.whitelist()
+def get_email_settings():
+    """
+    Retrieves the email settings (for admins).
+    """
+    _require_admin()
+    return frappe.get_doc("Email Settings").as_dict()
+
+
+@frappe.whitelist()
+def update_email_settings(settings_data):
+    """
+    Updates the email settings (for admins).
+    """
+    _require_admin()
+    if isinstance(settings_data, str):
+        settings_data = json.loads(settings_data)
+
+    settings = frappe.get_doc("Email Settings")
+    settings.update(settings_data)
+    settings.save(ignore_permissions=True)
+    return settings.as_dict()
+
+
+@frappe.whitelist()
+def get_deliveryman_global_settings():
+    """
+    Retrieves the global deliveryman settings (for admins).
+    """
+    _require_admin()
+    return frappe.get_doc("DeliveryMan Settings").as_dict()
+
+
+@frappe.whitelist()
+def update_deliveryman_global_settings(settings_data):
+    """
+    Updates the global deliveryman settings (for admins).
+    """
+    _require_admin()
+    if isinstance(settings_data, str):
+        settings_data = json.loads(settings_data)
+
+    settings = frappe.get_doc("DeliveryMan Settings")
+    settings.update(settings_data)
+    settings.save(ignore_permissions=True)
+    return settings.as_dict()
+
+
+@frappe.whitelist()
+def get_parcel_order_settings(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of all parcel order settings (for admins).
+    """
+    _require_admin()
+    return frappe.get_list(
+        "Parcel Order Setting",
+        fields=["name", "title"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length
+    )
+
+
+@frappe.whitelist()
+def create_parcel_order_setting(setting_data):
+    """
+    Creates a new parcel order setting (for admins).
+    """
+    _require_admin()
+    if isinstance(setting_data, str):
+        setting_data = json.loads(setting_data)
+
+    new_setting = frappe.get_doc({
+        "doctype": "Parcel Order Setting",
+        **setting_data
+    })
+    new_setting.insert(ignore_permissions=True)
+    return new_setting.as_dict()
+
+
+@frappe.whitelist()
+def update_parcel_order_setting(setting_name, setting_data):
+    """
+    Updates a parcel order setting (for admins).
+    """
+    _require_admin()
+    if isinstance(setting_data, str):
+        setting_data = json.loads(setting_data)
+
+    setting = frappe.get_doc("Parcel Order Setting", setting_name)
+    setting.update(setting_data)
+    setting.save(ignore_permissions=True)
+    return setting.as_dict()
+
+
+@frappe.whitelist()
+def delete_parcel_order_setting(setting_name):
+    """
+    Deletes a parcel order setting (for admins).
+    """
+    _require_admin()
+    frappe.delete_doc("Parcel Order Setting", setting_name, ignore_permissions=True)
+    return {"status": "success", "message": "Parcel order setting deleted successfully."}
+
+
+@frappe.whitelist()
+def get_all_wallet_histories(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of all wallet histories on the platform (for admins).
+    """
+    _require_admin()
+    return frappe.get_list(
+        "Wallet History",
+        fields=["name", "wallet", "type", "price", "status", "created_at"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length,
+        order_by="creation desc"
+    )
+
+
+@frappe.whitelist()
+def get_all_transactions(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of all transactions on the platform (for admins).
+    """
+    _require_admin()
+    return frappe.get_list(
+        "Transaction",
+        fields=["name", "transaction_date", "reference_doctype", "reference_name", "debit", "credit", "currency"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length,
+        order_by="creation desc"
+    )
+
+
+@frappe.whitelist()
+def get_all_seller_payouts(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of all seller payouts on the platform (for admins).
+    """
+    _require_admin()
+    return frappe.get_list(
+        "Seller Payout",
+        fields=["name", "shop", "amount", "payout_date", "status"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length,
+        order_by="payout_date desc"
+    )
+
+
+@frappe.whitelist()
+def get_all_shop_bonuses(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of all shop bonuses on the platform (for admins).
+    """
+    _require_admin()
+    return frappe.get_list(
+        "Shop Bonus",
+        fields=["name", "shop", "amount", "bonus_date", "reason"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length,
+        order_by="bonus_date desc"
+    )
+
+
+@frappe.whitelist()
+def get_all_order_statuses(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of all order statuses on the platform (for admins).
+    """
+    _require_admin()
+    return frappe.get_list(
+        "Order Status",
+        fields=["name", "status_name", "is_active", "sort_order"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length,
+        order_by="sort_order"
+    )
+
+
+@frappe.whitelist()
+def get_all_delivery_zones(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of all delivery zones on the platform (for admins).
+    """
+    _require_admin()
+    return frappe.get_list(
+        "Delivery Zone",
+        fields=["name", "shop"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length
+    )
+
+
+@frappe.whitelist()
+def get_all_request_models(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of all request models on the platform (for admins).
+    """
+    _require_admin()
+    return frappe.get_list(
+        "Request Model",
+        fields=["name", "model_type", "model", "status", "created_by_user", "created_at"],
         limit_start=limit_start,
         limit_page_length=limit_page_length,
         order_by="creation desc"

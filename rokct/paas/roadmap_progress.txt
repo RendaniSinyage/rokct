@@ -155,41 +155,41 @@
 - [x] Dashboard (Admin): Terms & Conditions
 - [x] Dashboard (Admin): Privacy & Policy
 - [x] Dashboard (Admin): Reviews
-- [ ] Dashboard (Admin): Languages
-- [ ] Dashboard (Admin): Currencies
+- [x] Dashboard (Admin): Languages
+- [x] Dashboard (Admin): Currencies
 - [x] Dashboard (Admin): Categories
 - [x] Dashboard (Admin): Brands
 - [ ] Dashboard (Admin): Landing Pages
 - [x] Dashboard (Admin): Banners
-- [ ] Dashboard (Admin): Units
+- [x] Dashboard (Admin): Units
 - [x] Dashboard (Admin): Shops
-- [ ] Dashboard (Admin): Extras (Groups & Values)
+- [x] Dashboard (Admin): Extras (Groups & Values)
 - [x] Dashboard (Admin): Products
 - [x] Dashboard (Admin): Orders
 - [x] Dashboard (Admin): Parcel Orders
-- [ ] Dashboard (Admin): Parcel Options
-- [ ] Dashboard (Admin): Parcel Order Settings
+- [x] Dashboard (Admin): Parcel Options
+- [x] Dashboard (Admin): Parcel Order Settings
 - [x] Dashboard (Admin): Users
 - [ ] Dashboard (Admin): Roles
-- [ ] Dashboard (Admin): Wallet Histories
+- [x] Dashboard (Admin): Wallet Histories
 - [ ] Dashboard (Admin): Points
-- [ ] Dashboard (Admin): Payments
+- [x] Dashboard (Admin): Payments
 - [ ] Dashboard (Admin): Translations
-- [ ] Dashboard (Admin): Transactions
-- [ ] Dashboard (Admin): Payment to Partners
+- [x] Dashboard (Admin): Transactions
+- [x] Dashboard (Admin): Payment to Partners
 - [x] Dashboard (Admin): Tickets
 - [x] Dashboard (Admin): FAQs
-- [ ] Dashboard (Admin): Blogs
-- [ ] Dashboard (Admin): Settings
+- [x] Dashboard (Admin): Blogs
+- [x] Dashboard (Admin): Settings
 - [ ] Dashboard (Admin): Backups
 - [ ] Dashboard (Admin): Project Upload/Update
-- [ ] Dashboard (Admin): Stories
-- [ ] Dashboard (Admin): Order Statuses
-- [ ] Dashboard (Admin): Tags
-- [ ] Dashboard (Admin): Delivery Zones
+- [x] Dashboard (Admin): Stories
+- [x] Dashboard (Admin): Order Statuses
+- [x] Dashboard (Admin): Tags
+- [x] Dashboard (Admin): Delivery Zones
 - [ ] Dashboard (Admin): Delivery Man Delivery Zones
-- [ ] Dashboard (Admin): Email Settings
-- [ ] Dashboard (Admin): DeliveryMan Settings
+- [x] Dashboard (Admin): Email Settings
+- [x] Dashboard (Admin): DeliveryMan Settings
 - [ ] Dashboard (Admin): Delivery Vehicle Types
 - [ ] Dashboard (Admin): Email Templates
 - [x] Dashboard (Admin): Order Refunds
@@ -197,26 +197,25 @@
 - [ ] Dashboard (Admin): Shop Closed Days
 - [x] Dashboard (Admin): Notifications
 - [ ] Dashboard (Admin): Email Subscriptions
-- [ ] Dashboard (Admin): Payouts
+- [x] Dashboard (Admin): Payouts
 - [ ] Dashboard (Admin): Shop Tags
 - [ ] Dashboard (Admin): Payment Payloads
 - [ ] Dashboard (Admin): SMS Payloads
-- [ ] Dashboard (Admin): Bonuses
+- [x] Dashboard (Admin): Bonuses
 - [ ] Dashboard (Admin): Referrals
 - [ ] Dashboard (Admin): Reports
-- [ ] Dashboard (Admin): Receipts
-- [ ] Dashboard (Admin): Menus
-- [ ] Dashboard (Admin): Careers
-- [ ] Dashboard (Admin): Pages
+- [x] Dashboard (Admin): Receipts
+- [x] Dashboard (Admin): Menus
+- [x] Dashboard (Admin): Careers
+- [x] Dashboard (Admin): Pages
 - [ ] Dashboard (Admin): Booking Module
 - [ ] Dashboard (Admin): Model Logs
-- [ ] Dashboard (Admin): Inventory
-- [ ] Dashboard (Admin): Ads Packages
-- [~] Dashboard (Admin): Kitchens
-  - [ ] Dependent on REST: Kitchens API implementation.
-- [ ] Dashboard (Admin): Request Models
-- [ ] Dashboard (Admin): Delivery Points
-- [ ] Dashboard (Admin): Combos
+- [x] Dashboard (Admin): Inventory
+- [x] Dashboard (Admin): Ads Packages
+- [x] Dashboard (Admin): Kitchens
+- [x] Dashboard (Admin): Request Models
+- [x] Dashboard (Admin): Delivery Points
+- [x] Dashboard (Admin): Combos
 
 ## Webhooks
 - [x] Webhook: PayPal
