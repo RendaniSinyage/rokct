@@ -154,7 +154,7 @@
 - [x] Dashboard (Admin): Dashboard & Statistics
 - [x] Dashboard (Admin): Terms & Conditions
 - [x] Dashboard (Admin): Privacy & Policy
-- [ ] Dashboard (Admin): Reviews
+- [x] Dashboard (Admin): Reviews
 - [ ] Dashboard (Admin): Languages
 - [ ] Dashboard (Admin): Currencies
 - [x] Dashboard (Admin): Categories
@@ -177,8 +177,8 @@
 - [ ] Dashboard (Admin): Translations
 - [ ] Dashboard (Admin): Transactions
 - [ ] Dashboard (Admin): Payment to Partners
-- [ ] Dashboard (Admin): Tickets
-- [ ] Dashboard (Admin): FAQs
+- [x] Dashboard (Admin): Tickets
+- [x] Dashboard (Admin): FAQs
 - [ ] Dashboard (Admin): Blogs
 - [ ] Dashboard (Admin): Settings
 - [ ] Dashboard (Admin): Backups
@@ -192,10 +192,10 @@
 - [ ] Dashboard (Admin): DeliveryMan Settings
 - [ ] Dashboard (Admin): Delivery Vehicle Types
 - [ ] Dashboard (Admin): Email Templates
-- [ ] Dashboard (Admin): Order Refunds
+- [x] Dashboard (Admin): Order Refunds
 - [ ] Dashboard (Admin): Shop Working Days
 - [ ] Dashboard (Admin): Shop Closed Days
-- [ ] Dashboard (Admin): Notifications
+- [x] Dashboard (Admin): Notifications
 - [ ] Dashboard (Admin): Email Subscriptions
 - [ ] Dashboard (Admin): Payouts
 - [ ] Dashboard (Admin): Shop Tags
