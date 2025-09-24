@@ -1,0 +1,23 @@
+{
+    "doctype": "DocType",
+    "name": "Combo Item",
+    "engine": "InnoDB",
+    "istable": 1,
+    "module": "Paas",
+    "permissions": [],
+    "fields": [
+        {
+            "fieldname": "item",
+            "fieldtype": "Link",
+            "label": "Item",
+            "options": "Item",
+            "reqd": 1
+        },
+        {
+            "fieldname": "quantity",
+            "fieldtype": "Int",
+            "label": "Quantity",
+            "reqd": 1
+        }
+    ]
+}

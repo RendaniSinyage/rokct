@@ -4116,6 +4116,503 @@ def get_seller_reviews(limit_start: int = 0, limit_page_length: int = 20):
 
 
 @frappe.whitelist()
+def get_seller_delivery_zones(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of delivery zones for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    delivery_zones = frappe.get_list(
+        "Delivery Zone",
+        filters={"shop": shop},
+        fields=["name"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length,
+        order_by="name"
+    )
+    return delivery_zones
+
+
+@frappe.whitelist()
+def get_seller_delivery_zone(zone_name):
+    """
+    Retrieves a single delivery zone with its coordinates for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    zone = frappe.get_doc("Delivery Zone", zone_name)
+
+    if zone.shop != shop:
+        frappe.throw("You are not authorized to view this delivery zone.", frappe.PermissionError)
+
+    return zone.as_dict()
+
+
+@frappe.whitelist()
+def create_seller_delivery_zone(zone_data):
+    """
+    Creates a new delivery zone for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    if isinstance(zone_data, str):
+        zone_data = json.loads(zone_data)
+
+    zone_data["shop"] = shop
+
+    new_zone = frappe.get_doc({
+        "doctype": "Delivery Zone",
+        **zone_data
+    })
+    new_zone.insert(ignore_permissions=True)
+    return new_zone.as_dict()
+
+
+@frappe.whitelist()
+def update_seller_delivery_zone(zone_name, zone_data):
+    """
+    Updates a delivery zone for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    if isinstance(zone_data, str):
+        zone_data = json.loads(zone_data)
+
+    zone = frappe.get_doc("Delivery Zone", zone_name)
+
+    if zone.shop != shop:
+        frappe.throw("You are not authorized to update this delivery zone.", frappe.PermissionError)
+
+    zone.update(zone_data)
+    zone.save(ignore_permissions=True)
+    return zone.as_dict()
+
+
+@frappe.whitelist()
+def delete_seller_delivery_zone(zone_name):
+    """
+    Deletes a delivery zone for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    zone = frappe.get_doc("Delivery Zone", zone_name)
+
+    if zone.shop != shop:
+        frappe.throw("You are not authorized to delete this delivery zone.", frappe.PermissionError)
+
+    frappe.delete_doc("Delivery Zone", zone_name, ignore_permissions=True)
+    return {"status": "success", "message": "Delivery zone deleted successfully."}
+
+
+@frappe.whitelist()
+def get_seller_branches(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of branches for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    branches = frappe.get_list(
+        "Branch",
+        filters={"shop": shop},
+        fields=["name", "branch_name", "address", "latitude", "longitude"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length,
+        order_by="name"
+    )
+    return branches
+
+
+@frappe.whitelist()
+def create_seller_branch(branch_data):
+    """
+    Creates a new branch for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    if isinstance(branch_data, str):
+        branch_data = json.loads(branch_data)
+
+    branch_data["shop"] = shop
+    branch_data["owner"] = user
+
+    new_branch = frappe.get_doc({
+        "doctype": "Branch",
+        **branch_data
+    })
+    new_branch.insert(ignore_permissions=True)
+    return new_branch.as_dict()
+
+
+@frappe.whitelist()
+def update_seller_branch(branch_name, branch_data):
+    """
+    Updates a branch for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    if isinstance(branch_data, str):
+        branch_data = json.loads(branch_data)
+
+    branch = frappe.get_doc("Branch", branch_name)
+
+    if branch.shop != shop:
+        frappe.throw("You are not authorized to update this branch.", frappe.PermissionError)
+
+    branch.update(branch_data)
+    branch.save(ignore_permissions=True)
+    return branch.as_dict()
+
+
+@frappe.whitelist()
+def delete_seller_branch(branch_name):
+    """
+    Deletes a branch for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    branch = frappe.get_doc("Branch", branch_name)
+
+    if branch.shop != shop:
+        frappe.throw("You are not authorized to delete this branch.", frappe.PermissionError)
+
+    frappe.delete_doc("Branch", branch_name, ignore_permissions=True)
+    return {"status": "success", "message": "Branch deleted successfully."}
+
+
+@frappe.whitelist()
+def get_seller_deliveryman_settings():
+    """
+    Retrieves the deliveryman settings for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    if not frappe.db.exists("Shop Deliveryman Settings", {"shop": shop}):
+        return {}
+
+    return frappe.get_doc("Shop Deliveryman Settings", {"shop": shop}).as_dict()
+
+
+@frappe.whitelist()
+def update_seller_deliveryman_settings(settings_data):
+    """
+    Updates the deliveryman settings for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    if isinstance(settings_data, str):
+        settings_data = json.loads(settings_data)
+
+    if not frappe.db.exists("Shop Deliveryman Settings", {"shop": shop}):
+        settings = frappe.new_doc("Shop Deliveryman Settings")
+        settings.shop = shop
+    else:
+        settings = frappe.get_doc("Shop Deliveryman Settings", {"shop": shop})
+
+    settings.update(settings_data)
+    settings.save(ignore_permissions=True)
+    return settings.as_dict()
+
+
+@frappe.whitelist()
+def get_seller_inventory(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves the inventory for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    products = frappe.get_all(
+        "Item",
+        filters={"shop": shop},
+        fields=["name", "item_name"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length,
+        order_by="name"
+    )
+
+    product_names = [p['name'] for p in products]
+
+    if not product_names:
+        return []
+
+    stock_levels = frappe.get_all(
+        "Bin",
+        fields=["item_code", "actual_qty"],
+        filters={"item_code": ["in", product_names]}
+    )
+
+    stock_map = {s['item_code']: s['actual_qty'] for s in stock_levels}
+
+    for p in products:
+        p['stock_quantity'] = stock_map.get(p.name, 0)
+
+    return products
+
+
+@frappe.whitelist()
+def get_ads_packages():
+    """
+    Retrieves a list of available ads packages.
+    """
+    return frappe.get_list(
+        "Ads Package",
+        fields=["name", "price", "duration_days"]
+    )
+
+
+@frappe.whitelist()
+def get_seller_shop_ads_packages(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of purchased ads packages for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    shop_ads_packages = frappe.get_list(
+        "Shop Ads Package",
+        filters={"shop": shop},
+        fields=["name", "ads_package", "start_date", "end_date"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length,
+        order_by="end_date desc"
+    )
+    return shop_ads_packages
+
+
+@frappe.whitelist()
+def purchase_shop_ads_package(package_name):
+    """
+    Purchases an ads package for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    ads_package = frappe.get_doc("Ads Package", package_name)
+
+    # In a real application, you would have a payment flow here.
+    # For now, we will just create the Shop Ads Package directly.
+
+    from frappe.utils import nowdate, add_days
+
+    start_date = nowdate()
+    end_date = add_days(start_date, ads_package.duration_days)
+
+    new_shop_ads_package = frappe.get_doc({
+        "doctype": "Shop Ads Package",
+        "shop": shop,
+        "ads_package": package_name,
+        "start_date": start_date,
+        "end_date": end_date
+    })
+    new_shop_ads_package.insert(ignore_permissions=True)
+
+    return new_shop_ads_package.as_dict()
+
+
+@frappe.whitelist()
+def get_seller_receipts(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of receipts for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    receipts = frappe.get_list(
+        "Receipt",
+        filters={"shop": shop},
+        fields=["name", "title"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length,
+        order_by="name"
+    )
+    return receipts
+
+
+@frappe.whitelist()
+def create_seller_receipt(receipt_data):
+    """
+    Creates a new receipt for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    if isinstance(receipt_data, str):
+        receipt_data = json.loads(receipt_data)
+
+    receipt_data["shop"] = shop
+
+    new_receipt = frappe.get_doc({
+        "doctype": "Receipt",
+        **receipt_data
+    })
+    new_receipt.insert(ignore_permissions=True)
+    return new_receipt.as_dict()
+
+
+@frappe.whitelist()
+def update_seller_receipt(receipt_name, receipt_data):
+    """
+    Updates a receipt for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    if isinstance(receipt_data, str):
+        receipt_data = json.loads(receipt_data)
+
+    receipt = frappe.get_doc("Receipt", receipt_name)
+
+    if receipt.shop != shop:
+        frappe.throw("You are not authorized to update this receipt.", frappe.PermissionError)
+
+    receipt.update(receipt_data)
+    receipt.save(ignore_permissions=True)
+    return receipt.as_dict()
+
+
+@frappe.whitelist()
+def delete_seller_receipt(receipt_name):
+    """
+    Deletes a receipt for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    receipt = frappe.get_doc("Receipt", receipt_name)
+
+    if receipt.shop != shop:
+        frappe.throw("You are not authorized to delete this receipt.", frappe.PermissionError)
+
+    frappe.delete_doc("Receipt", receipt_name, ignore_permissions=True)
+    return {"status": "success", "message": "Receipt deleted successfully."}
+
+
+@frappe.whitelist()
+def get_seller_combos(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of combos for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    combos = frappe.get_list(
+        "Combo",
+        filters={"shop": shop},
+        fields=["name", "price"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length,
+        order_by="name"
+    )
+    return combos
+
+
+@frappe.whitelist()
+def get_seller_combo(combo_name):
+    """
+    Retrieves a single combo with its items for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    combo = frappe.get_doc("Combo", combo_name)
+
+    if combo.shop != shop:
+        frappe.throw("You are not authorized to view this combo.", frappe.PermissionError)
+
+    return combo.as_dict()
+
+
+@frappe.whitelist()
+def create_seller_combo(combo_data):
+    """
+    Creates a new combo for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    if isinstance(combo_data, str):
+        combo_data = json.loads(combo_data)
+
+    combo_data["shop"] = shop
+
+    new_combo = frappe.get_doc({
+        "doctype": "Combo",
+        **combo_data
+    })
+    new_combo.insert(ignore_permissions=True)
+    return new_combo.as_dict()
+
+
+@frappe.whitelist()
+def update_seller_combo(combo_name, combo_data):
+    """
+    Updates a combo for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    if isinstance(combo_data, str):
+        combo_data = json.loads(combo_data)
+
+    combo = frappe.get_doc("Combo", combo_name)
+
+    if combo.shop != shop:
+        frappe.throw("You are not authorized to update this combo.", frappe.PermissionError)
+
+    combo.update(combo_data)
+    combo.save(ignore_permissions=True)
+    return combo.as_dict()
+
+
+@frappe.whitelist()
+def delete_seller_combo(combo_name):
+    """
+    Deletes a combo for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    combo = frappe.get_doc("Combo", combo_name)
+
+    if combo.shop != shop:
+        frappe.throw("You are not authorized to delete this combo.", frappe.PermissionError)
+
+    frappe.delete_doc("Combo", combo_name, ignore_permissions=True)
+    return {"status": "success", "message": "Combo deleted successfully."}
+
+
+@frappe.whitelist()
+def get_seller_request_models(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of request models for the current seller.
+    """
+    user = frappe.session.user
+    if user == "Guest":
+        frappe.throw("You must be logged in to view your request models.", frappe.AuthenticationError)
+
+    request_models = frappe.get_list(
+        "Request Model",
+        filters={"created_by_user": user},
+        fields=["name", "model_type", "model", "status", "created_at"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length,
+        order_by="creation desc"
+    )
+    return request_models
+
+
+@frappe.whitelist()
 def get_user_transactions(limit_start=0, limit_page_length=20):
     """
     Retrieve the list of transactions for the currently logged-in user.

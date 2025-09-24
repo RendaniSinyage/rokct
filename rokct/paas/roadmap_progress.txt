@@ -128,27 +128,27 @@
 - [x] Dashboard (Seller): Bonuses
 - [x] Dashboard (Seller): Stories
 - [x] Dashboard (Seller): Tags
-- [ ] Dashboard (Seller): Delivery Zones
+- [x] Dashboard (Seller): Delivery Zones
 - [x] Dashboard (Seller): Shop Payments
 - [x] Dashboard (Seller): Order Refunds
 - [x] Dashboard (Seller): Shop Working Days
 - [x] Dashboard (Seller): Shop Closed Days
 - [x] Dashboard (Seller): Payouts
 - [x] Dashboard (Seller): Reviews
-- [ ] Dashboard (Seller): Receipts
+- [x] Dashboard (Seller): Receipts
 - [x] Dashboard (Selle): Shop Galleries
-- [ ] Dashboard (Seller): Shop Deliveryman Settings
+- [x] Dashboard (Seller): Shop Deliveryman Settings
 - [x] Dashboard (Seller): Menus
-- [ ] Dashboard (Seller): Branches
-- [ ] Dashboard (Seller): Inventory
+- [x] Dashboard (Seller): Branches
+- [x] Dashboard (Seller): Inventory
 - [ ] Dashboard (Seller): Inventory Items
-- [ ] Dashboard (Seller): Ads Packages
-- [ ] Dashboard (Seller): Shop Ads Packages
-- [ ] Dashboard (Seller): Request Models
+- [x] Dashboard (Seller): Ads Packages
+- [x] Dashboard (Seller): Shop Ads Packages
+- [x] Dashboard (Seller): Request Models
 - [ ] Dashboard (Seller): Payment to Partners
 - [ ] Dashboard (Seller): User Addresses
 - [ ] Dashboard (Seller): Delivery Man Delivery Zones
-- [ ] Dashboard (Seller): Combos
+- [x] Dashboard (Seller): Combos
 
 ## Admin Dashboard
 - [ ] Dashboard (Admin): Dashboard & Statistics
