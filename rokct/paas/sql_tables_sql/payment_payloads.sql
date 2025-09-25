@@ -1,0 +1,9 @@
+CREATE TABLE `payment_payloads` (
+  `payment_id` bigint unsigned NOT NULL,
+  `payload` longtext NOT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  KEY `payment_payloads_payment_id_foreign` (`payment_id`),
+  CONSTRAINT `payment_payloads_payment_id_foreign` FOREIGN KEY (`payment_id`) REFERENCES `payments` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+
+INSERT INTO `payment_payloads` VALUES (5,'{\"paystack_pk\":\"pk_live_ecd3f1a57daddaa66c83a0e3fd2843681281182d\",\"paystack_sk\":\"sk_live_57e139eec45e1d25a1f50bd402734b69152ec8c9\",\"currency\":\"ZAR\"}','2023-06-20 17:33:01'),(5,'{\"paystack_pk\":\"pk_live_ecd3f1a57daddaa66c83a0e3fd2843681281182d\",\"paystack_sk\":\"sk_live_2335989de950ec170c90804a3a16804b47666114\",\"currency\":\"ZAR\"}','2023-06-20 17:33:01'),(4,'{\"paystack_pk\":\"pk_live_ecd3f1a57daddaa66c83a0e3fd2843681281182d\",\"paystack_sk\":\"sk_live_2335989de950ec170c90804a3a16804b47666114\",\"currency\":\"ZAR\"}','2023-06-23 17:13:23'),(5,'{\"paystack_pk\":\"pk_live_ecd3f1a57daddaa66c83a0e3fd2843681281182d\",\"paystack_sk\":\"sk_live_2335989de950ec170c90804a3a16804b47666114\",\"currency\":\"ZAR\"}',NULL),(8,'{\"title\":\"pay by flutter\",\"description\":\"pay by flutter\",\"flw_pk\":\"FLWPUBK-e7f46dd7b491fbe47da121f65cc0b16e-X\",\"flw_sk\":\"FLWSECK-ea11ee318f7dedb34d895f623d35b951-18e53663224vt-X\",\"key\":\"ea11ee318f7d72570afe0a1b\",\"currency\":\"ZAR\",\"logo\":\"https:\\/\\/gosouth.s3.af-south-1.amazonaws.com\\/public\\/images\\/brands\\/101-1711916565.webp\",\"sandbox\":0}',NULL),(12,'{\"merchant_id\":\"12035225\",\"merchant_key\":\"j5gtf8n3jvxo3\",\"pass_phrase\":\"Sgosouthbwi1\",\"sandbox\":0}','2024-10-19 11:24:47'),(12,'{\"merchant_id\":\"12035225\",\"merchant_key\":\"j5gtf8n3jvxo3\",\"pass_phrase\":\"Sgosouthbwi1\",\"sandbox\":0}','2024-10-19 11:24:47'),(12,'{\"merchant_id\":\"12035225\",\"merchant_key\":\"j5gtf8n3jvxo3\",\"pass_phrase\":\"Sgosouthbwi1\",\"sandbox\":0}',NULL);

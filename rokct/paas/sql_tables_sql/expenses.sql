@@ -1,0 +1,30 @@
+CREATE TABLE `expenses` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `shop_id` bigint unsigned NOT NULL,
+  `item_code` varchar(255) DEFAULT NULL,
+  `qty` decimal(10,2) DEFAULT '1.00',
+  `price` double NOT NULL,
+  `description` varchar(255) NOT NULL,
+  `note` varchar(255) DEFAULT NULL,
+  `meter_id` int DEFAULT NULL,
+  `kwh` decimal(10,2) DEFAULT NULL,
+  `litres` decimal(10,2) DEFAULT NULL,
+  `status` varchar(255) DEFAULT 'progress',
+  `type_id` int DEFAULT NULL,
+  `supplier` varchar(255) DEFAULT NULL,
+  `invoice_number` varchar(255) DEFAULT NULL,
+  `parent_id` bigint unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `transactions_user_id_index` (`shop_id`),
+  KEY `transactions_status_index` (`status`),
+  KEY `fk_expenses_type` (`type_id`),
+  KEY `fk_expenses_meter` (`meter_id`),
+  CONSTRAINT `fk_expenses_meter` FOREIGN KEY (`meter_id`) REFERENCES `meters` (`id`),
+  CONSTRAINT `fk_expenses_shop` FOREIGN KEY (`shop_id`) REFERENCES `shops` (`id`),
+  CONSTRAINT `fk_expenses_type` FOREIGN KEY (`type_id`) REFERENCES `expenses_type` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb3;
+
+INSERT INTO `expenses` VALUES (1,9003,NULL,1.00,200,'',NULL,1,77.90,NULL,'paid',1,NULL,NULL,NULL,'2024-12-17 14:24:17','2024-12-17 14:24:17',NULL),(2,9003,NULL,1.00,60,'',NULL,NULL,NULL,2.73,'paid',NULL,NULL,NULL,NULL,'2024-10-18 14:49:33','2024-10-18 14:49:33',NULL),(3,9003,NULL,1.00,200,'',NULL,1,63.20,NULL,'paid',1,NULL,NULL,NULL,'2024-09-29 14:24:17','2024-09-29 14:24:17',NULL),(4,9003,NULL,1.00,100,'',NULL,1,50.10,NULL,'paid',1,NULL,NULL,NULL,'2024-10-01 15:02:45','2024-10-01 15:02:45',NULL),(5,9003,NULL,1.00,60,'',NULL,NULL,NULL,2.73,'paid',3,NULL,NULL,NULL,'2024-10-19 15:05:16','2024-10-19 15:05:16',NULL),(6,9003,NULL,1.00,35.3,'NTK - Builders Line',NULL,NULL,NULL,NULL,'paid',2,NULL,NULL,NULL,'2024-10-22 15:06:52','2024-10-22 15:06:52',NULL),(7,9003,NULL,1.00,1.4,'NTK - plastic bag',NULL,NULL,NULL,NULL,'paid',2,NULL,NULL,NULL,'2024-10-22 15:06:52','2024-10-22 15:06:52',NULL),(8,9003,NULL,1.00,243.1,'NTK - ALNET SHADENET',NULL,NULL,NULL,NULL,'paid',2,NULL,'55843',NULL,'2024-10-22 15:06:52','2024-10-22 15:06:52',NULL),(9,9003,'9900SC',60.00,1128.15,'10LT Square Clear 45mm(15)',NULL,NULL,NULL,NULL,'paid',2,'AT-PET Trading','IN236821',NULL,'2024-09-19 15:06:52','2024-09-19 15:06:52',NULL),(10,9003,'BUHD20NAT',4.00,588.8,'20LT HDPE QUICKSERVE+TAP+CAPS(5)',NULL,NULL,NULL,NULL,'paid',2,'AT-PET Trading','IN236821',NULL,'2024-09-19 15:06:52','2024-09-19 15:06:52',NULL),(11,9003,'WD-25-BL',1.00,143.75,'25LT HDPE QUICKSERVE+TAP+CAPS(10)',NULL,NULL,NULL,NULL,'paid',2,'AT-PET Trading','IN236821',NULL,'2024-09-19 15:06:52','2024-09-19 15:06:52',NULL),(12,9003,NULL,1.00,10,'',NULL,1,77.90,NULL,'paid',1,NULL,NULL,NULL,'2025-02-12 14:24:17','2024-12-17 14:24:17',NULL),(13,9003,NULL,1.00,200,'',NULL,1,77.90,NULL,'paid',1,NULL,NULL,NULL,'2025-01-27 14:24:17','2024-12-17 14:24:17',NULL);

@@ -1,0 +1,27 @@
+CREATE TABLE `todo_tasks` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `uuid` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `shop_id` bigint unsigned DEFAULT NULL,
+  `kpi_id` bigint unsigned DEFAULT NULL,
+  `objective_id` bigint unsigned DEFAULT NULL,
+  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `due_date` date DEFAULT NULL,
+  `assigned_to` bigint unsigned DEFAULT NULL,
+  `status` enum('Todo','In Progress','Done','Blocked') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Todo',
+  `priority` enum('Low','Medium','High','Urgent') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Medium',
+  `app_id` bigint unsigned DEFAULT NULL,
+  `roadmap_version` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `todo_tasks_uuid_unique` (`uuid`),
+  KEY `todo_tasks_shop_id_foreign` (`shop_id`),
+  KEY `todo_tasks_kpi_id_foreign` (`kpi_id`),
+  KEY `todo_tasks_objective_id_foreign` (`objective_id`),
+  CONSTRAINT `todo_tasks_kpi_id_foreign` FOREIGN KEY (`kpi_id`) REFERENCES `kpis` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `todo_tasks_objective_id_foreign` FOREIGN KEY (`objective_id`) REFERENCES `strategic_objectives` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `todo_tasks_shop_id_foreign` FOREIGN KEY (`shop_id`) REFERENCES `shops` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
