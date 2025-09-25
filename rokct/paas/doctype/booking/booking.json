@@ -1,0 +1,60 @@
+{
+    "doctype": "DocType",
+    "name": "Booking",
+    "engine": "InnoDB",
+    "is_submittable": 0,
+    "issingle": 0,
+    "istable": 0,
+    "module": "Paas",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 1,
+            "email": 1,
+            "export": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "role": "System Manager",
+            "share": 1,
+            "write": 1
+        }
+    ],
+    "sort_field": "modified",
+    "sort_order": "DESC",
+    "track_changes": 1,
+    "fields": [
+        {
+            "fieldname": "user",
+            "fieldtype": "Link",
+            "label": "User",
+            "options": "User",
+            "reqd": 1
+        },
+        {
+            "fieldname": "shop",
+            "fieldtype": "Link",
+            "label": "Shop",
+            "options": "Company",
+            "reqd": 1
+        },
+        {
+            "fieldname": "booking_date",
+            "fieldtype": "Datetime",
+            "label": "Booking Date",
+            "reqd": 1
+        },
+        {
+            "fieldname": "number_of_guests",
+            "fieldtype": "Int",
+            "label": "Number of Guests"
+        },
+        {
+            "fieldname": "status",
+            "fieldtype": "Select",
+            "label": "Status",
+            "options": "Requested\nConfirmed\nCancelled",
+            "default": "Requested"
+        }
+    ]
+}

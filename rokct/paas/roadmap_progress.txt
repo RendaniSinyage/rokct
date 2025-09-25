@@ -136,7 +136,7 @@
 - [x] Dashboard (Seller): Payouts
 - [x] Dashboard (Seller): Reviews
 - [x] Dashboard (Seller): Receipts
-- [x] Dashboard (Selle): Shop Galleries
+- [x] Dashboard (Seller): Shop Galleries
 - [x] Dashboard (Seller): Shop Deliveryman Settings
 - [x] Dashboard (Seller): Menus
 - [x] Dashboard (Seller): Branches
@@ -242,9 +242,9 @@
 - [-] ERPGo: Sync (No longer needed)
 - [-] ERPGo: Reports (No longer needed)
 - [-] ERPGo: Inventory (No longer needed)
-- [ ] ERPGo: Employees (exclude this feature)
-- [ ] ERPGo: Staff Access (exclude this feature)
-- [ ] Webhooks (exclude this feature)
+- [x] ERPGo: Employees (exclude this feature)
+- [x] ERPGo: Staff Access (exclude this feature)
+- [x] Webhooks (exclude this feature)
 
 ## Resources
 - [x] Resources: Visions (Moved to rokct app)
@@ -253,13 +253,13 @@
 - [x] Resources: KPIs (Moved to rokct app)
 - [x] Resources: Plan on a Page (Moved to rokct app)
 - [x] Resources: Personal Mastery Goals (Moved to rokct app)
-- [ ] Resources: Apps (exclude this feature)
-- [ ] Roadmap Versions (exclude this feature)
-- [ ] Resources: Expenses (exclude this feature)
-- [ ] Resources: Energy Consumption (exclude this feature)
-- [ ] Resources: RO Systems (exclude this feature)
-- [ ] Resources: Maintenance Records (exclude this feature)
-- [ ] Resources: Tanks (exclude this feature)
+- [x] Resources: Apps (exclude this feature)
+- [x] Roadmap Versions (exclude this feature)
+- [x] Resources: Expenses (exclude this feature)
+- [x] Resources: Energy Consumption (exclude this feature)
+- [x] Resources: RO Systems (exclude this feature)
+- [x] Resources: Maintenance Records (exclude this feature)
+- [x] Resources: Tanks (exclude this feature)
 
 ## Multi-Company Vendor Architecture
 - [x] Phase 1: Foundational Setup

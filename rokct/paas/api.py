@@ -4409,10 +4409,31 @@ def update_seller_deliveryman_settings(settings_data):
 
 
 @frappe.whitelist()
-def get_seller_inventory(limit_start: int = 0, limit_page_length: int = 20):
+def get_seller_inventory_items(limit_start: int = 0, limit_page_length: int = 20, item_code: str = None):
     """
-    Retrieves the inventory for the current seller's shop.
+    Retrieves inventory items (Bin entries) for the current seller's shop.
+    Can be filtered by a specific item.
     """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    item_filters = {"shop": shop}
+    if item_code:
+        item_filters["name"] = item_code
+
+    items = frappe.get_all("Item", filters=item_filters, pluck="name")
+
+    if not items:
+        return []
+
+    inventory_items = frappe.get_list(
+        "Bin",
+        filters={"item_code": ["in", items]},
+        fields=["item_code", "warehouse", "actual_qty"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length
+    )
+    return inventory_items
     user = frappe.session.user
     shop = _get_seller_shop(user)
 
@@ -5920,6 +5941,223 @@ def get_multi_company_sales_report(from_date: str, to_date: str, company: str = 
         order.commission = (order.grand_total * commission_rate) / 100
 
     return sales_report
+
+
+@frappe.whitelist()
+def adjust_seller_inventory(item_code: str, warehouse: str, new_qty: int):
+    """
+    Adjusts the inventory for a specific item in a warehouse for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    item = frappe.get_doc("Item", item_code)
+    if item.shop != shop:
+        frappe.throw("You are not authorized to adjust inventory for this item.", frappe.PermissionError)
+
+    # Get current quantity
+    current_qty = frappe.db.get_value("Bin", {"item_code": item_code, "warehouse": warehouse}, "actual_qty") or 0
+
+    # Create a stock reconciliation entry
+    stock_entry = frappe.get_doc({
+        "doctype": "Stock Entry",
+        "purpose": "Stock Reconciliation",
+        "company": shop,
+        "items": [{
+            "item_code": item_code,
+            "warehouse": warehouse,
+            "qty": new_qty,
+            "basic_rate": item.standard_rate,
+            "t_warehouse": warehouse,
+            "s_warehouse": warehouse,
+            "diff_qty": new_qty - current_qty
+        }]
+    })
+    stock_entry.submit()
+
+    return {"status": "success", "message": f"Inventory for {item_code} adjusted to {new_qty}."}
+
+
+@frappe.whitelist()
+def get_all_product_extra_groups(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of all product extra groups on the platform (for admins).
+    """
+    _require_admin()
+    return frappe.get_list(
+        "Product Extra Group",
+        fields=["name", "shop"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length
+    )
+
+
+@frappe.whitelist()
+def get_all_product_extra_values(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of all product extra values on the platform (for admins).
+    """
+    _require_admin()
+    return frappe.get_list(
+        "Product Extra Value",
+        fields=["name", "product_extra_group", "value", "price"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length
+    )
+
+
+@frappe.whitelist()
+def get_all_parcel_order_settings(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of all parcel order settings on the platform (for admins).
+    """
+    _require_admin()
+    return frappe.get_list(
+        "Parcel Order Setting",
+        fields=["name", "title"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length
+    )
+
+
+@frappe.whitelist()
+def get_all_payments(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of all payments (credit transactions) on the platform (for admins).
+    """
+    _require_admin()
+    return frappe.get_list(
+        "Transaction",
+        filters={"credit": [">", 0]},
+        fields=["name", "transaction_date", "reference_doctype", "reference_name", "credit", "currency"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length,
+        order_by="creation desc"
+    )
+
+
+@frappe.whitelist()
+def get_all_payments_to_partners(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of all payments to partners (payouts) on the platform (for admins).
+    """
+    _require_admin()
+    return frappe.get_list(
+        "Payout",
+        fields=["name", "shop", "deliveryman", "amount", "payment_date", "status"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length,
+        order_by="payment_date desc"
+    )
+
+
+@frappe.whitelist()
+def get_all_bookings(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of all bookings on the platform (for admins).
+    """
+    _require_admin()
+    return frappe.get_list(
+        "Booking",
+        fields=["name", "user", "shop", "booking_date", "number_of_guests", "status"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length,
+        order_by="booking_date desc"
+    )
+
+
+@frappe.whitelist()
+def create_booking(booking_data):
+    """
+    Creates a new booking (for admins).
+    """
+    _require_admin()
+    if isinstance(booking_data, str):
+        booking_data = json.loads(booking_data)
+
+    new_booking = frappe.get_doc({
+        "doctype": "Booking",
+        **booking_data
+    })
+    new_booking.insert(ignore_permissions=True)
+    return new_booking.as_dict()
+
+
+@frappe.whitelist()
+def update_booking(booking_name, booking_data):
+    """
+    Updates a booking (for admins).
+    """
+    _require_admin()
+    if isinstance(booking_data, str):
+        booking_data = json.loads(booking_data)
+
+    booking = frappe.get_doc("Booking", booking_name)
+    booking.update(booking_data)
+    booking.save(ignore_permissions=True)
+    return booking.as_dict()
+
+
+@frappe.whitelist()
+def delete_booking(booking_name):
+    """
+    Deletes a booking (for admins).
+    """
+    _require_admin()
+    frappe.delete_doc("Booking", booking_name, ignore_permissions=True)
+    return {"status": "success", "message": "Booking deleted successfully."}
+
+
+@frappe.whitelist()
+def get_admin_report(doctype: str, fields: str, filters: str = None, limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a report for a specified doctype with given fields and filters (for admins).
+    """
+    _require_admin()
+
+    if isinstance(fields, str):
+        fields = json.loads(fields)
+
+    if filters and isinstance(filters, str):
+        filters = json.loads(filters)
+
+    return frappe.get_list(
+        doctype,
+        fields=fields,
+        filters=filters,
+        limit_start=limit_start,
+        limit_page_length=limit_page_length
+    )
+
+
+@frappe.whitelist()
+def get_payment_payloads(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of all payment payloads on the platform (for admins).
+    """
+    _require_admin()
+    return frappe.get_list(
+        "Payment Payload",
+        fields=["name", "payload", "creation"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length,
+        order_by="creation desc"
+    )
+
+
+@frappe.whitelist()
+def get_sms_payloads(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of all SMS payloads on the platform (for admins).
+    """
+    _require_admin()
+    return frappe.get_list(
+        "SMS Payload",
+        fields=["name", "payload", "creation"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length,
+        order_by="creation desc"
+    )
 
 
 @frappe.whitelist()
