@@ -5817,6 +5817,112 @@ def handle_stripe_webhook():
 
 
 @frappe.whitelist()
+def get_seller_inventory_items(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of inventory items for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    items = frappe.get_all(
+        "Item",
+        filters={"shop": shop},
+        pluck="name"
+    )
+
+    if not items:
+        return []
+
+    inventory_items = frappe.get_list(
+        "Bin",
+        filters={"item_code": ["in", items]},
+        fields=["item_code", "warehouse", "actual_qty"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length
+    )
+    return inventory_items
+
+
+@frappe.whitelist()
+def get_seller_payment_to_partners(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of payments to partners for the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    payouts = frappe.get_list(
+        "Payout",
+        filters={"shop": shop},
+        fields=["name", "deliveryman", "amount", "payment_date", "status"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length,
+        order_by="payment_date desc"
+    )
+    return payouts
+
+
+@frappe.whitelist()
+def get_seller_delivery_man_delivery_zones(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves a list of delivery zones for the deliverymen of the current seller's shop.
+    """
+    user = frappe.session.user
+    shop = _get_seller_shop(user)
+
+    deliverymen = frappe.db.sql_list("""
+        SELECT DISTINCT deliveryman FROM `tabOrder` WHERE shop = %(shop)s AND deliveryman IS NOT NULL
+    """, {"shop": shop})
+
+    if not deliverymen:
+        return []
+
+    delivery_zones = frappe.get_list(
+        "Deliveryman Delivery Zone",
+        filters={"deliveryman": ["in", deliverymen]},
+        fields=["name", "deliveryman", "delivery_zone"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length
+    )
+    return delivery_zones
+
+
+@frappe.whitelist()
+def get_multi_company_sales_report(from_date: str, to_date: str, company: str = None):
+    """
+    Retrieves a sales report for a specific company or all companies within a date range (for admins).
+    """
+    _require_admin()
+
+    filters = {
+        "creation": ["between", [from_date, to_date]]
+    }
+    if company:
+        filters["shop"] = company
+
+    sales_report = frappe.get_all(
+        "Order",
+        filters=filters,
+        fields=["name", "shop", "user", "grand_total", "status", "creation"],
+        order_by="creation desc"
+    )
+
+    # Get commission rates for all shops
+    commission_rates = frappe.get_all(
+        "Company",
+        fields=["name", "sales_commission_rate"],
+        filters={"sales_commission_rate": [">", 0]}
+    )
+    commission_map = {c['name']: c['sales_commission_rate'] for c in commission_rates}
+
+    for order in sales_report:
+        commission_rate = commission_map.get(order.shop, 0)
+        order.commission = (order.grand_total * commission_rate) / 100
+
+    return sales_report
+
+
+@frappe.whitelist()
 def get_user_transactions(limit_start=0, limit_page_length=20):
     """
     Retrieve the list of transactions for the currently logged-in user.

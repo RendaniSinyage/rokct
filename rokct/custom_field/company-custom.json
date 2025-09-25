@@ -41,5 +41,12 @@
         "fieldname": "description",
         "fieldtype": "Text",
         "label": "Description"
+    },
+    {
+        "doctype": "Custom Field",
+        "dt": "Company",
+        "fieldname": "sales_commission_rate",
+        "fieldtype": "Percent",
+        "label": "Sales Commission Rate"
     }
 ]

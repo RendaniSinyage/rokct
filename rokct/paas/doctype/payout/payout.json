@@ -25,6 +25,13 @@
     "track_changes": 1,
     "fields": [
         {
+            "fieldname": "shop",
+            "fieldtype": "Link",
+            "label": "Shop",
+            "options": "Company",
+            "reqd": 1
+        },
+        {
             "fieldname": "deliveryman",
             "fieldtype": "Link",
             "label": "Deliveryman",
