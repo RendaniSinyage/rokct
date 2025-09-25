@@ -25,7 +25,7 @@ class GalleryRepository implements GalleryRepositoryFacade {
       final client = dioHttp.client(requireAuth: true);
       // NOTE: Using Frappe's standard file upload method
       final response = await client.post(
-        '/api/method/upload_file',
+        '/api/v1/method/upload_file',
         data: data,
       );
       // The response will contain the file URL, which needs to be saved

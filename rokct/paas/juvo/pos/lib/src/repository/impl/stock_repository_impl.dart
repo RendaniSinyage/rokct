@@ -42,31 +42,16 @@ class StockRepositoryImpl implements StockRepository {
 
     final data = {
       if (query != null) 'search': query,
-      'perPage': 10,
-      "page": page,
-      if (categoryIds != null)
-        for (int i = 0; i < categoryIds.length; i++)
-          'category_ids[$i]': categoryIds[i],
-      if (brandIds != null)
-        for (int i = 0; i < brandIds.length; i++) 'brand_ids[$i]': brandIds[i],
-      if (extrasId != null)
-        for (int i = 0; i < extrasId.length; i++) 'extras[$i]': extrasId[i],
-      if (priceTo != null) "price_to": priceTo,
-      if (priceFrom != null) 'price_from': priceFrom,
+      'limit_start': (page - 1) * 10,
+      'limit_page_length': 10,
       if (categoryId != null) 'category_id': categoryId,
       if (brandId != null) 'brand_id': brandId,
-      if (shopId != null) 'shop_id': shopId,
-      if (isNew ?? false) "column": "created_at",
-      if (isNew ?? false) 'sort': 'desc',
-      //'currency_id': LocalStorage.getSelectedCurrency()?.id,
-      'lang': LocalStorage.getLanguage()?.locale ?? 'en',
-      // 'active': 1,
       if (statusText != null) 'status': statusText,
     };
     try {
       final client = dioHttp.client(requireAuth: true);
       final response = await client.get(
-        '/api/v1/dashboard/seller/stocks/select-paginate',
+        '/api/v1/method/rokct.paas.api.get_seller_inventory_items',
         queryParameters: data,
       );
       return ApiResult.success(
@@ -78,4 +63,3 @@ class StockRepositoryImpl implements StockRepository {
     }
   }
 }
-

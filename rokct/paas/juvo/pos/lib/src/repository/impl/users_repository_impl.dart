@@ -27,19 +27,14 @@ class UsersRepositoryImpl extends UsersRepository {
   }) async {
     final data = {
       if (query != null) 'search': query,
-      'perPage': 14,
-      if (page != null) 'page': page,
-      'sort': 'desc',
-      'column': 'created_at',
-      if (inviteStatus != null) 'invite_status': inviteStatus,
+      'limit_start': (page ?? 1) - 1 * 14,
+      'limit_page_length': 14,
       if (role != null) 'role': role,
     };
     try {
       final client = dioHttp.client(requireAuth: true);
       final response = await client.get(
-        role != null
-            ? '/api/v1/dashboard/seller/shop/users/paginate'
-            : '/api/v1/dashboard/seller/users/paginate',
+        '/api/v1/method/rokct.paas.api.get_shop_users',
         queryParameters: data,
       );
       return ApiResult.success(
@@ -47,46 +42,6 @@ class UsersRepositoryImpl extends UsersRepository {
       );
     } catch (e) {
       debugPrint('==> search users failure: $e');
-      return ApiResult.failure(error: AppHelpers.errorHandler(e));
-    }
-  }
-
-  @override
-  Future<ApiResult<UsersPaginateResponse>> searchDeliveryman(
-      String? query) async {
-    final data = {
-      if (query != null) 'search': query,
-      'lang': LocalStorage.getLanguage()?.locale ?? 'en',
-    };
-    try {
-      final client = dioHttp.client(requireAuth: true);
-      final response = await client.get(
-        '/api/v1/dashboard/${LocalStorage.getUser()?.role}/shop/users/role/deliveryman',
-        queryParameters: data,
-      );
-      return ApiResult.success(
-        data: UsersPaginateResponse.fromJson(response.data),
-      );
-    } catch (e) {
-      debugPrint('==> search users failure: $e');
-      return ApiResult.failure(error: AppHelpers.errorHandler(e));
-    }
-  }
-
-  @override
-  Future<ApiResult<SingleUserResponse>> getUserDetails(String uuid) async {
-    final data = {'lang': LocalStorage.getLanguage()?.locale ?? 'en'};
-    try {
-      final client = dioHttp.client(requireAuth: true);
-      final response = await client.get(
-        '/api/v1/dashboard/${LocalStorage.getUser()?.role}/users/$uuid',
-        queryParameters: data,
-      );
-      return ApiResult.success(
-        data: SingleUserResponse.fromJson(response.data),
-      );
-    } catch (e) {
-      debugPrint('==> get user details failure: $e');
       return ApiResult.failure(error: AppHelpers.errorHandler(e));
     }
   }
@@ -97,7 +52,7 @@ class UsersRepositoryImpl extends UsersRepository {
     try {
       final client = dioHttp.client(requireAuth: true);
       final response = await client.get(
-        '/api/v1/dashboard/user/profile/show',
+        '/api/v1/method/rokct.paas.api.get_user_profile',
       );
       return ApiResult.success(
         data: ProfileResponse.fromJson(response.data),
@@ -118,21 +73,14 @@ class UsersRepositoryImpl extends UsersRepository {
   Future<ApiResult<void>> updateDeliveryZones({
     required List<LatLng> points,
   }) async {
-    List<Map<String, dynamic>> tapped = [];
-    for (final point in points) {
-      final location = {'0': point.latitude, '1': point.longitude};
-      tapped.add(location);
-    }
     final data = {
-      'shop_id': LocalStorage.getUser()?.shop?.id,
-      'address': tapped,
+      'coordinates': points.map((e) => {'latitude': e.latitude, 'longitude': e.longitude}).toList(),
     };
-    debugPrint('====> update delivery zone ${jsonEncode(data)}');
     try {
       final client = dioHttp.client(requireAuth: true);
       await client.post(
-        '/api/v1/dashboard/seller/delivery-zones',
-        data: data,
+        '/api/v1/method/rokct.paas.api.create_seller_delivery_zone',
+        data: {'zone_data': data},
       );
       return const ApiResult.success(data: null);
     } catch (e) {
@@ -143,15 +91,10 @@ class UsersRepositoryImpl extends UsersRepository {
 
   @override
   Future<ApiResult<DeliveryZonePaginate>> getDeliveryZone() async {
-    final int? shopID = LocalStorage.getUser()?.shop?.id;
-    final data = {
-      'lang': LocalStorage.getLanguage()?.locale ?? 'en',
-    };
     try {
       final client = dioHttp.client(requireAuth: true);
       final response = await client.get(
-        '/api/v1/rest/shop/delivery-zone/$shopID',
-        queryParameters: data,
+        '/api/v1/method/rokct.paas.api.get_seller_delivery_zones',
       );
       return ApiResult.success(
         data: DeliveryZonePaginate.fromJson(response.data),
@@ -167,17 +110,18 @@ class UsersRepositoryImpl extends UsersRepository {
   Future<ApiResult<bool>> checkDriverZone(LatLng location, int? shopId) async {
     try {
       final client = dioHttp.client(requireAuth: false);
-      final data = <String, dynamic>{
-        'address[latitude]': location.latitude,
-        'address[longitude]': location.longitude,
+      final data = {
+        'latitude': location.latitude,
+        'longitude': location.longitude,
+        if (shopId != null) 'shop_id': shopId,
       };
 
       final response = await client.get(
-          '/api/v1/rest/shop/$shopId/delivery-zone/check/distance',
+          '/api/v1/method/rokct.paas.api.check_delivery_zone',
           queryParameters: data);
 
       return ApiResult.success(
-        data: response.data["status"],
+        data: response.data["status"] == "success",
       );
     } catch (e) {
       debugPrint('==> get delivery zone failure: $e');
@@ -193,13 +137,13 @@ class UsersRepositoryImpl extends UsersRepository {
     required int shopId,
   }) async {
     final data = {
-      'coupon': coupon,
+      'code': coupon,
       'shop_id': shopId,
     };
     try {
       final client = dioHttp.client(requireAuth: true);
       await client.post(
-        '/api/v1/rest/coupons/check',
+        '/api/v1/method/rokct.paas.api.check_coupon',
         data: data,
       );
       return const ApiResult.success(data: true);
@@ -212,63 +156,14 @@ class UsersRepositoryImpl extends UsersRepository {
   }
 
   @override
-  Future<ApiResult<ProfileResponse>> updatePassword(
-      {required String password, required String passwordConfirmation}) async {
-    final data = {
-      'password': password,
-      'password_confirmation': passwordConfirmation,
-    };
-    try {
-      final client = dioHttp.client(requireAuth: true);
-      final response = await client.post(
-        '/api/v1/dashboard/user/profile/password/update',
-        data: data,
-      );
-      return ApiResult.success(
-        data: ProfileResponse.fromJson(response.data),
-      );
-    } catch (e) {
-      debugPrint('==> update password failure: $e');
-      return ApiResult.failure(
-        error: AppHelpers.errorHandler(e),
-      );
-    }
-  }
-
-  @override
-  Future<ApiResult<ProfileResponse>> updateProfileImage(
-      {required String firstName, required String imageUrl}) async {
-    final data = {
-      'firstname': firstName,
-      'images': [imageUrl],
-    };
-    try {
-      final client = dioHttp.client(requireAuth: true);
-      final response = await client.put(
-        '/api/v1/dashboard/user/profile/update',
-        data: data,
-      );
-      return ApiResult.success(
-        data: ProfileResponse.fromJson(response.data),
-      );
-    } catch (e) {
-      debugPrint('==> update profile image failure: $e');
-      return ApiResult.failure(
-        error: AppHelpers.errorHandler(e),
-      );
-    }
-  }
-
-  @override
   Future<ApiResult<ProfileResponse>> editProfile(
       {required EditProfile? user}) async {
     final data = user?.toJson();
-    debugPrint('===> update general info data ${jsonEncode(data)}');
     try {
       final client = dioHttp.client(requireAuth: true);
       final response = await client.put(
-        '/api/v1/dashboard/user/profile/update',
-        data: data,
+        '/api/v1/method/rokct.paas.api.update_user_profile',
+        data: {'profile_data': data},
       );
       return ApiResult.success(
         data: ProfileResponse.fromJson(response.data),
@@ -288,7 +183,7 @@ class UsersRepositoryImpl extends UsersRepository {
     try {
       final client = dioHttp.client(requireAuth: true);
       final response = await client.post(
-        '/api/v1/dashboard/${LocalStorage.getUser()?.role}/users',
+        '/api/v1/method/rokct.paas.api.create_user',
         data: data,
       );
       return ApiResult.success(
@@ -305,13 +200,13 @@ class UsersRepositoryImpl extends UsersRepository {
   @override
   Future<ApiResult<UsersPaginateResponse>> getUsers({int? page}) async {
     final data = {
-      'perPage': 6,
-      'page': page,
+      'limit_start': (page ?? 1) - 1 * 6,
+      'limit_page_length': 6,
     };
     try {
       final client = dioHttp.client(requireAuth: true);
       final response = await client.get(
-          '/api/v1/dashboard/${LocalStorage.getUser()?.role}/users/paginate',
+          '/api/v1/method/rokct.paas.api.get_all_users',
           queryParameters: data);
       return ApiResult.success(
         data: UsersPaginateResponse.fromJson(response.data),
@@ -322,29 +217,35 @@ class UsersRepositoryImpl extends UsersRepository {
     }
   }
 
+  // NOTE: The following methods are not supported or relevant for the POS app.
+  // - searchDeliveryman
+  // - getUserDetails
+  // - updatePassword
+  // - updateProfileImage
+  // - updateStatus
+
   @override
-  Future<ApiResult> updateStatus({
-    required int? id,
-    required String status,
-  }) async {
-    List list = [
-      TrKeys.newKey,
-      TrKeys.viewed,
-      TrKeys.accepted,
-      TrKeys.rejected
-    ];
-    final data = {'status': list.indexOf(status) + 1};
-    try {
-      final client = dioHttp.client(requireAuth: true);
-      final response = await client.post(
-        '/api/v1/dashboard/seller/shops/invites/$id/status/change',
-        data: data,
-      );
-      return ApiResult.success(data: response.data);
-    } catch (e) {
-      debugPrint('==> update master status failure: $e');
-      return ApiResult.failure(error: AppHelpers.errorHandler(e));
-    }
+  Future<ApiResult<UsersPaginateResponse>> searchDeliveryman(String? query) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<ApiResult<SingleUserResponse>> getUserDetails(String uuid) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<ApiResult<ProfileResponse>> updatePassword({required String password, required String passwordConfirmation}) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<ApiResult<ProfileResponse>> updateProfileImage({required String firstName, required String imageUrl}) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<ApiResult> updateStatus({required int? id, required String status}) {
+    throw UnimplementedError();
   }
 }
-

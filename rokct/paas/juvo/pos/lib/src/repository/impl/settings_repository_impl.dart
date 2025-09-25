@@ -19,7 +19,7 @@ class SettingsSettingsRepositoryImpl extends SettingsRepository {
   Future<ApiResult<GlobalSettingsResponse>> getGlobalSettings() async {
     try {
       final client = dioHttp.client(requireAuth: false);
-      final response = await client.get('/api/v1/rest/settings');
+      final response = await client.get('/api/v1/method/rokct.paas.api.get_global_settings');
       debugPrint('==> get global settings response: $response');
       return ApiResult.success(
         data: GlobalSettingsResponse.fromJson(response.data),
@@ -38,7 +38,7 @@ class SettingsSettingsRepositoryImpl extends SettingsRepository {
       final dioHttp = HttpService();
       final client = dioHttp.client(requireAuth: false);
       final response = await client.get(
-        '/api/v1/rest/translations/paginate',
+        '/api/v1/method/rokct.paas.api.get_mobile_translations',
         queryParameters: data,
       );
       await LocalStorage.setTranslations(
@@ -52,14 +52,10 @@ class SettingsSettingsRepositoryImpl extends SettingsRepository {
 
   @override
   Future<ApiResult<TranslationsResponse>> getTranslations() async {
-    final data = {
-      'lang': LocalStorage.getLanguage()?.locale ?? 'en'
-    };
     try {
       final client = dioHttp.client(requireAuth: false);
       final response = await client.get(
-        '/api/v1/rest/translations/paginate',
-        queryParameters: data,
+        '/api/v1/method/rokct.paas.api.get_all_translations',
       );
       return ApiResult.success(
         data: TranslationsResponse.fromJson(response.data),
@@ -81,13 +77,11 @@ class SettingsSettingsRepositoryImpl extends SettingsRepository {
               : "history",
       "perPage": 10,
       "page": page,
-      "sort": "desc",
-      "column": "created_at"
     };
     try {
       final client = dioHttp.client(requireAuth: true);
       final response = await client.get(
-        '/api/v1/dashboard/${LocalStorage.getUser()?.role}/sales-history',
+        '/api/v1/method/rokct.paas.api.get_seller_sales_report',
         queryParameters: data,
       );
       return ApiResult.success(
@@ -104,7 +98,7 @@ class SettingsSettingsRepositoryImpl extends SettingsRepository {
     try {
       final client = dioHttp.client(requireAuth: true);
       final response = await client.get(
-        '/api/v1/dashboard/${LocalStorage.getUser()?.role}/sales-cards',
+        '/api/v1/method/rokct.paas.api.get_seller_statistics',
       );
       return ApiResult.success(
         data: SaleCartResponse.fromJson(response.data),
@@ -129,7 +123,7 @@ class SettingsSettingsRepositoryImpl extends SettingsRepository {
       };
       final client = dioHttp.client(requireAuth: true);
       final response = await client.get(
-          '/api/v1/dashboard/${LocalStorage.getUser()?.role}/sales-statistic',
+          '/api/v1/method/rokct.paas.api.get_seller_statistics',
           queryParameters: data);
       return ApiResult.success(
         data: IncomeStatisticResponse.fromJson(response.data),
@@ -153,7 +147,7 @@ class SettingsSettingsRepositoryImpl extends SettingsRepository {
       };
       final client = dioHttp.client(requireAuth: true);
       final response = await client.get(
-          '/api/v1/dashboard/${LocalStorage.getUser()?.role}/sales-main-cards',
+          '/api/v1/method/rokct.paas.api.get_seller_statistics',
           queryParameters: data);
       return ApiResult.success(
         data: IncomeCartResponse.fromJson(response.data),
@@ -176,7 +170,7 @@ class SettingsSettingsRepositoryImpl extends SettingsRepository {
         "date_to": to.toString().substring(0, to.toString().indexOf(" "))
       };
       final client = dioHttp.client(requireAuth: true);
-      final response = await client.get('/api/v1/dashboard/${LocalStorage.getUser()?.role}/sales-chart',
+      final response = await client.get('/api/v1/method/rokct.paas.api.get_seller_statistics',
           queryParameters: data);
       return ApiResult.success(
         data: incomeChartResponseFromJson(jsonEncode(response.data)),
@@ -191,7 +185,7 @@ class SettingsSettingsRepositoryImpl extends SettingsRepository {
   Future<ApiResult<LanguagesResponse>> getLanguages() async {
     try {
       final client = HttpService().client(requireAuth: false);
-      final response = await client.get('/api/v1/rest/languages/active');
+      final response = await client.get('/api/v1/method/rokct.paas.api.get_languages');
       if (LocalStorage.getLanguage() == null ||
           !(LanguagesResponse.fromJson(response.data)
               .data
@@ -217,7 +211,7 @@ class SettingsSettingsRepositoryImpl extends SettingsRepository {
   Future<ApiResult<HelpModel>> getFaq() async {
     try {
       final client = dioHttp.client(requireAuth: true);
-      final response = await client.get('/api/v1/rest/faqs/paginate');
+      final response = await client.get('/api/v1/method/rokct.paas.api.get_faqs');
       return ApiResult.success(
         data: HelpModel.fromJson(response.data),
       );
@@ -227,4 +221,3 @@ class SettingsSettingsRepositoryImpl extends SettingsRepository {
     }
   }
 }
-

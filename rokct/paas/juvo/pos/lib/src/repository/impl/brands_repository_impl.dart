@@ -12,7 +12,7 @@ class BrandsRepositoryImpl extends BrandsRepository {
     try {
       final client = dioHttp.client(requireAuth: true);
       final response = await client.get(
-        '/api/v1/rest/brands/paginate',
+        '/api/v1/method/rokct.paas.api.get_seller_brands',
         queryParameters: data,
       );
       return ApiResult.success(
@@ -24,4 +24,3 @@ class BrandsRepositoryImpl extends BrandsRepository {
     }
   }
 }
-

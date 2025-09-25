@@ -16,9 +16,9 @@ class AuthRepository implements AuthRepositoryFacade {
   }) async {
     try {
       final client = dioHttp.client(requireAuth: false);
-      // NOTE: Frappe's core login endpoint is `/api/method/login`
+      // NOTE: Frappe's core login endpoint is `/api/v1/method/login`
       final response = await client.post(
-        '/api/method/login',
+        '/api/v1/method/login',
         data: {
           'usr': email,
           'pwd': password,
@@ -44,7 +44,7 @@ class AuthRepository implements AuthRepositoryFacade {
     try {
       final client = dioHttp.client(requireAuth: false);
       final response = await client.post(
-        '/api/method/rokct.paas.api.send_phone_verification_code',
+        '/api/v1/method/rokct.paas.api.send_phone_verification_code',
         data: data,
       );
       // The response from this endpoint is simple, may need to adjust RegisterResponse model
@@ -65,7 +65,7 @@ class AuthRepository implements AuthRepositoryFacade {
     try {
       final client = dioHttp.client(requireAuth: false);
       final response = await client.get(
-        '/api/method/rokct.paas.api.verify_my_email',
+        '/api/v1/method/rokct.paas.api.verify_my_email',
         queryParameters: {'token': verifyCode},
       );
       return ApiResult.success(
@@ -87,7 +87,7 @@ class AuthRepository implements AuthRepositoryFacade {
     try {
       final client = dioHttp.client(requireAuth: false);
       final response = await client.post(
-        '/api/method/rokct.paas.api.verify_phone_code',
+        '/api/v1/method/rokct.paas.api.verify_phone_code',
         data: {
           "phone": phone,
           "otp": otp,
@@ -111,7 +111,7 @@ class AuthRepository implements AuthRepositoryFacade {
     try {
       final client = dioHttp.client(requireAuth: false);
       final response = await client.post(
-        '/api/method/rokct.paas.api.forgot_password',
+        '/api/v1/method/rokct.paas.api.forgot_password',
         data: {'user': email},
       );
       return ApiResult.success(data: response.data);
@@ -129,7 +129,7 @@ class AuthRepository implements AuthRepositoryFacade {
     try {
       final client = dioHttp.client(requireAuth: false);
       var res = await client.post(
-        '/api/method/rokct.paas.api.register_user',
+        '/api/v1/method/rokct.paas.api.register_user',
         data: user.toJsonForSignUp(),
       );
       // This response will not contain tokens, adaptation needed

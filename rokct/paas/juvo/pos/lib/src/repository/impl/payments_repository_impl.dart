@@ -13,7 +13,7 @@ class PaymentsRepositoryImpl extends PaymentsRepository {
   Future<ApiResult<PaymentsResponse>> getPayments() async {
     try {
       final client = dioHttp.client(requireAuth: true);
-      final response = await client.get('/api/v1/rest/payments');
+      final response = await client.get('/api/v1/method/rokct.paas.api.get_payment_gateways');
       return ApiResult.success(
         data: PaymentsResponse.fromJson(response.data),
       );
@@ -30,18 +30,16 @@ class PaymentsRepositoryImpl extends PaymentsRepository {
     String? terminalTransactionId,
   }) async {
     final data = {
-      'payment_sys_id': paymentId,
-      if (terminalTransactionId != null) 'terminal_transaction_id': terminalTransactionId,
-      'note': terminalTransactionId != null ? 'Terminal payment' : 'Cash payment',
+      'reference_doctype': 'Order',
+      'reference_name': orderId,
+      'payment_gateway': paymentId,
+      if (terminalTransactionId != null) 'transaction_id': terminalTransactionId,
     };
-
-    debugPrint('===> create transaction body: ${jsonEncode(data)}');
-    debugPrint('===> create transaction order id: $orderId');
 
     try {
       final client = dioHttp.client(requireAuth: true);
       final response = await client.post(
-        '/api/v1/payments/order/$orderId/transactions',
+        '/api/v1/method/rokct.paas.api.create_transaction',
         data: data,
       );
       return ApiResult.success(
@@ -60,10 +58,11 @@ class PaymentsRepositoryImpl extends PaymentsRepository {
     try {
       final client = dioHttp.client(requireAuth: true);
       final response = await client.get(
-        '/api/v1/payments/transactions/$transactionId',
+        '/api/v1/method/rokct.paas.api.get_transaction',
+        queryParameters: {'id': transactionId},
       );
       return ApiResult.success(
-        data: TransactionData.fromJson(response.data['data']),
+        data: TransactionData.fromJson(response.data),
       );
     } catch (e) {
       debugPrint('==> get transaction failure: $e');
@@ -78,7 +77,8 @@ class PaymentsRepositoryImpl extends PaymentsRepository {
     try {
       final client = dioHttp.client(requireAuth: true);
       final response = await client.get(
-        '/api/v1/payments/order/$orderId/transactions',
+        '/api/v1/method/rokct.paas.api.get_transactions_by_order',
+        queryParameters: {'order_id': orderId},
       );
 
       final List<dynamic> data = response.data['data'] ?? [];
@@ -93,45 +93,17 @@ class PaymentsRepositoryImpl extends PaymentsRepository {
     }
   }
 
-  @override
-  Future<ApiResult<TransactionData>> updateTransactionStatus({
-    required int transactionId,
-    required String status,
-    String? note,
-  }) async {
-    final data = {
-      'status': status,
-      if (note != null) 'note': note,
-    };
+  // NOTE: The following methods are not supported by the new backend.
+  // - updateTransactionStatus
+  // - deleteTransaction
 
-    try {
-      final client = dioHttp.client(requireAuth: true);
-      final response = await client.put(
-        '/api/v1/payments/transactions/$transactionId/status',
-        data: data,
-      );
-      return ApiResult.success(
-        data: TransactionData.fromJson(response.data['data']),
-      );
-    } catch (e) {
-      debugPrint('==> update transaction status failure: $e');
-      return ApiResult.failure(error: AppHelpers.errorHandler(e));
-    }
+  @override
+  Future<ApiResult<TransactionData>> updateTransactionStatus({required int transactionId, required String status, String? note}) {
+    throw UnimplementedError();
   }
 
   @override
-  Future<ApiResult<void>> deleteTransaction({
-    required int transactionId,
-  }) async {
-    try {
-      final client = dioHttp.client(requireAuth: true);
-      await client.delete(
-        '/api/v1/payments/transactions/$transactionId',
-      );
-      return const ApiResult.success(data: null);
-    } catch (e) {
-      debugPrint('==> delete transaction failure: $e');
-      return ApiResult.failure(error: AppHelpers.errorHandler(e));
-    }
+  Future<ApiResult<void>> deleteTransaction({required int transactionId}) {
+    throw UnimplementedError();
   }
 }

@@ -16,7 +16,7 @@ class BannersRepository implements BannersRepositoryFacade {
     try {
       final client = dioHttp.client(requireAuth: false);
       final response = await client.get(
-        '/api/method/rokct.paas.api.get_banners',
+        '/api/v1/method/rokct.paas.api.get_banners',
         queryParameters: params,
       );
       return ApiResult.success(
@@ -38,7 +38,7 @@ class BannersRepository implements BannersRepositoryFacade {
     try {
       final client = dioHttp.client(requireAuth: false);
       final response = await client.get(
-        '/api/method/rokct.paas.api.get_banner',
+        '/api/v1/method/rokct.paas.api.get_banner',
         queryParameters: {'id': bannerId},
       );
       return ApiResult.success(

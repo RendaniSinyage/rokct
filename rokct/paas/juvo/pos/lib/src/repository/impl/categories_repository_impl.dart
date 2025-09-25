@@ -13,21 +13,13 @@ class CategoriesRepositoryImpl extends CategoriesRepository {
     String? query,
   ) async {
     final data = {
-      'lang': LocalStorage.getLanguage()?.locale ?? 'en',
-      'perPage': 100,
-      'type': 'main',
-      "has_products": 1,
-      "p_shop_id": LocalStorage.getUser()?.role == TrKeys.waiter
-          ?
-          LocalStorage.getUser()?.invite?.shopId ?? 0
-          : LocalStorage.getUser()?.shop?.id ?? 0
+      'search': query,
+      'limit_page_length': 100,
     };
     try {
       final client = dioHttp.client(requireAuth: true);
       final response = await client.get(
-        LocalStorage.getUser()?.role == TrKeys.seller
-            ? '/api/v1/dashboard/${LocalStorage.getUser()?.role}/categories/paginate'
-            : '/api/v1/rest/categories/paginate',
+        '/api/v1/method/rokct.paas.api.get_seller_categories',
         queryParameters: data,
       );
       return ApiResult.success(
@@ -39,4 +31,3 @@ class CategoriesRepositoryImpl extends CategoriesRepository {
     }
   }
 }
-

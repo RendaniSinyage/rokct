@@ -13,7 +13,7 @@ class OrdersRepository implements OrdersRepositoryFacade {
     try {
       final client = dioHttp.client(requireAuth: true);
       final response = await client.post(
-        '/api/method/rokct.paas.api.create_order',
+        '/api/v1/method/rokct.paas.api.create_order',
         data: orderBody.toJson(),
       );
       return ApiResult.success(
@@ -40,7 +40,7 @@ class OrdersRepository implements OrdersRepositoryFacade {
     try {
       final client = dioHttp.client(requireAuth: true);
       final response = await client.get(
-        '/api/method/rokct.paas.api.list_orders',
+        '/api/v1/method/rokct.paas.api.list_orders',
         queryParameters: data,
       );
       return ApiResult.success(
@@ -60,7 +60,7 @@ class OrdersRepository implements OrdersRepositoryFacade {
     try {
       final client = dioHttp.client(requireAuth: true);
       final response = await client.get(
-        '/api/method/rokct.paas.api.get_order_details',
+        '/api/v1/method/rokct.paas.api.get_order_details',
         queryParameters: {'order_id': orderId},
       );
       return ApiResult.success(
@@ -89,7 +89,7 @@ class OrdersRepository implements OrdersRepositoryFacade {
     try {
       final client = dioHttp.client(requireAuth: true);
       await client.post(
-        '/api/method/rokct.paas.api.add_order_review',
+        '/api/v1/method/rokct.paas.api.add_order_review',
         data: data,
       );
       return const ApiResult.success(data: null);
@@ -110,7 +110,7 @@ class OrdersRepository implements OrdersRepositoryFacade {
     try {
       final client = dioHttp.client(requireAuth: true);
       var res = await client.post(
-        '/api/method/rokct.paas.api.initiate_${name.toLowerCase()}_payment',
+        '/api/v1/method/rokct.paas.api.initiate_${name.toLowerCase()}_payment',
         data: {'order_id': orderBody.orderId},
       );
       return ApiResult.success(data: res.data["redirect_url"]);
@@ -128,7 +128,7 @@ class OrdersRepository implements OrdersRepositoryFacade {
     try {
       final client = dioHttp.client(requireAuth: true);
       await client.post(
-        '/api/method/rokct.paas.api.cancel_order',
+        '/api/v1/method/rokct.paas.api.cancel_order',
         data: {'order_id': orderId},
       );
       return const ApiResult.success(data: null);
@@ -149,7 +149,7 @@ class OrdersRepository implements OrdersRepositoryFacade {
         "cause": title,
       };
       final client = dioHttp.client(requireAuth: true);
-      await client.post('/api/method/rokct.paas.api.create_order_refund', data: data);
+      await client.post('/api/v1/method/rokct.paas.api.create_order_refund', data: data);
       return const ApiResult.success(
         data: null,
       );
@@ -162,7 +162,7 @@ class OrdersRepository implements OrdersRepositoryFacade {
     }
   }
 
-  // NOTE: The following methods are no longer supported or have been consolidated.
+  // NOTE: The following methods are not supported or have been consolidated.
   // - createAutoOrder
   // - deleteAutoOrder
   // - getCompletedOrders

@@ -13,15 +13,13 @@ class StoriesRepositoryImpl extends StoriesRepository {
     int? page,
   }) async {
     final data = {
-      'page': page,
-      'perPage': 12,
-      'lang': LocalStorage.getLanguage()?.locale ?? 'en',
-      'shop_id': LocalStorage.getUser()?.shop?.id,
+      'limit_start': (page ?? 1) - 1 * 12,
+      'limit_page_length': 12,
     };
     try {
       final client = dioHttp.client(requireAuth: true);
       final response = await client.get(
-        "/api/v1/dashboard/seller/stories",
+        "/api/v1/method/rokct.paas.api.get_seller_stories",
         queryParameters: data,
       );
       return ApiResult.success(
@@ -35,19 +33,15 @@ class StoriesRepositoryImpl extends StoriesRepository {
 
   @override
   Future<ApiResult<void>> deleteStories(int id) async {
-    final data = {
-      'ids': [id]
-    };
-    debugPrint('====> delete brand request ${jsonEncode(data)}');
     try {
       final client = dioHttp.client(requireAuth: true);
-      await client.delete(
-        '/api/v1/dashboard/seller/stories/delete',
-        data: data,
+      await client.post(
+        '/api/v1/method/rokct.paas.api.delete_seller_story',
+        data: {'story_name': id},
       );
       return const ApiResult.success(data: null);
     } catch (e) {
-      debugPrint('==> delete brand failure: $e');
+      debugPrint('==> delete story failure: $e');
       return ApiResult.failure(error: AppHelpers.errorHandler(e));
     }
   }
@@ -56,15 +50,14 @@ class StoriesRepositoryImpl extends StoriesRepository {
   Future<ApiResult<void>> createStories(
       {required List<String> img, int? id}) async {
     final data = {
-      for (int i = 0; i < img.length; i++) 'file_urls[$i]': img[i],
+      'images': img,
       if (id != null) 'product_id': id
     };
-    debugPrint('====> add stories request ${jsonEncode(data)}');
     try {
       final client = dioHttp.client(requireAuth: true);
       await client.post(
-        '/api/v1/dashboard/seller/stories',
-        queryParameters: data,
+        '/api/v1/method/rokct.paas.api.create_seller_story',
+        data: {'story_data': data},
       );
       return const ApiResult.success(data: null);
     } catch (e) {
@@ -77,15 +70,17 @@ class StoriesRepositoryImpl extends StoriesRepository {
   Future<ApiResult<void>> updateStories(
       {required List<String> img, int? id, required int storyId}) async {
     final data = {
-      for (int i = 0; i < img.length; i++) 'file_urls[$i]': img[i],
+      'images': img,
       if (id != null) 'product_id': id
     };
-    debugPrint('====> update stories request ${jsonEncode(data)}');
     try {
       final client = dioHttp.client(requireAuth: true);
       await client.put(
-        '/api/v1/dashboard/seller/stories/$storyId',
-        queryParameters: data,
+        '/api/v1/method/rokct.paas.api.update_seller_story',
+        data: {
+          'story_name': storyId,
+          'story_data': data,
+        },
       );
       return const ApiResult.success(data: null);
     } catch (e) {
@@ -94,4 +89,3 @@ class StoriesRepositoryImpl extends StoriesRepository {
     }
   }
 }
-

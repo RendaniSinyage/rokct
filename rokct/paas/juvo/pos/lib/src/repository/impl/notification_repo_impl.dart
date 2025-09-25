@@ -13,15 +13,13 @@ class NotificationRepositoryImpl extends NotificationRepository {
   Future<ApiResult<TransactionListResponse>> getTransactions(
       {int? page}) async {
     final data = {
-      if (page != null) 'page': page,
-      'perPage': 4,
-      'lang': LocalStorage.getLanguage()?.locale ?? 'en',
-      'model': 'orders'
+      'limit_start': ((page ?? 1) - 1) * 4,
+      'limit_page_length': 4,
     };
     try {
       final client = dioHttp.client(requireAuth: true);
       final response = await client.get(
-        '/api/v1/dashboard/${LocalStorage.getUser()?.role}/transactions/paginate',
+        '/api/v1/method/rokct.paas.api.get_seller_transactions',
         queryParameters: data,
       );
       return ApiResult.success(
@@ -38,16 +36,13 @@ class NotificationRepositoryImpl extends NotificationRepository {
     int? page,
   }) async {
     final data = {
-      if (page != null) 'page': page,
-      'column': 'created_at',
-      'sort': 'desc',
-      'perPage': 5,
-      'lang': LocalStorage.getLanguage()?.locale ?? 'en',
+      'limit_start': ((page ?? 1) - 1) * 7,
+      'limit_page_length': 7,
     };
     try {
       final client = dioHttp.client(requireAuth: true);
       final response = await client.get(
-        '/api/v1/dashboard/notifications',
+        '/api/v1/method/rokct.paas.api.get_user_notifications',
         queryParameters: data,
       );
       return ApiResult.success(
@@ -59,98 +54,35 @@ class NotificationRepositoryImpl extends NotificationRepository {
     }
   }
 
+  // NOTE: The following methods are not supported by the new backend.
+  // - readAll
+  // - readOne
+  // - showSingleUser
+  // - getAllNotifications
+  // - getCount
+
   @override
-  Future<ApiResult<NotificationResponse>> readAll() async {
-    try {
-      final client = dioHttp.client(requireAuth: true);
-      final response = await client.post(
-        '/api/v1/dashboard/notifications/read-all',
-      );
-      return ApiResult.success(
-        data: NotificationResponse.fromJson(response.data),
-      );
-    } catch (e) {
-      debugPrint('==> get notification failure: $e');
-      return ApiResult.failure(error: AppHelpers.errorHandler(e));
-    }
+  Future<ApiResult<NotificationResponse>> readAll() {
+    throw UnimplementedError();
   }
 
   @override
-  Future<ApiResult<ReadOneNotificationResponse>> readOne({int? id}) async {
-    final data = {
-      if (id != null) '$id': id,
-      // 'lang': LocalStorage.getLanguage()?.locale ?? 'en',
-    };
-    try {
-      final client = dioHttp.client(requireAuth: true);
-      final response = await client.post(
-        '/api/v1/dashboard/notifications/$id/read-at',
-        queryParameters: data,
-      );
-      return ApiResult.success(
-        data: ReadOneNotificationResponse.fromJson(response.data),
-      );
-    } catch (e) {
-      debugPrint('==> get notification failure: $e');
-      return ApiResult.failure(error: AppHelpers.errorHandler(e));
-    }
+  Future<ApiResult<ReadOneNotificationResponse>> readOne({int? id}) {
+    throw UnimplementedError();
   }
 
   @override
-  Future<ApiResult<NotificationResponse>> showSingleUser({int? id}) async {
-    final data = {
-      if (id != null) '$id': id,
-      'lang': LocalStorage.getLanguage()?.locale ?? 'en',
-    };
-    try {
-      final client = dioHttp.client(requireAuth: true);
-      final response = await client.post(
-        '/api/v1/dashboard/notifications/$id',
-        queryParameters: data,
-      );
-      return ApiResult.success(
-        data: NotificationResponse.fromJson(response.data),
-      );
-    } catch (e) {
-      debugPrint('==> get notification failure: $e');
-      return ApiResult.failure(error: AppHelpers.errorHandler(e));
-    }
+  Future<ApiResult<NotificationResponse>> showSingleUser({int? id}) {
+    throw UnimplementedError();
   }
 
   @override
-  Future<ApiResult<NotificationResponse>> getAllNotifications() async {
-    final data = {
-      'lang': LocalStorage.getLanguage()?.locale ?? 'en',
-    };
-    try {
-      final client = dioHttp.client(requireAuth: true);
-      final response = await client.get(
-        '/api/v1/dashboard/notifications',
-        queryParameters: data,
-      );
-      return ApiResult.success(
-        data: NotificationResponse.fromJson(response.data),
-      );
-    } catch (e) {
-      debugPrint('==> get notification failure: $e');
-      return ApiResult.failure(error: AppHelpers.errorHandler(e));
-    }
+  Future<ApiResult<NotificationResponse>> getAllNotifications() {
+    throw UnimplementedError();
   }
 
   @override
-  Future<ApiResult<CountNotificationModel>> getCount() async {
-    try {
-      final client = dioHttp.client(requireAuth: true);
-      final response = await client.get(
-        '/api/v1/dashboard/user/profile/notifications-statistic',
-      );
-      return ApiResult.success(
-        data: CountNotificationModel.fromJson(response.data),
-      );
-    } catch (e) {
-      debugPrint('==> get notification failure: $e');
-      return ApiResult.failure(error: AppHelpers.errorHandler(e));
-    }
+  Future<ApiResult<CountNotificationModel>> getCount() {
+    throw UnimplementedError();
   }
 }
-

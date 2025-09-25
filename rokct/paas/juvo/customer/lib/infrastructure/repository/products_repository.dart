@@ -18,7 +18,7 @@ class ProductsRepository implements ProductsRepositoryFacade {
     try {
       final client = dioHttp.client(requireAuth: false);
       final response = await client.get(
-        '/api/method/rokct.paas.api.get_products',
+        '/api/v1/method/rokct.paas.api.get_products',
         queryParameters: params,
       );
       return ApiResult.success(
@@ -39,7 +39,7 @@ class ProductsRepository implements ProductsRepositoryFacade {
     try {
       final client = dioHttp.client(requireAuth: false);
       final response = await client.get(
-        '/api/method/rokct.paas.api.get_product_by_uuid',
+        '/api/v1/method/rokct.paas.api.get_product_by_uuid',
         queryParameters: {'uuid': uuid},
       );
       return ApiResult.success(
@@ -73,7 +73,7 @@ class ProductsRepository implements ProductsRepositoryFacade {
     try {
       final client = dioHttp.client(requireAuth: false);
       final response = await client.get(
-        '/api/method/rokct.paas.api.get_products',
+        '/api/v1/method/rokct.paas.api.get_products',
         queryParameters: params,
       );
       return ApiResult.success(
@@ -99,7 +99,7 @@ class ProductsRepository implements ProductsRepositoryFacade {
     try {
       final client = dioHttp.client(requireAuth: false);
       final response = await client.get(
-        '/api/method/rokct.paas.api.most_sold_products',
+        '/api/v1/method/rokct.paas.api.most_sold_products',
         queryParameters: params,
       );
       return ApiResult.success(
@@ -126,7 +126,7 @@ class ProductsRepository implements ProductsRepositoryFacade {
     try {
       final client = dioHttp.client(requireAuth: false);
       final response = await client.post(
-        '/api/method/rokct.paas.api.order_products_calculate',
+        '/api/v1/method/rokct.paas.api.order_products_calculate',
         data: {'products': products},
       );
       return ApiResult.success(
@@ -148,7 +148,7 @@ class ProductsRepository implements ProductsRepositoryFacade {
     try {
       final client = dioHttp.client(requireAuth: false);
       final response = await client.get(
-        '/api/method/rokct.paas.api.get_products_by_ids',
+        '/api/v1/method/rokct.paas.api.get_products_by_ids',
         queryParameters: {'ids': ids},
       );
       return ApiResult.success(
@@ -178,7 +178,7 @@ class ProductsRepository implements ProductsRepositoryFacade {
     try {
       final client = dioHttp.client(requireAuth: true);
       await client.post(
-        '/api/method/rokct.paas.api.add_product_review',
+        '/api/v1/method/rokct.paas.api.add_product_review',
         data: data,
       );
       return const ApiResult.success(data: null);
@@ -204,7 +204,7 @@ class ProductsRepository implements ProductsRepositoryFacade {
     try {
       final client = dioHttp.client(requireAuth: false);
       final response = await client.get(
-        '/api/method/rokct.paas.api.get_discounted_products',
+        '/api/v1/method/rokct.paas.api.get_discounted_products',
         queryParameters: params,
       );
       return ApiResult.success(

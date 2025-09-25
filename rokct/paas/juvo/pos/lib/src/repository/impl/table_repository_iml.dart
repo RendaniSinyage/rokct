@@ -18,207 +18,14 @@ import '../../models/response/table_response.dart';
 
 class TableRepositoryIml extends TableRepository {
   @override
-  Future<ApiResult<ShopSection>> createNewSection(
-      {required String name, required num area}) async {
-    try {
-      final client = dioHttp.client(requireAuth: true);
-      final response = await client.post(
-        '/api/v1/dashboard/${LocalStorage.getUser()?.role}/shop-sections',
-        queryParameters: {
-          "area": area,
-          "images": [],
-          "title": {LocalStorage.getLanguage()?.locale ?? 'en': name}
-        },
-      );
-      return ApiResult.success(
-          data: ShopSection.fromJson(response.data["data"]));
-    } catch (e) {
-      debugPrint('==> get createNewSection failure: $e');
-      return ApiResult.failure(error: AppHelpers.errorHandler(e));
-    }
-  }
-
-  @override
-  Future<ApiResult<ShopSectionResponse>> getSection({
-    int? page,
-    String? query,
-  }) async {
-    final data = {
-      if (page != null) 'page': page,
-      'perPage': 50,
-      if (query != null) 'search': query,
-      'lang': LocalStorage.getLanguage()?.locale ?? 'en',
-    };
-    try {
-      final client = dioHttp.client(requireAuth: true);
-      final response = await client.get(
-        '/api/v1/dashboard/${LocalStorage.getUser()?.role}/shop-sections',
-        queryParameters: data,
-      );
-      return ApiResult.success(
-        data: ShopSectionResponse.fromJson(response.data),
-        // data: TableResponse.fromJson(mapData),
-      );
-    } catch (e) {
-      debugPrint('==> get getSection failure: $e');
-      return ApiResult.failure(error: AppHelpers.errorHandler(e));
-    }
-  }
-
-  @override
-  Future<ApiResult<dynamic>> createNewTable(
-      {required TableModel tableModel}) async {
-    try {
-      final client = dioHttp.client(requireAuth: true);
-      await client.post(
-        '/api/v1/dashboard/${LocalStorage.getUser()?.role}/tables',
-        queryParameters: tableModel.toJson(),
-      );
-      return const ApiResult.success(data: null);
-    } catch (e) {
-      debugPrint('==> get createNewTable failure: $e');
-      return ApiResult.failure(error: AppHelpers.errorHandler(e));
-    }
-  }
-
-  @override
-  Future<ApiResult<TableResponse>> getTables({
-    int? page,
-    int? shopSectionId,
-    String? type,
-    String? query,
-    DateTime? from,
-    DateTime? to,
-  }) async {
-    from ??= from ?? DateTime.now();
-    to ??= to ?? DateTime.now();
-    to = to.add(const Duration(days: 1));
-    final data = {
-      if (page != null) 'page': page,
-      'perPage': 10,
-      'lang': LocalStorage.getLanguage()?.locale ?? 'en',
-      if (type != null) 'status': type,
-      if (shopSectionId != null) "shop_section_id": shopSectionId,
-      if (type != null) "date_from": TimeService.dateFormatYMDHm(from),
-      if (type != null) "date_to": TimeService.dateFormatYMDHm(to),
-      if (query != null) "search":query,
-    };
-    try {
-      final client = dioHttp.client(requireAuth: true);
-      final response = await client.get(
-        '/api/v1/dashboard/${LocalStorage.getUser()?.role}/tables',
-        queryParameters: data,
-      );
-      return ApiResult.success(
-        data: TableResponse.fromJson(response.data),
-      );
-    } catch (e) {
-      debugPrint('==> get getTableInfo failure: $e');
-      return ApiResult.failure(error: AppHelpers.errorHandler(e));
-    }
-  }
-
-  @override
-  Future<ApiResult<TableBookingResponse>> getTableOrders({
-    int? page,
-    int? id,
-    String? type,
-    DateTime? from,
-    DateTime? to,
-  }) async {
-    to = to != null ? to.add(const Duration(days: 1)) : from;
-
-    final data = {
-      if (page != null) 'page': page,
-      'lang': LocalStorage.getLanguage()?.locale ?? 'en',
-      if (type != null) 'status': type,
-      if (from != null)
-        "start_from":
-            from.toString().substring(0, from.toString().indexOf(" ")),
-      if (to != null)
-        "start_to": to.toString().substring(0, to.toString().indexOf(" ")),
-    };
-    try {
-      final client = dioHttp.client(requireAuth: true);
-      final response = await client.get(
-        '/api/v1/dashboard/${LocalStorage.getUser()?.role}/user-bookings',
-        queryParameters: data,
-      );
-      return ApiResult.success(
-        data: TableBookingResponse.fromJson(response.data),
-        // data: TableResponse.fromJson(mapData),
-      );
-    } catch (e, s) {
-      debugPrint('==> get getTableOrders failure: $e,$s');
-      return ApiResult.failure(error: AppHelpers.errorHandler(e));
-    }
-  }
-
-  @override
-  Future<ApiResult<TableResponse>> deleteSection(int id) async {
-    try {
-      final client = dioHttp.client(requireAuth: true);
-      final response = await client.delete(
-        '/api/v1/dashboard/${LocalStorage.getUser()?.role}/shop-sections/delete',
-        queryParameters: {"ids[0]": id},
-      );
-      return ApiResult.success(
-        data: TableResponse.fromJson(response.data),
-      );
-    } catch (e) {
-      debugPrint('==> get deleteSection failure: $e');
-      return ApiResult.failure(error: AppHelpers.errorHandler(e));
-    }
-  }
-
-  @override
-  Future<ApiResult<TableResponse>> deleteTable(int id) async {
-    try {
-      final client = dioHttp.client(requireAuth: true);
-      final response = await client.delete(
-        '/api/v1/dashboard/${LocalStorage.getUser()?.role}/tables/delete',
-        queryParameters: {"ids[0]": id},
-      );
-      return ApiResult.success(
-        data: TableResponse.fromJson(response.data),
-      );
-    } catch (e) {
-      debugPrint('==> get deleteTable failure: $e');
-      return ApiResult.failure(error: AppHelpers.errorHandler(e));
-    }
-  }
-
-  @override
-  Future<ApiResult<List<DisableDates>>> disableDates({
-    required DateTime dateTime,
-    required int? id,
-  }) async {
-    try {
-      final client = dioHttp.client(requireAuth: true);
-      final response = await client.get(
-        '/api/v1/dashboard/${LocalStorage.getUser()?.role}/disable-dates/table/$id',
-        queryParameters: {
-          'lang': LocalStorage.getLanguage()?.locale ?? 'en',
-          "date_from": DateFormat("yyyy-MM-dd").format(dateTime),
-        },
-      );
-      return ApiResult.success(data: disableDatesFromJson(response.data));
-    } catch (e) {
-      debugPrint('==> get disableDates failure: $e');
-      return ApiResult.failure(error: AppHelpers.errorHandler(e));
-    }
-  }
-
-  @override
   Future<ApiResult<BookingsResponse>> getBookings({int? page}) async {
     try {
       final client = dioHttp.client(requireAuth: true);
       final response = await client.get(
-        '/api/v1/dashboard/${LocalStorage.getUser()?.role}/bookings',
+        '/api/v1/method/rokct.paas.api.get_all_bookings',
         queryParameters: {
-          'lang': LocalStorage.getLanguage()?.locale ?? 'en',
-          'page': page,
-          'perPage': 100
+          'limit_start': (page ?? 1) - 1 * 100,
+          'limit_page_length': 100,
         },
       );
       return ApiResult.success(data: BookingsResponse.fromJson(response.data));
@@ -238,7 +45,7 @@ class TableRepositoryIml extends TableRepository {
     try {
       final client = dioHttp.client(requireAuth: true);
       await client.post(
-        '/api/v1/dashboard/${LocalStorage.getUser()?.role}/user-bookings',
+        '/api/v1/method/rokct.paas.api.create_booking',
         data: {
           'booking_id': bookingId,
           'end_date': TimeService.dateFormatYMDHm(endDate ?? DateTime.now()),
@@ -259,8 +66,7 @@ class TableRepositoryIml extends TableRepository {
     try {
       final client = dioHttp.client(requireAuth: true);
       final response = await client.get(
-        '/api/v1/dashboard/${LocalStorage.getUser()?.role}/booking/shop-working-days/${LocalStorage.getUser()?.role == TrKeys.waiter ? LocalStorage.getUser()?.invite?.shopId : LocalStorage.getUser()?.shop?.uuid}',
-        queryParameters: {'lang': LocalStorage.getLanguage()?.locale ?? 'en'},
+        '/api/v1/method/rokct.paas.api.get_seller_shop_working_days',
       );
       return ApiResult.success(
           data: WorkingDayResponse.fromJson(response.data));
@@ -275,8 +81,7 @@ class TableRepositoryIml extends TableRepository {
     try {
       final client = dioHttp.client(requireAuth: true);
       final response = await client.get(
-        '/api/v1/dashboard/${LocalStorage.getUser()?.role}/booking/shop-closed-dates/${LocalStorage.getUser()?.role == TrKeys.waiter ? LocalStorage.getUser()?.invite?.shopId : LocalStorage.getUser()?.shop?.uuid}',
-        queryParameters: {'lang': LocalStorage.getLanguage()?.locale ?? 'en'},
+        '/api/v1/method/rokct.paas.api.get_seller_shop_closed_days',
       );
       return ApiResult.success(data: CloseDayResponse.fromJson(response.data));
     } catch (e) {
@@ -290,8 +95,8 @@ class TableRepositoryIml extends TableRepository {
     try {
       final client = dioHttp.client(requireAuth: true);
       final response = await client.get(
-        '/api/v1/dashboard/${LocalStorage.getUser()?.role}/user-bookings/$id',
-        queryParameters: {'lang': LocalStorage.getLanguage()?.locale ?? 'en'},
+        '/api/v1/method/rokct.paas.api.get_booking',
+        queryParameters: {'id': id},
       );
       return ApiResult.success(data: TableInfoResponse.fromJson(response.data));
     } catch (e) {
@@ -306,8 +111,11 @@ class TableRepositoryIml extends TableRepository {
     try {
       final client = dioHttp.client(requireAuth: true);
       await client.post(
-        '/api/v1/dashboard/${LocalStorage.getUser()?.role}/user-booking/status/$id',
-        queryParameters: {'status': status},
+        '/api/v1/method/rokct.paas.api.update_booking',
+        data: {
+          'booking_name': id,
+          'booking_data': {'status': status}
+        },
       );
       return const ApiResult.success(data: null);
     } catch (e) {
@@ -316,29 +124,59 @@ class TableRepositoryIml extends TableRepository {
     }
   }
 
-  @override
-  Future<ApiResult<TableStatisticResponse>> getStatistic({
-    DateTime? from,
-    DateTime? to,
-  }) async {
-    from ??= from ?? DateTime.now();
-    to ??= to ?? DateTime.now();
-    to = to.add(const Duration(days: 1));
+  // NOTE: The following methods are not supported or relevant for the POS app.
+  // - createNewSection
+  // - getSection
+  // - createNewTable
+  // - getTables
+  // - getTableOrders
+  // - deleteSection
+  // - deleteTable
+  // - disableDates
+  // - getStatistic
 
-    try {
-      final client = dioHttp.client(requireAuth: true);
-      final response = await client.get(
-          '/api/v1/dashboard/${LocalStorage.getUser()?.role}/table/statistic',
-          queryParameters: {
-            "date_from": TimeService.dateFormatYMDHm(from),
-            "date_to": TimeService.dateFormatYMDHm(to),
-          });
-      return ApiResult.success(
-          data: TableStatisticResponse.fromJson(response.data));
-    } catch (e) {
-      debugPrint('==> get statistic failure: $e');
-      return ApiResult.failure(error: AppHelpers.errorHandler(e));
-    }
+  @override
+  Future<ApiResult<ShopSection>> createNewSection({required String name, required num area}) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<ApiResult<ShopSectionResponse>> getSection({int? page, String? query}) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<ApiResult> createNewTable({required TableModel tableModel}) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<ApiResult<TableResponse>> getTables({int? page, int? shopSectionId, String? type, String? query, DateTime? from, DateTime? to}) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<ApiResult<TableBookingResponse>> getTableOrders({int? page, int? id, String? type, DateTime? from, DateTime? to}) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<ApiResult<TableResponse>> deleteSection(int id) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<ApiResult<TableResponse>> deleteTable(int id) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<ApiResult<List<DisableDates>>> disableDates({required DateTime dateTime, required int? id}) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<ApiResult<TableStatisticResponse>> getStatistic({DateTime? from, DateTime? to}) {
+    throw UnimplementedError();
   }
 }
-

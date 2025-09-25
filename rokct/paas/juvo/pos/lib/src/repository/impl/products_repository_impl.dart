@@ -19,24 +19,14 @@ class ProductsRepositoryImpl extends ProductsRepository {
     final data = {
       if (brandId != null) 'brand_id': brandId,
       if (categoryId != null) 'category_id': categoryId,
-      if (shopId != null ||
-          LocalStorage.getUser()?.role == TrKeys.waiter)
-        'shop_id': LocalStorage.getUser()?.role == TrKeys.waiter
-            ? LocalStorage.getUser()?.invite?.shopId
-            : shopId,
       if (query != null) 'search': query,
-      'perPage': 12,
-      'page': page,
-      'lang': LocalStorage.getLanguage()?.locale ?? 'en',
-      "status": "published",
-      "addon_status": "published"
+      'limit_start': (page - 1) * 12,
+      'limit_page_length': 12,
     };
     try {
       final client = dioHttp.client(requireAuth: true);
       final response = await client.get(
-        LocalStorage.getUser()?.role == TrKeys.waiter
-            ? '/api/v1/rest/products/paginate'
-            : '/api/v1/dashboard/${LocalStorage.getUser()?.role}/products/paginate',
+        '/api/v1/method/rokct.paas.api.get_seller_products',
         queryParameters: data,
       );
       return ApiResult.success(
@@ -52,43 +42,15 @@ class ProductsRepositoryImpl extends ProductsRepository {
   Future<ApiResult<ProductCalculateResponse>> getAllCalculations(
       List<BagProductData> bagProducts, String type,
       {String? coupon}) async {
-    UserData? userData = LocalStorage.getUser();
-    final data = {
-      'currency_id': LocalStorage.getSelectedCurrency().id,
-      'shop_id': userData?.role == TrKeys.waiter
-          ? userData?.invite?.shopId ?? 0
-          : userData?.shop?.id ?? 0,
-      'type': type.isEmpty ? TrKeys.pickup : type,
-      if (coupon != null) "coupon": coupon,
-      'address[latitude]': LocalStorage
-              .getBags()
-              .first
-              .selectedAddress
-              ?.location
-              ?.latitude ??
-          0,
-      'address[longitude]': LocalStorage
-              .getBags()
-              .first
-              .selectedAddress
-              ?.location
-              ?.longitude ??
-          0
-    };
-    for (int i = 0; i < (bagProducts.length); i++) {
-      data['products[$i][stock_id]'] = bagProducts[i].stockId;
-      data['products[$i][quantity]'] = bagProducts[i].quantity;
-      for (int j = 0; j < (bagProducts[i].carts?.length ?? 0); j++) {
-        data['products[$i][addons][$j][stock_id]'] = bagProducts[i].carts?[j].stockId;
-        data['products[$i][addons][$j][quantity]'] = bagProducts[i].carts?[j].quantity;
-      }
-    }
-
+    final products = bagProducts
+        .map((p) =>
+            {'product_id': p.stockId, 'quantity': p.quantity})
+        .toList();
     try {
       final client = dioHttp.client(requireAuth: true);
       final response = await client.get(
-        '/api/v1/rest/order/products/calculate',
-        queryParameters: data,
+        '/api/v1/method/rokct.paas.api.order_products_calculate',
+        queryParameters: {'products': products},
       );
       return ApiResult.success(
         data: ProductCalculateResponse.fromJson(response.data),
@@ -98,71 +60,14 @@ class ProductsRepositoryImpl extends ProductsRepository {
       return ApiResult.failure(error: AppHelpers.errorHandler(e));
     }
   }
-  @override
-  Future<ApiResult<SingleProductResponse>> updateStocks({
-    required List<Stocks> stocks,
-    required List<int> deletedStocks,
-    String? uuid,
-    bool isAddon = false,
-  }) async {
-    final List<Map<String, dynamic>> extras = [];
-    for (final stock in stocks) {
-      List<int> ids = [];
-      List<int> addonsIds = [];
-      if (stock.extras != null && (stock.extras?.isNotEmpty ?? false)) {
-        for (final item in stock.extras!) {
-          ids.add(item.id ?? 0);
-        }
-      }
-      ids = ids.toSet().toList();
-      if (stock.addons != null && (stock.addons?.isNotEmpty ?? false)) {
-        for (final item in stock.addons!) {
-          addonsIds.add(item.product?.id ?? 0);
-        }
-      }
-      addonsIds = addonsIds.toSet().toList();
-      extras.add(
-        {
-          'price': stock.price,
-          if (stock.sku?.isNotEmpty ?? false) 'sku': stock.sku,
-          'quantity': stock.quantity,
-          if (stock.id != -1 && stock.id != null) "stock_id": stock.id,
-          'ids': ids,
-          if (addonsIds.isNotEmpty) 'addons': addonsIds,
-        },
-      );
-    }
-    final data = {
-      'extras': extras,
-      if (isAddon) 'addon': 1,
-      if (deletedStocks.isNotEmpty) 'delete_ids': deletedStocks,
-    };
-
-    try {
-      final client = dioHttp.client(requireAuth: true);
-      final response = await client.post(
-        '/api/v1/dashboard/seller/products/$uuid/stocks',
-        data: data,
-      );
-      return ApiResult.success(
-        data: SingleProductResponse.fromJson(response.data),
-      );
-    } catch (e) {
-      debugPrint('==> update stocks fail: $e');
-      return ApiResult.failure(error: AppHelpers.errorHandler(e));
-    }
-  }
 
   @override
   Future<ApiResult<SingleProductResponse>> getProductDetails(String uuid) async {
-    final data = {
-      'lang': LocalStorage.getLanguage()?.locale ?? 'en',
-    };
     try {
       final client = dioHttp.client(requireAuth: true);
       final response = await client.get(
-        '/api/v1/dashboard/seller/products/$uuid',
-        queryParameters: data,
+        '/api/v1/method/rokct.paas.api.get_product_by_uuid',
+        queryParameters: {'uuid': uuid},
       );
       return ApiResult.success(
         data: SingleProductResponse.fromJson(response.data),
@@ -172,6 +77,17 @@ class ProductsRepositoryImpl extends ProductsRepository {
       return ApiResult.failure(error: AppHelpers.errorHandler(e));
     }
   }
+
+  // NOTE: The updateStocks method is complex and requires a more detailed
+  // understanding of the new backend's stock management logic.
+  // It is marked as unimplemented for now.
+  @override
+  Future<ApiResult<SingleProductResponse>> updateStocks({
+    required List<Stocks> stocks,
+    required List<int> deletedStocks,
+    String? uuid,
+    bool isAddon = false,
+  }) {
+    throw UnimplementedError();
+  }
 }
-
-

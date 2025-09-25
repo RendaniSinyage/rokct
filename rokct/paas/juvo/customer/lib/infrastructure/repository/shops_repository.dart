@@ -18,7 +18,7 @@ class ShopsRepository implements ShopsRepositoryFacade {
     try {
       final client = dioHttp.client(requireAuth: false);
       final response = await client.get(
-        '/api/method/rokct.paas.api.search_shops',
+        '/api/v1/method/rokct.paas.api.search_shops',
         queryParameters: params,
       );
       return ApiResult.success(
@@ -50,7 +50,7 @@ class ShopsRepository implements ShopsRepositoryFacade {
     try {
       final client = dioHttp.client(requireAuth: false);
       final response = await client.get(
-        '/api/method/rokct.paas.api.get_shops',
+        '/api/v1/method/rokct.paas.api.get_shops',
         queryParameters: params,
       );
       return ApiResult.success(
@@ -71,7 +71,7 @@ class ShopsRepository implements ShopsRepositoryFacade {
     try {
       final client = dioHttp.client(requireAuth: false);
       final response = await client.get(
-        '/api/method/rokct.paas.api.get_shop_by_uuid',
+        '/api/v1/method/rokct.paas.api.get_shop_by_uuid',
         queryParameters: {'uuid': uuid},
       );
       return ApiResult.success(
@@ -96,7 +96,7 @@ class ShopsRepository implements ShopsRepositoryFacade {
         if (shopId != null) 'shop_id': shopId,
       };
       final response = await client.get(
-        '/api/method/rokct.paas.api.check_delivery_zone',
+        '/api/v1/method/rokct.paas.api.check_delivery_zone',
         queryParameters: data,
       );
       return ApiResult.success(
