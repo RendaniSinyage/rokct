@@ -6,7 +6,6 @@ import 'package:foodyman/domain/interface/notification.dart';
 import 'package:foodyman/infrastructure/models/data/count_of_notifications_data.dart';
 import 'package:foodyman/infrastructure/models/response/notification_response.dart';
 import 'package:foodyman/infrastructure/services/app_helpers.dart';
-import 'package:foodyman/infrastructure/services/local_storage.dart';
 
 class NotificationRepositoryImpl extends NotificationRepositoryFacade {
   @override
@@ -14,16 +13,13 @@ class NotificationRepositoryImpl extends NotificationRepositoryFacade {
     int? page,
   }) async {
     final data = {
-      if (page != null) 'page': page,
-      'column': 'created_at',
-      'sort': 'desc',
-      'perPage': 7,
-      'lang': LocalStorage.getLanguage()?.locale,
+      'limit_start': ((page ?? 1) - 1) * 7,
+      'limit_page_length': 7,
     };
     try {
       final client = dioHttp.client(requireAuth: true);
       final response = await client.get(
-        '/api/v1/dashboard/notifications',
+        '/api/method/rokct.paas.api.get_user_notifications',
         queryParameters: data,
       );
       return ApiResult.success(
@@ -38,89 +34,27 @@ class NotificationRepositoryImpl extends NotificationRepositoryFacade {
     }
   }
 
+  // NOTE: The new backend does not have endpoints for reading notifications
+  // or getting a count of notifications. These features would need to be
+  // implemented on the backend if they are still required.
+
   @override
   Future<ApiResult<NotificationResponse>> readAll() async {
-    try {
-      final client = dioHttp.client(requireAuth: true);
-      final response = await client.post(
-        '/api/v1/dashboard/notifications/read-all',
-      );
-      return ApiResult.success(
-        data: NotificationResponse.fromJson(response.data),
-      );
-    } catch (e) {
-      debugPrint('==> read all notification failure: $e');
-      return ApiResult.failure(
-        error: AppHelpers.errorHandler(e),
-        statusCode: NetworkExceptions.getDioStatus(e),
-      );
-    }
+    throw UnimplementedError();
   }
 
   @override
   Future<ApiResult<dynamic>> readOne({int? id}) async {
-    final data = {
-      if (id != null) '$id': id,
-      'lang': LocalStorage.getLanguage()?.locale,
-    };
-    try {
-      final client = dioHttp.client(requireAuth: true);
-      await client.post(
-        '/api/v1/dashboard/notifications/$id/read-at',
-        queryParameters: data,
-      );
-      return const ApiResult.success(
-        data: true,
-      );
-    } catch (e) {
-      debugPrint('==> read notification failure: $e');
-      return ApiResult.failure(
-        error: AppHelpers.errorHandler(e),
-        statusCode: NetworkExceptions.getDioStatus(e),
-      );
-    }
+    throw UnimplementedError();
   }
 
   @override
   Future<ApiResult<NotificationResponse>> getAllNotifications() async {
-    final data = {
-      'lang': LocalStorage.getLanguage()?.locale,
-    };
-    try {
-      final client = dioHttp.client(requireAuth: true);
-      final response = await client.get(
-        '/api/v1/dashboard/notifications',
-        queryParameters: data,
-      );
-      return ApiResult.success(
-        data: NotificationResponse.fromJson(response.data),
-      );
-    } catch (e) {
-      debugPrint('==> get all notification failure: $e');
-      return ApiResult.failure(
-        error: AppHelpers.errorHandler(e),
-        statusCode: NetworkExceptions.getDioStatus(e),
-      );
-    }
+    throw UnimplementedError();
   }
 
   @override
   Future<ApiResult<CountNotificationModel>> getCount() async {
-    try {
-      final client = dioHttp.client(requireAuth: true);
-      final response = await client.get(
-        '/api/v1/dashboard/user/profile/notifications-statistic',
-      );
-      return ApiResult.success(
-        data: CountNotificationModel.fromJson(response.data),
-      );
-    } catch (e) {
-      debugPrint('==> get notification count failure: $e');
-      return ApiResult.failure(
-        error: AppHelpers.errorHandler(e),
-        statusCode: NetworkExceptions.getDioStatus(e),
-      );
-    }
+    throw UnimplementedError();
   }
 }
-
