@@ -94,13 +94,14 @@ function initMap() {
     loadCompetitors();
 }
 
+// --- UI Setup and Event Handlers ---
+
 function setupUI() {
     // Search
     $('#search-button').on('click', searchLocation);
 
-    // Controls
-    $('#add-station-btn').on('click', () => toggleAdding('stations'));
-    $('#add-spaza-btn').on('click', () => toggleAdding('spazas'));
+    // Controls - Updated for dynamic location types
+    $('#add-location-btn').on('click', () => toggleAdding('location'));
     $('#add-zone-btn').on('click', () => toggleAdding('zone'));
     $('#add-taxi-route-btn').on('click', () => toggleAdding('taxiRoute'));
     $('#add-secondary-taxi-route-btn').on('click', () => toggleAdding('secondaryTaxiRoute'));
@@ -112,41 +113,52 @@ function setupUI() {
     // Competitor selection
     $('#competitor-select').on('change', function() {
         selectedCompetitor = $(this).val();
+        loadLocationTypesForCompetitor(selectedCompetitor);
         if (selectedCompetitor) {
-            loadCompetitorData(selectedCompetitor);
+            loadCompetitorMapData(selectedCompetitor);
         } else {
             clearAll();
         }
     });
 }
 
+let addingLocation = false; // Simplified state
+
 function toggleAdding(type) {
-    addingStations = type === 'stations' ? !addingStations : false;
-    addingSpazas = type === 'spazas' ? !addingSpazas : false;
+    // Store the current state before resetting
+    const wasAdding = {
+        location: addingLocation,
+        zone: addingZone,
+        taxiRoute: addingTaxiRoute,
+        secondaryTaxiRoute: addingSecondaryTaxiRoute
+    };
 
-    addingZone = type === 'zone' ? !addingZone : false;
+    // Reset all modes
+    addingLocation = addingZone = addingTaxiRoute = addingSecondaryTaxiRoute = false;
+    drawingManager.setDrawingMode(null);
+
+    // Toggle the selected type on or off
+    if (type === 'location' && !wasAdding.location) addingLocation = true;
+    if (type === 'zone' && !wasAdding.zone) addingZone = true;
+    if (type === 'taxiRoute' && !wasAdding.taxiRoute) addingTaxiRoute = true;
+    if (type === 'secondaryTaxiRoute' && !wasAdding.secondaryTaxiRoute) addingSecondaryTaxiRoute = true;
+
+    // Set drawing manager if a drawing mode is active
     if (addingZone) drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYGON);
-
-    addingTaxiRoute = type === 'taxiRoute' ? !addingTaxiRoute : false;
-    if (addingTaxiRoute) drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYLINE);
-
-    addingSecondaryTaxiRoute = type === 'secondaryTaxiRoute' ? !addingSecondaryTaxiRoute : false;
-    if (addingSecondaryTaxiRoute) drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYLINE);
-
-    if (type !== 'zone' && type !== 'taxiRoute' && type !== 'secondaryTaxiRoute') {
-        drawingManager.setDrawingMode(null);
-    }
+    else if (addingTaxiRoute) drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYLINE);
+    else if (addingSecondaryTaxiRoute) drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYLINE);
 
     updateButtonStates();
 }
 
 function updateButtonStates() {
-    $('#add-station-btn').toggleClass('btn-primary', addingStations).toggleClass('btn-default', !addingStations);
-    $('#add-spaza-btn').toggleClass('btn-primary', addingSpazas).toggleClass('btn-default', !addingSpazas);
+    $('#add-location-btn').toggleClass('btn-primary', addingLocation).toggleClass('btn-default', !addingLocation);
     $('#add-zone-btn').toggleClass('btn-primary', addingZone).toggleClass('btn-default', !addingZone);
     $('#add-taxi-route-btn').toggleClass('btn-primary', addingTaxiRoute).toggleClass('btn-default', !addingTaxiRoute);
     $('#add-secondary-taxi-route-btn').toggleClass('btn-primary', addingSecondaryTaxiRoute).toggleClass('btn-default', !addingSecondaryTaxiRoute);
 }
+
+// --- Map Element Creation ---
 
 function searchLocation() {
     const address = $('#search-input').val();
@@ -157,10 +169,7 @@ function searchLocation() {
             map.setCenter(results[0].geometry.location);
             map.setZoom(12);
             if (searchMarker) searchMarker.setMap(null);
-            searchMarker = new google.maps.Marker({
-                map: map,
-                position: results[0].geometry.location
-            });
+            searchMarker = new google.maps.Marker({ map: map, position: results[0].geometry.location });
         } else {
             showNotification("Couldn't find the location. Please try again.", "error");
         }
@@ -173,17 +182,8 @@ function addZone(polygon, name = null) {
         polygon.setMap(null);
         return;
     }
-    const zoneColor = getUniqueColor();
-    polygon.setOptions({
-        fillColor: zoneColor,
-        strokeColor: zoneColor
-    });
-    const zone = {
-        polygon: polygon,
-        name: zoneName,
-        color: zoneColor,
-    };
-    zones.push(zone);
+    polygon.setOptions({ fillColor: getUniqueColor(), strokeColor: getUniqueColor() });
+    zones.push({ polygon: polygon, name: zoneName });
 }
 
 function addTaxiRoute(polyline, name = null) {
@@ -193,8 +193,7 @@ function addTaxiRoute(polyline, name = null) {
         return;
     }
     polyline.setOptions({ strokeColor: PRIMARY_ROUTE_COLOR });
-    const route = { polyline: polyline, name: routeName, type: 'Primary' };
-    taxiRoutes.push(route);
+    taxiRoutes.push({ polyline: polyline, name: routeName, type: 'Primary' });
 }
 
 function addSecondaryTaxiRoute(polyline, name = null) {
@@ -204,38 +203,29 @@ function addSecondaryTaxiRoute(polyline, name = null) {
         return;
     }
     polyline.setOptions({ strokeColor: SECONDARY_ROUTE_COLOR });
-    const route = { polyline: polyline, name: routeName, type: 'Secondary' };
-    secondaryTaxiRoutes.push(route);
+    secondaryTaxiRoutes.push({ polyline: polyline, name: routeName, type: 'Secondary' });
 }
 
-function addSpaza(location, name = null) {
-    const spazaName = name || `Spaza ${spazaCounter++}`;
-    const spaza = new google.maps.Marker({
-        position: location,
-        map: map,
-        label: { text: spazaName },
-        icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 8,
-            fillColor: "#FFD700",
-            fillOpacity: 0.8,
-            strokeWeight: 2,
-            strokeColor: "#FFA500"
-        }
-    });
-    spazas.push({marker: spaza, name: spazaName});
-}
+// This replaces placeMarker and addSpaza
+function addLocation(position, name = null, type = null) {
+    const locationType = type || $('#location-type-select').val();
+    const locationTypeName = type ? type : $('#location-type-select option:selected').text();
 
-function placeMarker(location, name = null) {
-    const stationName = name || prompt("Enter a name for this station:");
-    if (!stationName) return;
+    if (!locationType) {
+        showNotification("Please select a location type first.", "warning");
+        return;
+    }
+    const locationName = name || prompt(`Enter a name for this ${locationTypeName}:`);
+    if (!locationName) return;
 
     let marker = new google.maps.Marker({
-        position: location,
+        position: position,
         map: map,
         draggable: true,
-        label: { text: stationName },
+        label: { text: locationName },
     });
+
+    marker.location_type = locationType; // Store the type's name (which is its ID)
     markers.push(marker);
 
     marker.addListener('rightclick', function() {
@@ -244,11 +234,11 @@ function placeMarker(location, name = null) {
     });
 }
 
+// --- Data Handling ---
+
 function clearAll() {
     markers.forEach(marker => marker.setMap(null));
     markers = [];
-    spazas.forEach(spaza => spaza.marker.setMap(null));
-    spazas = [];
     zones.forEach(zone => zone.polygon.setMap(null));
     zones = [];
     taxiRoutes.forEach(route => route.polyline.setMap(null));
@@ -258,7 +248,6 @@ function clearAll() {
     if (searchMarker) searchMarker.setMap(null);
     if (heatmap) heatmap.setMap(null);
     $('#results').html('');
-    showNotification("All data cleared.", "info");
 }
 
 function showNotification(message, type) {

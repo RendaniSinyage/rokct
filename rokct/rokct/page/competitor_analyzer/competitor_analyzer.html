@@ -127,9 +127,14 @@ button:disabled {
     <div id="map" style="height: 600px; width: 100%;"></div>
 
     <div id="controls">
-        <button id="add-spaza-btn">Add Spazas</button>
+        <div class="form-inline" style="margin-bottom: 10px;">
+            <div class="form-group">
+                <label for="location-type-select" style="margin-right: 10px;">Location Type:</label>
+                <select id="location-type-select" class="form-control" style="margin-right: 10px;" disabled></select>
+                <button id="add-location-btn" class="btn btn-default" disabled>Add Location</button>
+            </div>
+        </div>
         <button id="add-zone-btn">Add Zone</button>
-        <button id="add-station-btn">Add Stations</button>
         <button id="add-taxi-route-btn">Add Taxi Route</button>
         <button id="add-secondary-taxi-route-btn">Add Secondary Route</button>
     </div>

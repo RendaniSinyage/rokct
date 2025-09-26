@@ -13,10 +13,10 @@
  "fields": [
   {
    "fieldname": "location_type",
-   "fieldtype": "Select",
-   "in_list_view": 1,
+   "fieldtype": "Link",
    "label": "Location Type",
-   "options": "Station\nSpaza",
+   "options": "Location Type",
+   "in_list_view": 1,
    "reqd": 1
   },
   {
