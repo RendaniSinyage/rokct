@@ -226,7 +226,8 @@ fixtures = [
     "Province",
     "Organ of State",
     "Tender Type",
-    "Email Template"
+    "Email Template",
+    "Subscription Plan"
 ]
 
 # exempt linked doctypes from being automatically cancelled
