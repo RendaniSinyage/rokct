@@ -276,7 +276,7 @@ function loadCompetitors() {
         args: {
             doctype: "Competitor",
             fields: ["name", "competitor_name"],
-            limit_page_length: 1000 // Or some other high number
+            limit_page_length: 1000
         },
         callback: function(r) {
             if (r.message) {
@@ -299,60 +299,48 @@ function loadCompetitorData(competitor) {
         args: { competitor: competitor },
         callback: function(r) {
             if (r.message && r.message.status === "success") {
-                const locations = r.message.data;
-                const zonesData = {};
-                const routesData = {};
+                const data = r.message.data;
 
-                locations.forEach(loc => {
-                    const name = loc.location_name;
+                // Load locations (stations and spazas)
+                data.locations.forEach(loc => {
                     const geo = JSON.parse(loc.location_geolocation);
-                    const lat = geo.coordinates[1];
-                    const lng = geo.coordinates[0];
-                    const position = new google.maps.LatLng(lat, lng);
-
-                    if (name.startsWith("Station:")) {
-                        placeMarker(position, name.split(':')[1]);
-                    } else if (name.startsWith("Spaza:")) {
-                        addSpaza(position, name.split(':')[1]);
-                    } else if (name.startsWith("Zone:")) {
-                        const parts = name.split(':');
-                        const zoneName = parts[1];
-                        if (!zonesData[zoneName]) zonesData[zoneName] = [];
-                        zonesData[zoneName].push(position);
-                    } else if (name.startsWith("Route:")) {
-                        const parts = name.split(':');
-                        const routeName = parts[1];
-                        const routeType = parts[2];
-                        if (!routesData[routeName]) routesData[routeName] = { type: routeType, path: [] };
-                        routesData[routeName].path.push(position);
+                    const position = new google.maps.LatLng(geo.coordinates[1], geo.coordinates[0]);
+                    if (loc.location_type === 'Station') {
+                        placeMarker(position, loc.location_name);
+                    } else if (loc.location_type === 'Spaza') {
+                        addSpaza(position, loc.location_name);
                     }
                 });
 
-                // Recreate zones
-                for (const zoneName in zonesData) {
+                // Load zones
+                data.zones.forEach(zone_data => {
+                    const path = JSON.parse(zone_data.zone_path).map(p => new google.maps.LatLng(p.lat, p.lng));
                     const polygon = new google.maps.Polygon({
-                        paths: zonesData[zoneName],
+                        paths: path,
                         map: map,
                         editable: true
                     });
-                    addZone(polygon, zoneName);
-                }
+                    addZone(polygon, zone_data.zone_name);
+                });
 
-                // Recreate routes
-                for (const routeName in routesData) {
-                    const routeInfo = routesData[routeName];
+                // Load routes
+                data.routes.forEach(route_data => {
+                    const path = JSON.parse(route_data.route_path).map(p => new google.maps.LatLng(p.lat, p.lng));
                     const polyline = new google.maps.Polyline({
-                        path: routeInfo.path,
+                        path: path,
                         map: map,
                         editable: true
                     });
-                    if (routeInfo.type === 'Primary') {
-                        addTaxiRoute(polyline, routeName);
+                    if (route_data.route_type === 'Primary') {
+                        addTaxiRoute(polyline, route_data.route_name);
                     } else {
-                        addSecondaryTaxiRoute(polyline, routeName);
+                        addSecondaryTaxiRoute(polyline, route_data.route_name);
                     }
-                }
+                });
+
                 showNotification("Competitor data loaded.", "success");
+            } else {
+                showNotification("Error loading competitor data.", "error");
             }
         }
     });
@@ -365,9 +353,14 @@ function saveCompetitorData() {
     }
 
     const data = {
-        stations: markers.map(m => ({ name: m.getLabel().text, lat: m.getPosition().lat(), lng: m.getPosition().lng() })),
-        spazas: spazas.map(s => ({ name: s.name, lat: s.marker.getPosition().lat(), lng: s.marker.getPosition().lng() })),
-        zones: zones.map(z => ({ name: z.name, path: z.polygon.getPath().getArray().map(p => ({lat: p.lat(), lng: p.lng()})) })),
+        locations: [
+            ...markers.map(m => ({ type: 'Station', name: m.getLabel().text, lat: m.getPosition().lat(), lng: m.getPosition().lng() })),
+            ...spazas.map(s => ({ type: 'Spaza', name: s.name, lat: s.marker.getPosition().lat(), lng: s.marker.getPosition().lng() }))
+        ],
+        zones: zones.map(z => ({
+            name: z.name,
+            path: z.polygon.getPath().getArray().map(p => ({lat: p.lat(), lng: p.lng()}))
+        })),
         routes: [...taxiRoutes, ...secondaryTaxiRoutes].map(r => ({
             name: r.name,
             type: r.type,

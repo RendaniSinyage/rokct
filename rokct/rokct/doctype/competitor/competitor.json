@@ -215,6 +215,23 @@
    "fieldname": "notes",
    "fieldtype": "Long Text",
    "label": "Notes"
+  },
+  {
+   "fieldname": "map_data_section",
+   "fieldtype": "Section Break",
+   "label": "Map Data"
+  },
+  {
+   "fieldname": "zones",
+   "fieldtype": "Table",
+   "label": "Zones",
+   "options": "Competitor Zone"
+  },
+  {
+   "fieldname": "routes",
+   "fieldtype": "Table",
+   "label": "Routes",
+   "options": "Competitor Route"
   }
  ],
  "index_web_pages_for_search": 1,

@@ -6,10 +6,19 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
+  "location_type",
   "location_name",
   "location_geolocation"
  ],
  "fields": [
+  {
+   "fieldname": "location_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Location Type",
+   "options": "Station\nSpaza",
+   "reqd": 1
+  },
   {
    "fieldname": "location_name",
    "fieldtype": "Data",

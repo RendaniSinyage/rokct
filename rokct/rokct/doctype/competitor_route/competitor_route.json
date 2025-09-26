@@ -1,34 +1,42 @@
 {
  "actions": [],
  "autoname": "hash",
- "creation": "2025-09-26 13:26:00.000000",
+ "creation": "2025-09-26 13:27:00.000000",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "zone_name",
-  "zone_path"
+  "route_name",
+  "route_type",
+  "route_path"
  ],
  "fields": [
   {
-   "fieldname": "zone_name",
+   "fieldname": "route_name",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Zone Name",
+   "label": "Route Name",
    "reqd": 1
   },
   {
-   "fieldname": "zone_path",
+   "fieldname": "route_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Route Type",
+   "options": "Primary\nSecondary"
+  },
+  {
+   "fieldname": "route_path",
    "fieldtype": "Text",
-   "label": "Zone Path"
+   "label": "Route Path"
   }
  ],
  "istable": 1,
  "links": [],
- "modified": "2025-09-26 13:26:00.000000",
+ "modified": "2025-09-26 13:27:00.000000",
  "modified_by": "Administrator",
  "module": "rokct",
- "name": "Competitor Zone",
+ "name": "Competitor Route",
  "owner": "Administrator",
  "permissions": [],
  "sort_field": "modified",
