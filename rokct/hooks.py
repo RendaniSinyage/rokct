@@ -208,9 +208,9 @@ whitelisted_methods = {
 # each overriding function accepts a `data` argument;
 # generated from the base implementation of the doctype dashboard,
 # along with any modifications made in other Frappe apps
-# override_doctype_dashboards = {
-#       "Task": "rokct.task.get_dashboard_data"
-# }
+override_doctype_dashboards = {
+      "Competitor": "rokct.rokct.doctype.competitor.competitor.get_dashboard_data"
+}
 
 fixtures = [
     "Property Setter",

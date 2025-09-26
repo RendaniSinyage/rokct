@@ -1,0 +1,149 @@
+{% extends "templates/web.html" %}
+
+{% block style %}
+<style>
+.water-refill-analyzer {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 20px;
+    background-color: #f4f4f4;
+}
+
+.water-refill-analyzer h1 {
+    color: #333;
+}
+
+#map {
+    height: 500px;
+    width: 100%;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+#search-container {
+    display: flex;
+    margin-bottom: 10px;
+}
+
+#search-input {
+    flex-grow: 1;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: 4px 0 0 4px;
+}
+
+#search-button {
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 0 4px 4px 0;
+    cursor: pointer;
+}
+
+#search-button:hover {
+    background-color: #45a049;
+}
+
+#controls, #analysis-controls, #data-controls {
+    margin-bottom: 20px;
+}
+
+button {
+    background-color: #4CAF50;
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color: 0.3s;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+#results {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 10px 20px;
+    border-radius: 4px;
+    color: white;
+    font-weight: bold;
+    z-index: 1000;
+}
+
+.notification.error {
+    background-color: #e74c3c;
+}
+
+.notification.success {
+    background-color: #2ecc71;
+}
+
+.notification.warning {
+    background-color: #f39c12;
+}
+</style>
+{% endblock %}
+
+{% block page_content %}
+<div class="water-refill-analyzer">
+    <div id="notification-area"></div>
+    <h1>Competitor Analyzer</h1>
+
+    <div class="form-group">
+        <label for="competitor-select">Select Competitor</label>
+        <select id="competitor-select" class="form-control"></select>
+    </div>
+
+    <div id="search-container">
+        <input type="text" id="search-input" placeholder="Search for a location">
+        <button id="search-button">Search</button>
+    </div>
+
+    <div id="map" style="height: 600px; width: 100%;"></div>
+
+    <div id="controls">
+        <button id="add-spaza-btn">Add Spazas</button>
+        <button id="add-zone-btn">Add Zone</button>
+        <button id="add-station-btn">Add Stations</button>
+        <button id="add-taxi-route-btn">Add Taxi Route</button>
+        <button id="add-secondary-taxi-route-btn">Add Secondary Route</button>
+    </div>
+
+    <div id="data-controls">
+        <button id="save-data-btn">Save Map Data</button>
+        <button id="clear-all-btn">Clear All</button>
+    </div>
+
+    <div id="results"></div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script src="/assets/rokct/js/competitor_analyzer.js"></script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key={{ gmaps_api_key }}&libraries=drawing,geometry,visualization,places&callback=initMap"></script>
+{% endblock %}
