@@ -92,6 +92,8 @@ after_install = "rokct.rokct.utils.update_site_apps_txt"
 before_uninstall = "rokct.rokct.flutter_builder.utils.prevent_uninstall_if_build_active"
 # after_uninstall = "rokct.uninstall.after_uninstall"
 
+after_migrate = ["rokct.paas.juvo.seed.run_juvo_seed"]
+
 # Integration Setup
 # ------------------
 # To set up dependencies/integrations with other apps
