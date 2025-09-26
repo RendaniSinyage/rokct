@@ -3,7 +3,7 @@
     "name": "Email Settings",
     "engine": "InnoDB",
     "issingle": 1,
-    "module": "Paas",
+    "module": "paas",
     "permissions": [
         {
             "create": 1,

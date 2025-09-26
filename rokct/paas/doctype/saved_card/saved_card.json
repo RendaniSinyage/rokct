@@ -1,6 +1,6 @@
 {
     "name": "Saved Card",
-    "module": "Paas",
+    "module": "paas",
     "engine": "InnoDB",
     "creation": "2024-09-21 12:44:00.000000",
     "modified": "2024-09-21 12:44:00.000000",

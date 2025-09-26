@@ -5,7 +5,7 @@
     "is_submittable": 0,
     "issingle": 0,
     "istable": 1,
-    "module": "Paas",
+    "module": "paas",
     "permissions": [],
     "sort_field": "modified",
     "sort_order": "DESC",
