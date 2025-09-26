@@ -9,72 +9,61 @@ class Competitor(Document):
 	pass
 
 @frappe.whitelist()
-def get_competitor_map_data(competitor):
-	"""
-	Retrieves structured map data for a given competitor.
-	"""
-	if not frappe.db.exists("Competitor", competitor):
-		return {"status": "error", "message": "Competitor not found"}
+def get_map_data(competitor=None):
+    """
+    Retrieves all master map data (zones, routes) and competitor-specific locations.
+    """
+    zones = frappe.get_all("Competitor Zone", fields=["zone_name", "zone_path"])
+    routes = frappe.get_all("Competitor Route", fields=["route_name", "route_type", "route_path"])
 
-	doc = frappe.get_doc("Competitor", competitor)
+    locations = []
+    if competitor and frappe.db.exists("Competitor", competitor):
+        locations = frappe.get_all("Competitor Location",
+            filters={"parent": competitor, "parenttype": "Competitor"},
+            fields=["location_type", "location_name", "location_geolocation"]
+        )
 
-	return {
-		"status": "success",
-		"data": {
-			"locations": doc.get("office_locations"),
-			"zones": doc.get("zones"),
-			"routes": doc.get("routes")
-		}
-	}
+    return {
+        "status": "success",
+        "data": {
+            "locations": locations,
+            "zones": zones,
+            "routes": routes
+        }
+    }
 
 @frappe.whitelist()
-def save_competitor_map_data(competitor, data):
-	"""
-	Saves structured map data to the competitor's child tables.
-	"""
-	import json
+def save_competitor_locations(competitor, locations_data):
+    """
+    Saves only the location data for a specific competitor.
+    Zones and Routes are master data and not saved from here.
+    """
+    import json
 
-	if not frappe.db.exists("Competitor", competitor):
-		return {"status": "error", "message": "Competitor not found"}
+    if not frappe.db.exists("Competitor", competitor):
+        return {"status": "error", "message": "Competitor not found"}
 
-	try:
-		data = json.loads(data)
-		doc = frappe.get_doc("Competitor", competitor)
+    try:
+        data = json.loads(locations_data)
+        doc = frappe.get_doc("Competitor", competitor)
 
-		# Update locations (stations/spazas)
-		doc.set("office_locations", [])
-		for loc in data.get("locations", []):
-			doc.append("office_locations", {
-				"location_type": loc.get("type"),
-				"location_name": loc.get("name"),
-				"location_geolocation": f'{{"type":"Point","coordinates":[{loc.get("lng")},{loc.get("lat")}]}}'
-			})
+        # Update locations
+        doc.set("office_locations", [])
+        for loc in data: # The data is now just a list of locations
+            doc.append("office_locations", {
+                "location_type": loc.get("type"),
+                "location_name": loc.get("name"),
+                "location_geolocation": f'{{"type":"Point","coordinates":[{loc.get("lng")},{loc.get("lat")}]}}'
+            })
 
-		# Update zones
-		doc.set("zones", [])
-		for zone in data.get("zones", []):
-			doc.append("zones", {
-				"zone_name": zone.get("name"),
-				"zone_path": json.dumps(zone.get("path"))
-			})
+        doc.save(ignore_permissions=True)
+        frappe.db.commit()
 
-		# Update routes
-		doc.set("routes", [])
-		for route in data.get("routes", []):
-			doc.append("routes", {
-				"route_name": route.get("name"),
-				"route_type": route.get("type"),
-				"route_path": json.dumps(route.get("path"))
-			})
+        return {"status": "success"}
 
-		doc.save(ignore_permissions=True)
-		frappe.db.commit()
-
-		return {"status": "success"}
-
-	except Exception as e:
-		frappe.log_error(frappe.get_traceback(), "Save Competitor Map Data Error")
-		return {"status": "error", "message": str(e)}
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), "Save Competitor Locations Error")
+        return {"status": "error", "message": str(e)}
 
 def get_dashboard_data(data):
 	"""
