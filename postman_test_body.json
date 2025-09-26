@@ -1,0 +1,11 @@
+{
+    "plan": "Pro-Monthly",
+    "email": "test.user@example.com",
+    "password": "a_strong_password_123",
+    "first_name": "Test",
+    "last_name": "User",
+    "company_name": "Test Company Inc.",
+    "currency": "USD",
+    "country": "United States",
+    "industry": "Information Technology"
+}
