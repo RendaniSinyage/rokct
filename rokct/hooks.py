@@ -83,8 +83,8 @@ home_page = "swagger"
 # Installation
 # ------------
 
-# before_install = "rokct.install.before_install"
-after_install = "rokct.rokct.utils.update_site_apps_txt"
+before_install = "rokct.install.before_install"
+after_install = "rokct.install.after_install"
 
 # Uninstallation
 # ------------
