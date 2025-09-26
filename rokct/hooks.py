@@ -98,7 +98,7 @@ before_uninstall = "rokct.rokct.flutter_builder.utils.prevent_uninstall_if_build
 # Name of the app being installed is passed as an argument
 
 # before_app_install = "rokct.utils.before_app_install"
-after_app_install = "rokct.rokct.utils.update_site_apps_txt"
+# after_app_install = "rokct.rokct.utils.update_site_apps_txt"
 
 # Integration Cleanup
 # -------------------
