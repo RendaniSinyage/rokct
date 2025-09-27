@@ -46,8 +46,20 @@ def after_install():
     """
     print("\n--- Frappe Installation Process Finished ---")
 
-    # The data seeder patch will run automatically via patches.txt.
-    # The patch file itself contains print statements for verbosity.
+    # Manually executing seeders from the after_install hook to ensure they run.
+    # This bypasses the patch system which can skip patches that have failed once.
+    print("\n--- Manually Executing Data Seeders ---")
+    try:
+        from rokct.patches import seed_map_data, seed_subscription_plans_v2
+
+        # Calling the execute function from each seeder module
+        seed_map_data.execute()
+        seed_subscription_plans_v2.execute()
+
+        print("--- Data Seeders Finished Successfully ---")
+    except Exception as e:
+        print(f"FATAL ERROR during manual seeder execution: {e}")
+        frappe.log_error(message=frappe.get_traceback(), title="Manual Seeder Execution Error")
 
     update_site_apps_txt_with_error_handling()
 

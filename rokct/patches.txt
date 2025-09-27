@@ -4,6 +4,4 @@
 
 [post_model_sync]
 rokct.patches.add_migration_fields_to_company_subscription
-rokct.patches.seed_map_data
-rokct.patches.seed_subscription_plans_v2
 # Patches added in this section will be executed after doctypes are migrated
