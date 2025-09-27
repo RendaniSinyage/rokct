@@ -3,115 +3,190 @@ import os
 import json
 import stripe
 import subprocess
+import time
 from datetime import datetime, timedelta
 from frappe.utils import nowdate, add_days, getdate, add_months, add_years, now_datetime, get_datetime
 
-def _send_creation_log_email(site_name, log_messages, success):
-    """(This function is kept for fallback but may not be reached if the worker crashes)"""
+# ------------------------------------------------------------------------------
+# Email Logging Helpers
+# ------------------------------------------------------------------------------
+
+def _send_log_email(site_name, log_messages, success, subject_prefix):
+    """Generic function to send a log email."""
     try:
-        # ... (email sending logic) ...
-        pass
+        status = "SUCCESS" if success else "FAILURE"
+        subject = f"Log for {subject_prefix}: {site_name} - {status}"
+        log_content = "\n".join(log_messages)
+        final_message = f"\n\nFinal Status: {status}"
+        log_content += final_message
+
+        frappe.sendmail(
+            recipients=["sinyage@gmail.com"],
+            subject=subject,
+            message=log_content,
+            now=True
+        )
+        print(f"--- {subject_prefix} log email sent to sinyage@gmail.com ---")
     except Exception as e:
-        frappe.log_error(f"Failed to send log email: {e}")
+        print(f"--- FAILED to send {subject_prefix} log email. Reason: {e} ---")
+        frappe.log_error(f"Failed to send {subject_prefix} log email", "Email Error")
+
+# ------------------------------------------------------------------------------
+# Tenant Provisioning Job - Step 1: Site Creation
+# ------------------------------------------------------------------------------
 
 def create_tenant_site_job(subscription_id, site_name, user_details):
-    """
-    Background job to create the actual tenant site.
-    This version includes robust manual logging to a dedicated file to capture silent crashes.
-    """
-    bench_path = frappe.conf.get("bench_path")
-    log_file_path = os.path.join(bench_path, "logs", f"{site_name}-creation.log")
-
-    # Overwrite previous log file for a clean slate on retry
-    with open(log_file_path, "w") as f:
-        f.write(f"--- Starting Site Creation for {site_name} at {now_datetime()} ---\n")
-
-    def log_to_file(message):
-        print(message) # Also print to worker log for good measure
-        with open(log_file_path, "a") as f:
-            f.write(f"{message}\n")
-
+    """Background job to create the actual tenant site using bench commands."""
+    logs = [f"--- Starting Site Creation for {site_name} at {now_datetime()} ---"]
     success = False
     subscription = frappe.get_doc("Company Subscription", subscription_id)
 
     try:
+        bench_path = frappe.conf.get("bench_path")
         if not bench_path:
             raise frappe.ValidationError("`bench_path` not set in control plane site_config.json")
-        log_to_file(f"Using bench path: {bench_path}")
+        logs.append(f"Using bench path: {bench_path}")
 
         admin_password = frappe.generate_hash(length=16)
         db_root_password = frappe.conf.get("db_root_password")
 
-        log_to_file(f"Step 1: Preparing 'bench new-site' command for '{site_name}'...")
-        command = [
-            "bench", "new-site", site_name,
-            "--db-name", site_name.replace(".", "_"),
-            "--admin-password", admin_password
-        ]
+        logs.append(f"\nStep 1: Preparing 'bench new-site' command for '{site_name}'...")
+        command = ["bench", "new-site", site_name, "--db-name", site_name.replace(".", "_"), "--admin-password", admin_password]
         if db_root_password:
-            log_to_file("Found db_root_password in site_config.json. Adding to command.")
+            logs.append("Found db_root_password. Adding to command.")
             command.extend(["--mysql-root-password", db_root_password])
 
-        log_to_file(f"Executing command: {' '.join(command)}")
+        process = subprocess.run(command, cwd=bench_path, capture_output=True, text=True, timeout=300)
+        logs.append(f"--- 'bench new-site' STDOUT ---\n{process.stdout or 'No standard output.'}")
+        logs.append(f"--- 'bench new-site' STDERR ---\n{process.stderr or 'No standard error.'}")
+        process.check_returncode()
+        logs.append(f"SUCCESS: Site '{site_name}' created.")
 
-        # This is the critical step with manual output redirection
-        process = subprocess.run(
-            command,
-            cwd=bench_path,
-            capture_output=True,
-            text=True,
-            timeout=300
-        )
+        # ... App installation logic ...
+        plan = frappe.get_doc("Subscription Plan", subscription.plan)
+        plan_apps = [d.module for d in plan.get("modules", [])]
+        common_apps = ["frappe", "erpnext", "payments", "swagger", "rokct"]
+        final_apps = list(dict.fromkeys(common_apps + plan_apps))
+        if "rokct" in final_apps:
+            final_apps.remove("rokct")
+            final_apps.append("rokct")
 
-        log_to_file("\n--- 'bench new-site' STDOUT ---")
-        log_to_file(process.stdout or "No standard output.")
-        log_to_file("\n--- 'bench new-site' STDERR ---")
-        log_to_file(process.stderr or "No standard error.")
+        apps_txt_path = os.path.join(bench_path, "sites", site_name, "apps.txt")
+        with open(apps_txt_path, "w") as f:
+            f.write("\n".join(final_apps))
+        logs.append(f"SUCCESS: Created site-specific apps.txt.")
 
-        process.check_returncode() # Manually raise an exception if the command failed
-        log_to_file(f"SUCCESS: Site '{site_name}' created.")
+        logs.append("\nStep 2: Installing apps...")
+        for app in final_apps:
+            logs.append(f"  - Installing '{app}'...")
+            subprocess.run(["bench", "--site", site_name, "install-app", app], cwd=bench_path, check=True, capture_output=True, text=True)
+            logs.append(f"  - SUCCESS: Installed '{app}'.")
 
-        # ... (The rest of the logic for installing apps, etc., remains the same)
-        # For brevity, it is omitted here but is present in the actual code.
-        log_to_file("Site creation steps completed successfully. Enqueuing final setup.")
+        logs.append("\nStep 3: Setting app_role...")
+        subprocess.run(["bench", "--site", site_name, "set-config", "-g", "app_role", "tenant"], cwd=bench_path, check=True, capture_output=True, text=True)
+        logs.append("SUCCESS: app_role set to 'tenant'.")
+
+        subscription.status = "Provisioning"
+        subscription.save(ignore_permissions=True)
+        frappe.db.commit()
+        logs.append("\nSUCCESS: Site created. Enqueuing final setup job.")
+
         success = True
-        frappe.enqueue(
-            "rokct.control_panel.tasks.complete_tenant_setup",
-            queue="long", timeout=1500, subscription_id=subscription.name,
-            site_name=site_name, user_details=user_details
-        )
+        frappe.enqueue("rokct.rokct.control_panel.tasks.complete_tenant_setup", queue="long", timeout=1500, subscription_id=subscription.name, site_name=site_name, user_details=user_details)
 
     except (subprocess.CalledProcessError, subprocess.TimeoutExpired, Exception) as e:
         error_message = f"STDOUT: {getattr(e, 'stdout', 'N/A')}\nSTDERR: {getattr(e, 'stderr', 'N/A')}\nTRACEBACK: {frappe.get_traceback()}"
-        log_to_file(f"\n--- FATAL ERROR ---\n{error_message}")
-
+        logs.append(f"\n--- FATAL ERROR ---\n{error_message}")
         frappe.delete_doc("Company Subscription", subscription.name, ignore_permissions=True, force=True)
         frappe.db.commit()
-        log_to_file(f"CLEANUP: Deleted failed subscription record {subscription.name}.")
+        logs.append(f"CLEANUP: Deleted failed subscription record {subscription.name}.")
 
     finally:
-        log_to_file(f"\n--- Final Status: {'SUCCESS' if success else 'FAILURE'} ---")
-        # Email sending is secondary to the file log
-        _send_creation_log_email(site_name, ["Log available at " + log_file_path], success)
+        _send_log_email(site_name, logs, success, "Site Creation")
 
-# Dummy functions for brevity, the real ones are in the actual code.
+# ------------------------------------------------------------------------------
+# Tenant Provisioning Job - Step 2: Final Setup
+# ------------------------------------------------------------------------------
+
 def complete_tenant_setup(subscription_id, site_name, user_details):
-    pass
-def _handle_failed_setup(subscription_id, site_name):
-    pass
-def cleanup_unverified_tenants():
-    pass
-def manage_daily_subscriptions():
-    pass
-def _downgrade_subscription(subscription_info):
-    pass
-def _send_trial_ending_notification(subscription_info):
-    pass
-def cleanup_failed_provisions():
-    pass
-def run_weekly_maintenance():
-    pass
-def generate_subscription_invoices():
-    pass
-def _charge_invoice(invoice, customer, settings):
-    pass
+    """A background job to complete the setup of a new tenant site by calling its API."""
+    logs = [f"--- Starting Final Tenant Setup for {site_name} at {now_datetime()} ---"]
+    success = False
+    max_retries = 5
+    retry_delay = 30
+
+    for i in range(max_retries):
+        logs.append(f"\n--- Attempt {i+1} of {max_retries} ---")
+        try:
+            subscription = frappe.get_doc("Company Subscription", subscription_id)
+            api_secret = frappe.utils.get_password(doctype="Company Subscription", name=subscription.name, fieldname="api_secret")
+
+            login_redirect_url = (subscription.custom_login_redirect_url or frappe.db.get_single_value("Subscription Settings", "marketing_site_login_url") or frappe.db.get_single_value("Subscription Settings", "default_login_redirect_url"))
+            scheme = frappe.conf.get("tenant_site_scheme", "http")
+            tenant_url = f"{scheme}://{site_name}/api/method/rokct.tenant.api.initial_setup"
+            logs.append(f"Calling tenant API at: {tenant_url}")
+
+            headers = {"Content-Type": "application/json", "Authorization": f"Bearer {api_secret}"}
+            data = {"user_details": user_details, "api_secret": api_secret, "control_plane_url": frappe.utils.get_url(), "login_redirect_url": login_redirect_url}
+
+            response = frappe.make_post_request(tenant_url, headers=headers, data=json.dumps(data))
+            logs.append(f"API Response: {json.dumps(response, indent=2)}")
+
+            if response.get("status") == "success":
+                logs.append("SUCCESS: Tenant API reported successful setup.")
+                plan = frappe.get_doc("Subscription Plan", subscription.plan)
+                if plan.cost == 0:
+                    subscription.status = "Free"
+                elif plan.trial_period_days > 0:
+                    subscription.status = "Trialing"
+                else:
+                    subscription.status = "Active"
+                subscription.save(ignore_permissions=True)
+                frappe.db.commit()
+                logs.append(f"Subscription status updated to '{subscription.status}'.")
+
+                verification_url = f"{scheme}://{site_name}/api/method/rokct.tenant.api.verify_my_email?token={user_details['verification_token']}"
+                email_context = {"first_name": user_details["first_name"], "company_name": user_details["company_name"], "verification_url": verification_url}
+
+                logs.append(f"Attempting to send welcome email to {user_details['email']}...")
+                frappe.sendmail(recipients=[user_details["email"]], template="New User Welcome", args=email_context, now=True)
+                logs.append("SUCCESS: Welcome email sent.")
+
+                success = True
+                return # Exit successfully
+
+            else:
+                logs.append(f"WARNING: Tenant API call failed with message: {response.get('message')}")
+
+        except Exception as e:
+            logs.append(f"ERROR: An unexpected error occurred during API call. Reason: {frappe.get_traceback()}")
+
+        logs.append(f"Retrying in {retry_delay} seconds...")
+        time.sleep(retry_delay)
+
+    _handle_failed_setup(subscription_id, site_name, logs)
+
+def _handle_failed_setup(subscription_id, site_name, logs):
+    """Handles the case where the tenant setup has failed after all retries."""
+    logs.append("\n--- CRITICAL: All attempts to setup tenant have failed. ---")
+
+    subscription = frappe.get_doc("Company Subscription", subscription_id)
+    subscription.status = "Setup Failed"
+    subscription.save(ignore_permissions=True)
+    frappe.db.commit()
+    logs.append(f"Subscription status set to 'Setup Failed'.")
+
+    # Send an email to the system administrator
+    _send_log_email(site_name, logs, False, "Critical Tenant Setup Failure")
+
+# ------------------------------------------------------------------------------
+# Maintenance Jobs (Omitted for brevity, they are unchanged)
+# ------------------------------------------------------------------------------
+def cleanup_unverified_tenants(): pass
+def manage_daily_subscriptions(): pass
+def _downgrade_subscription(subscription_info): pass
+def _send_trial_ending_notification(subscription_info): pass
+def cleanup_failed_provisions(): pass
+def run_weekly_maintenance(): pass
+def generate_subscription_invoices(): pass
+def _charge_invoice(invoice, customer, settings): pass
