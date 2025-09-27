@@ -48,10 +48,21 @@ def create_tenant_site_job(subscription_id, site_name, user_details):
         logs.append(f"Using bench path: {bench_path}")
 
         admin_password = frappe.generate_hash(length=16)
+        db_root_password = frappe.conf.get("db_root_password")
 
         logs.append(f"Step 1: Creating new site '{site_name}'...")
+
+        command = [
+            "bench", "new-site", site_name,
+            "--db-name", site_name.replace(".", "_"),
+            "--admin-password", admin_password
+        ]
+        if db_root_password:
+            logs.append("Found db_root_password in site_config.json. Using it for site creation.")
+            command.extend(["--mysql-root-password", db_root_password])
+
         subprocess.run(
-            ["bench", "new-site", site_name, "--db-name", site_name.replace(".", "_"), "--admin-password", admin_password],
+            command,
             cwd=bench_path, check=True, capture_output=True, text=True
         )
         logs.append(f"SUCCESS: Site '{site_name}' created.")
