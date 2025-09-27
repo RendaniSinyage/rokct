@@ -5,27 +5,60 @@ import subprocess
 def before_install():
     """
     This function is called before the app is installed.
+    It prints a manifest of components to be installed.
     """
     print("--- Starting ROKCT App Installation ---")
+    print("\n--- Pre-Installation Manifest ---")
+
+    # --- Print DocTypes ---
+    print("\nThe following DocTypes will be installed/updated:")
+    try:
+        app_path = frappe.get_app_path("rokct")
+        doctype_path = os.path.join(app_path, "rokct", "doctype")
+        if os.path.exists(doctype_path):
+            for item in os.listdir(doctype_path):
+                if os.path.isdir(os.path.join(doctype_path, item)):
+                    print(f"- {item}")
+        else:
+            print("Could not find doctype directory.")
+    except Exception as e:
+        print(f"ERROR: Could not list DocTypes. Reason: {e}")
+
+    # --- Print Fixtures ---
+    print("\nThe following Fixtures will be installed/updated:")
+    try:
+        from rokct.hooks import fixtures
+        if fixtures:
+            for fixture in fixtures:
+                print(f"- {fixture}")
+        else:
+            print("No fixtures found.")
+    except Exception as e:
+        print(f"ERROR: Could not list Fixtures. Reason: {e}")
+
+    print("\n--- Beginning Frappe Installation Process ---")
+
 
 def after_install():
     """
     This function is called after the app is installed.
     It consolidates all post-installation steps for clear, robust logging.
     """
+    print("\n--- Frappe Installation Process Finished ---")
+
     # The data seeder patch will run automatically via patches.txt.
     # The patch file itself contains print statements for verbosity.
 
     update_site_apps_txt_with_error_handling()
 
-    print("--- ROKCT App Installation Complete ---")
+    print("\n--- ROKCT App Installation Complete ---")
 
 def update_site_apps_txt_with_error_handling():
     """
     Updates the site-specific apps.txt file with robust error handling and logging.
     """
     step_name = "Update site-specific apps.txt"
-    print(f"--- Running Step: {step_name} ---")
+    print(f"--- Running Post-Install Step: {step_name} ---")
 
     if not frappe.local.site:
         print(f"[{step_name}] No site context found. Skipping.")
