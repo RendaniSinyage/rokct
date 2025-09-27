@@ -110,22 +110,31 @@ def create_subscription_record(plan, company_name, industry, site_name, currency
         "customer_name": company_name,
         "customer_group": customer_group,
         "industry": industry,
-        "default_currency": currency # Set the customer's default currency
+        "default_currency": currency
     }).insert(ignore_permissions=True)
 
     # 2. Create the subscription record
     subscription_plan = frappe.get_doc("Subscription Plan", plan)
 
+    # Determine initial status and dates
+    status = "Active"
     trial_ends_on = None
-    # A plan is considered "not free" if it has a cost.
-    if subscription_plan.cost > 0 and subscription_plan.trial_period_days:
-        trial_ends_on = add_days(nowdate(), subscription_plan.trial_period_days)
-
     next_billing_date = None
-    if subscription_plan.cost > 0:
-        if subscription_plan.billing_cycle == 'Monthly':
+
+    if subscription_plan.cost == 0:
+        status = "Free"
+    elif subscription_plan.trial_period_days > 0:
+        status = "Trialing"
+        trial_ends_on = add_days(nowdate(), subscription_plan.trial_period_days)
+        # Billing starts after the trial
+        if subscription_plan.billing_cycle == 'Month':
+            next_billing_date = add_months(trial_ends_on, 1)
+        elif subscription_plan.billing_cycle == 'Year':
+            next_billing_date = add_years(trial_ends_on, 1)
+    else: # Paid plan with no trial
+        if subscription_plan.billing_cycle == 'Month':
             next_billing_date = add_months(nowdate(), 1)
-        elif subscription_plan.billing_cycle == 'Yearly':
+        elif subscription_plan.billing_cycle == 'Year':
             next_billing_date = add_years(nowdate(), 1)
 
     api_secret = frappe.generate_hash(length=48)
@@ -135,7 +144,7 @@ def create_subscription_record(plan, company_name, industry, site_name, currency
         "customer": customer.name,
         "site_name": site_name,
         "plan": plan,
-        "status": "Pending", # Status is now 'Pending' until the background job starts
+        "status": status,
         "trial_ends_on": trial_ends_on,
         "subscription_start_date": nowdate(),
         "next_billing_date": next_billing_date,
