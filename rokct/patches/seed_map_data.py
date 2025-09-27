@@ -13,29 +13,37 @@ def execute():
     # frappe.db.delete("Competitor Route")
 
     # Seed Zones
-    frappe.msgprint("Seeding Zones...")
+    print("--- Running Step: Seeding Zones ---")
     for zone in data.get("zones", []):
-        if not frappe.db.exists("Competitor Zone", zone.get("name")):
-            try:
+        try:
+            if not frappe.db.exists("Competitor Zone", zone.get("name")):
                 new_zone = frappe.new_doc("Competitor Zone")
                 new_zone.zone_name = zone.get("name")
                 new_zone.zone_path = json.dumps(zone.get("path"))
                 new_zone.insert(ignore_permissions=True)
-            except Exception as e:
-                frappe.log_error(f"Failed to import zone {zone.get('name')}: {e}", "Seeder Error")
+                print(f"SUCCESS: Imported zone '{zone.get('name')}'")
+            else:
+                print(f"SKIPPED: Zone '{zone.get('name')}' already exists.")
+        except Exception as e:
+            print(f"ERROR: Failed to import zone '{zone.get('name')}'. Reason: {e}")
+            frappe.log_error(f"Failed to import zone {zone.get('name')}: {e}", "Seeder Error")
 
     # Seed Routes
-    frappe.msgprint("Seeding Routes...")
+    print("--- Running Step: Seeding Routes ---")
     for route in data.get("taxiRoutes", []):
-        if not frappe.db.exists("Competitor Route", route.get("name")):
-            try:
+        try:
+            if not frappe.db.exists("Competitor Route", route.get("name")):
                 new_route = frappe.new_doc("Competitor Route")
                 new_route.route_name = route.get("name")
                 new_route.route_type = route.get("type", "Secondary") # Default to secondary
                 new_route.route_path = json.dumps(route.get("path"))
                 new_route.insert(ignore_permissions=True)
-            except Exception as e:
-                frappe.log_error(f"Failed to import route {route.get('name')}: {e}", "Seeder Error")
+                print(f"SUCCESS: Imported route '{route.get('name')}'")
+            else:
+                print(f"SKIPPED: Route '{route.get('name')}' already exists.")
+        except Exception as e:
+            print(f"ERROR: Failed to import route '{route.get('name')}'. Reason: {e}")
+            frappe.log_error(f"Failed to import route {route.get('name')}: {e}", "Seeder Error")
 
     frappe.db.commit()
-    frappe.msgprint("Seeding complete.")
+    print("--- Seeding complete ---")
