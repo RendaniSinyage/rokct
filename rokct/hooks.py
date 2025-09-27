@@ -1,7 +1,7 @@
 import frappe
 
 app_name = "rokct"
-app_title = "The ROKCT app"
+app_title = "ROKCT"
 app_publisher = "ROKCT Holdings"
 app_description = "All custom work lives here"
 app_logo_url = "/assets/rokct/images/logo_dark.svg"
