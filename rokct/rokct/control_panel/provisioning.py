@@ -79,7 +79,7 @@ def provision_new_tenant(plan, email, password, first_name, last_name, company_n
     verification_token = frappe.generate_hash(length=48)
 
     frappe.enqueue(
-        "rokct.control_panel.tasks.create_tenant_site_job",
+        "rokct.rokct.control_panel.tasks.create_tenant_site_job",
         queue="long",
         timeout=1500, # 25 minutes, to be safe
         job_name=f"provision-site-{site_name}",
