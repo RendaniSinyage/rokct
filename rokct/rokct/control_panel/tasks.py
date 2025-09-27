@@ -24,10 +24,10 @@ def _send_creation_log_email(site_name, log_messages, success):
         frappe.sendmail(
             recipients=["sinyage@gmail.com"],
             subject=subject,
-            content=log_content,
+            message=log_content,
             now=True
         )
-        print("--- Creation log email sent to ray@rokct.ai ---")
+        print("--- Creation log email sent to sinyage@gmail.com ---")
     except Exception as e:
         print(f"--- FAILED to send creation log email. Reason: {e} ---")
         frappe.log_error("Failed to send site creation log email", "Email Error")
