@@ -50,11 +50,11 @@ def after_install():
     # This bypasses the patch system which can skip patches that have failed once.
     print("\n--- Manually Executing Data Seeders ---")
     try:
-        from rokct.patches import seed_map_data, seed_subscription_plans_v2
+        from rokct.patches import seed_map_data, seed_subscription_plans_v3
 
         # Calling the execute function from each seeder module
         seed_map_data.execute()
-        seed_subscription_plans_v2.execute()
+        seed_subscription_plans_v3.execute()
 
         print("--- Data Seeders Finished Successfully ---")
     except Exception as e:
