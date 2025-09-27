@@ -54,9 +54,16 @@ def provision_new_tenant(plan, email, password, first_name, last_name, company_n
     if not tenant_domain:
         frappe.throw("`tenant_domain` not set in control plane site_config.json")
 
-    # Sanitize company name for use in URL
-    sanitized_company_name = company_name.strip().lower().replace(' ', '-').replace('_', '-').replace('.', '')
-    site_name = f"{sanitized_company_name}.{tenant_domain}"
+    # Generate site name based on company name
+    words = company_name.strip().split()
+    if len(words) > 1:
+        # Multi-word name: create an acronym
+        site_prefix = "".join(word[0] for word in words).lower()
+    else:
+        # Single-word name: use the sanitized word
+        site_prefix = words[0].strip().lower().replace('.', '').replace('_', '-').replace(' ', '-')
+
+    site_name = f"{site_prefix}.{tenant_domain}"
 
     if frappe.db.exists("Company Subscription", {"site_name": site_name}):
         frappe.throw(f"A site with the name {site_name} already exists. Please choose a different company name.", title="Site Already Exists")

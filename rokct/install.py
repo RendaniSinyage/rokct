@@ -63,24 +63,30 @@ def after_install():
 
     update_site_apps_txt_with_error_handling()
 
-    log_homepage_setting()
+    set_website_homepage()
 
     print("\n--- ROKCT App Installation Complete ---")
 
-def log_homepage_setting():
+def set_website_homepage():
     """
-    Reads the homepage setting from hooks and prints it to the console.
+    Programmatically sets the homepage in Website Settings to ensure it is applied.
     """
     step_name = "Set Website Homepage"
     print(f"--- Running Post-Install Step: {step_name} ---")
     try:
         from rokct.hooks import home_page
         if home_page:
-            print(f"SUCCESS: [{step_name}] Set homepage to '{home_page}'.")
+            print(f"[{step_name}] Found homepage '{home_page}' in hooks.py.")
+            website_settings = frappe.get_doc("Website Settings", "Website Settings")
+            website_settings.home_page = home_page
+            website_settings.save(ignore_permissions=True)
+            frappe.db.commit()
+            print(f"SUCCESS: [{step_name}] Successfully set homepage in Website Settings to '{home_page}'.")
         else:
             print(f"INFO: [{step_name}] No default homepage set in hooks.py.")
     except Exception as e:
-        print(f"ERROR: [{step_name}] Could not read homepage setting. Reason: {e}")
+        print(f"ERROR: [{step_name}] Could not set homepage. Reason: {e}")
+        frappe.log_error(f"Failed to set homepage: {e}", "Installation Error")
 
 def update_site_apps_txt_with_error_handling():
     """
