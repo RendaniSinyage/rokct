@@ -63,7 +63,7 @@ def create_tenant_site_job(subscription_id, site_name, user_details):
 
         subprocess.run(
             command,
-            cwd=bench_path, check=True, capture_output=True, text=True
+            cwd=bench_path, check=True, capture_output=True, text=True, timeout=300
         )
         logs.append(f"SUCCESS: Site '{site_name}' created.")
 
