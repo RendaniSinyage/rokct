@@ -44,7 +44,9 @@ def execute():
                 if not frappe.db.exists("Competitor Route", route.get("name")):
                     new_route = frappe.new_doc("Competitor Route")
                     new_route.route_name = route.get("name")
-                    new_route.route_type = route.get("type", "Secondary")  # Default to secondary
+                # Fix case-sensitivity issue from legacy data
+                route_type = route.get("type", "Secondary").capitalize()
+                new_route.route_type = route_type
                     new_route.route_path = json.dumps(route.get("path"))
                     new_route.insert(ignore_permissions=True)
                     print(f"SUCCESS: Imported route '{route.get('name')}'")
