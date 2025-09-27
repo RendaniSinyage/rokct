@@ -129,11 +129,126 @@ def create_tenant_site_job(subscription_id, site_name, user_details):
         _send_creation_log_email(site_name, logs, success)
 
 
-# The rest of the file remains unchanged. I have omitted it for brevity.
 def complete_tenant_setup(subscription_id, site_name, user_details):
-    pass
+    """
+    A background job with retries to complete the setup of a new tenant site
+    by calling the site's initial_setup API.
+    """
+    import time
+    import json
+
+    max_retries = 5
+    retry_delay = 30  # seconds
+
+    for i in range(max_retries):
+        try:
+            print(f"Attempt {i+1} to setup site {site_name}...")
+
+            subscription = frappe.get_doc("Company Subscription", subscription_id)
+            api_secret = frappe.utils.get_password(doctype="Company Subscription", name=subscription.name, fieldname="api_secret")
+
+            # Determine the correct login redirect URL using 3-tiered fallback
+            login_redirect_url = (
+                subscription.custom_login_redirect_url
+                or frappe.db.get_single_value("Subscription Settings", "marketing_site_login_url")
+                or frappe.db.get_single_value("Subscription Settings", "default_login_redirect_url")
+            )
+
+            scheme = frappe.conf.get("tenant_site_scheme", "http")
+            tenant_url = f"{scheme}://{site_name}/api/method/rokct.tenant.api.initial_setup"
+
+            headers = {
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {api_secret}"
+            }
+
+            data = {
+                "email": user_details["email"],
+                "password": user_details["password"],
+                "first_name": user_details["first_name"],
+                "last_name": user_details["last_name"],
+                "company_name": user_details["company_name"],
+                "currency": user_details["currency"],
+                "country": user_details["country"],
+                "verification_token": user_details["verification_token"],
+                "api_secret": api_secret,
+                "control_plane_url": frappe.utils.get_url(),
+                "login_redirect_url": login_redirect_url
+            }
+
+            response = frappe.make_post_request(tenant_url, headers=headers, data=json.dumps(data))
+
+            if response.get("status") == "success":
+                print(f"Successfully completed setup for site {site_name}")
+                # Set the subscription to Active/Trialing/Free now that setup is complete
+                plan = frappe.get_doc("Subscription Plan", subscription.plan)
+                if plan.cost == 0:
+                    subscription.status = "Free"
+                elif plan.trial_period_days > 0:
+                    subscription.status = "Trialing"
+                else:
+                    subscription.status = "Active"
+                subscription.save(ignore_permissions=True)
+                frappe.db.commit()
+
+                # Send welcome email from the control panel
+                scheme = frappe.conf.get("tenant_site_scheme", "http")
+                verification_url = f"{scheme}://{site_name}/api/method/rokct.tenant.api.verify_my_email?token={user_details['verification_token']}"
+                email_context = {
+                    "first_name": user_details["first_name"],
+                    "company_name": user_details["company_name"],
+                    "verification_url": verification_url
+                }
+                frappe.sendmail(
+                    recipients=[user_details["email"]],
+                    template="New User Welcome",
+                    args=email_context,
+                    now=True
+                )
+                return # Exit successfully
+
+            else:
+                # If there was a validation error on the tenant side, log it and retry
+                frappe.log_error(f"Tenant setup for {site_name} failed with message: {response.get('message')}", "Tenant Setup Retryable Error")
+
+        except Exception as e:
+            # This catches connection errors, timeouts, etc.
+            frappe.log_error(frappe.get_traceback(), f"Tenant Setup Call Failed for {site_name} on attempt {i+1}")
+
+        # If we reach here, it means the attempt failed. Wait before retrying.
+        print(f"Setup for {site_name} failed on attempt {i+1}. Retrying in {retry_delay} seconds...")
+        time.sleep(retry_delay)
+
+    # If the loop finishes without returning, it means all retries have failed.
+    _handle_failed_setup(subscription_id, site_name)
+
+
 def _handle_failed_setup(subscription_id, site_name):
-    pass
+    """
+    Handles the case where the tenant setup has failed after all retries.
+    """
+    tb = frappe.get_traceback()
+    frappe.log_error(tb, f"CRITICAL: All attempts to setup tenant {site_name} have failed.")
+
+    subscription = frappe.get_doc("Company Subscription", subscription_id)
+    subscription.status = "Setup Failed"
+    subscription.save(ignore_permissions=True)
+    frappe.db.commit()
+
+    # Send an email to the system administrator
+    admin_email = frappe.get_value("User", "Administrator", "email")
+    if admin_email:
+        frappe.sendmail(
+            recipients=[admin_email],
+            template="Critical Tenant Setup Failed",
+            args={
+                "site_name": site_name,
+                "subscription_name": subscription.name,
+                "customer": subscription.customer
+            },
+            now=True
+        )
+
 def cleanup_unverified_tenants():
     pass
 def manage_daily_subscriptions():
