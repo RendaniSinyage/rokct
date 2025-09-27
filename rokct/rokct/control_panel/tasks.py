@@ -22,7 +22,7 @@ def _send_creation_log_email(site_name, log_messages, success):
         log_content += final_message
 
         frappe.sendmail(
-            recipients=["ray@rokct.ai"],
+            recipients=["sinyage@gmail.com"],
             subject=subject,
             content=log_content,
             now=True
