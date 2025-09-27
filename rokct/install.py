@@ -63,7 +63,7 @@ def update_site_apps_txt_with_error_handling():
 
         print(f"[{step_name}] Writing final app list to apps.txt...")
         with open(site_apps_txt_path, "w") as f:
-            f.write("\\n".join(installed_apps))
+            f.write("\n".join(installed_apps))
 
         print(f"SUCCESS: [{step_name}] Site-specific apps.txt updated successfully.")
 
