@@ -8,6 +8,9 @@ def execute():
     dependent 'Item' documents are created first.
     This patch is hyper-verbose to prevent silent failures.
     """
+    # --- DIAGNOSTIC TEST ---
+    raise Exception("--- DIAGNOSTIC: If you see this, the patch script is executing. ---")
+
     print("\n--- Running Patch V2: Seeding Subscription Plans with Dependencies ---")
 
     app_path = frappe.get_app_path("rokct")
