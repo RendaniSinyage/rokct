@@ -117,11 +117,12 @@ def create_subscription_record(plan, company_name, industry, site_name, currency
     subscription_plan = frappe.get_doc("Subscription Plan", plan)
 
     trial_ends_on = None
-    if not subscription_plan.is_free_plan and subscription_plan.trial_period_days:
+    # A plan is considered "not free" if it has a cost.
+    if subscription_plan.cost > 0 and subscription_plan.trial_period_days:
         trial_ends_on = add_days(nowdate(), subscription_plan.trial_period_days)
 
     next_billing_date = None
-    if not subscription_plan.is_free_plan:
+    if subscription_plan.cost > 0:
         if subscription_plan.billing_cycle == 'Monthly':
             next_billing_date = add_months(nowdate(), 1)
         elif subscription_plan.billing_cycle == 'Yearly':

@@ -63,7 +63,24 @@ def after_install():
 
     update_site_apps_txt_with_error_handling()
 
+    log_homepage_setting()
+
     print("\n--- ROKCT App Installation Complete ---")
+
+def log_homepage_setting():
+    """
+    Reads the homepage setting from hooks and prints it to the console.
+    """
+    step_name = "Set Website Homepage"
+    print(f"--- Running Post-Install Step: {step_name} ---")
+    try:
+        from rokct.hooks import home_page
+        if home_page:
+            print(f"SUCCESS: [{step_name}] Set homepage to '{home_page}'.")
+        else:
+            print(f"INFO: [{step_name}] No default homepage set in hooks.py.")
+    except Exception as e:
+        print(f"ERROR: [{step_name}] Could not read homepage setting. Reason: {e}")
 
 def update_site_apps_txt_with_error_handling():
     """
