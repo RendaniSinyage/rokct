@@ -115,17 +115,3 @@ def generate_subscription_invoices():
     pass
 def _charge_invoice(invoice, customer, settings):
     pass
-
-def hello_world_job():
-    """
-    A minimal diagnostic job to test if the background worker is running.
-    """
-    print("--- Hello World Job Executing ---")
-    bench_path = frappe.conf.get("bench_path", os.getcwd())
-    test_log_path = os.path.join(bench_path, "logs", "test_worker.log")
-    try:
-        with open(test_log_path, "w") as f:
-            f.write(f"Hello from the background worker at {now_datetime()}.\n")
-        print(f"--- Successfully wrote to {test_log_path} ---")
-    except Exception as e:
-        print(f"--- FAILED to write to test log. Reason: {e} ---")
