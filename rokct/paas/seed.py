@@ -438,11 +438,8 @@ class LegacyDataSeeder:
 
 
     def run(self):
-        if frappe.db.get_value("Site", self.site_name, "name") != self.site_name:
-             print("Site does not match, aborting.")
-             return
-
-        frappe.connect(site=self.site_name)
+        # The site is already connected by the `bench execute` command.
+        # We just need to ensure we're running as Administrator.
         frappe.local.user = frappe.get_doc("User", "Administrator")
 
         # Phase 1: Users and Companies (Shops)
@@ -490,15 +487,21 @@ class LegacyDataSeeder:
         self._insert_orders()
         frappe.db.commit()
 
-        frappe.destroy()
-
 def run_seeder():
-    # This should be the only part that needs configuration
-    site_name = "juvo.tenant.rokct.ai"
+    # This seeder is intended to run only on a specific site.
+    target_site_name = "juvo.tenant.rokct.ai"
+    current_site = frappe.local.site
+
+    if current_site != target_site_name:
+        print(f"Skipping data import for site '{current_site}'. This seeder is intended for '{target_site_name}' only.")
+        return
+
+    print(f"--- Starting data import for site '{current_site}' ---")
+
     bench_path = get_bench_path()
     db_path = os.path.join(bench_path, "apps/rokct/rokct/paas/db")
 
-    seeder = LegacyDataSeeder(site_name=site_name, db_path=db_path)
+    seeder = LegacyDataSeeder(site_name=current_site, db_path=db_path)
     seeder.run()
 
 if __name__ == "__main__":
