@@ -72,18 +72,15 @@ def set_website_homepage():
     Programmatically sets the homepage in Website Settings to ensure it is applied.
     """
     step_name = "Set Website Homepage"
+    home_page_to_set = "swagger"
     print(f"--- Running Post-Install Step: {step_name} ---")
     try:
-        from rokct.hooks import home_page
-        if home_page:
-            print(f"[{step_name}] Found homepage '{home_page}' in hooks.py.")
-            website_settings = frappe.get_doc("Website Settings", "Website Settings")
-            website_settings.home_page = home_page
-            website_settings.save(ignore_permissions=True)
-            frappe.db.commit()
-            print(f"SUCCESS: [{step_name}] Successfully set homepage in Website Settings to '{home_page}'.")
-        else:
-            print(f"INFO: [{step_name}] No default homepage set in hooks.py.")
+        print(f"[{step_name}] Setting Website Settings homepage to '{home_page_to_set}'.")
+        website_settings = frappe.get_doc("Website Settings", "Website Settings")
+        website_settings.home_page = home_page_to_set
+        website_settings.save(ignore_permissions=True)
+        frappe.db.commit()
+        print(f"SUCCESS: [{step_name}] Successfully set homepage in Website Settings to '{home_page_to_set}'.")
     except Exception as e:
         print(f"ERROR: [{step_name}] Could not set homepage. Reason: {e}")
         frappe.log_error(f"Failed to set homepage: {e}", "Installation Error")
