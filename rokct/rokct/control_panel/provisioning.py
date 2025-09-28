@@ -110,7 +110,15 @@ def create_subscription_record(plan, company_name, industry, site_name, currency
     """
     from frappe.utils import nowdate, add_days, add_months, add_years
 
-    # 1. Create a Customer record for the new tenant
+    # 1. Ensure the Industry Type exists before creating the customer
+    if not frappe.db.exists("Industry Type", industry):
+        frappe.get_doc({
+            "doctype": "Industry Type",
+            "name": industry
+        }).insert(ignore_permissions=True)
+        print(f"Created missing Industry Type: {industry}")
+
+    # 2. Create a Customer record for the new tenant
     customer_group = frappe.db.get_default("customer_group")
     customer = frappe.get_doc({
         "doctype": "Customer",

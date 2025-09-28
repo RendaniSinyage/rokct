@@ -100,6 +100,7 @@ def initial_setup(email, password, first_name, last_name, company_name, api_secr
         # Disable signup and redirect /login to the main marketing site
         website_settings = frappe.get_doc("Website Settings", "Website Settings")
         website_settings.allow_signup = 0
+        website_settings.home_page = "welcome" # Set tenant-specific homepage
         website_settings.save(ignore_permissions=True)
 
         if not frappe.db.exists("Redirect", {"source": "/login"}):
