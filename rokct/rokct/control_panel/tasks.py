@@ -11,25 +11,36 @@ from frappe.utils import nowdate, add_days, getdate, add_months, add_years, now_
 # Email Logging Helpers
 # ------------------------------------------------------------------------------
 
-def _send_log_email(site_name, log_messages, success, subject_prefix):
-    """Generic function to send a log email."""
+def _log_and_notify(site_name, log_messages, success, subject_prefix):
+    """
+    Logs the outcome of a job to the Frappe Error Log and sends an email notification.
+    """
+    status = "SUCCESS" if success else "FAILURE"
+    subject = f"{subject_prefix} for {site_name}: {status}"
+    log_content = "\n".join(log_messages)
+
+    # Always log to Frappe's Error Log for system administrators to review
+    if not success:
+        frappe.log_error(message=log_content, title=subject)
+
     try:
-        status = "SUCCESS" if success else "FAILURE"
-        subject = f"Log for {subject_prefix}: {site_name} - {status}"
-        log_content = "\n".join(log_messages)
-        final_message = f"\n\nFinal Status: {status}"
-        log_content += final_message
+        # Also send an email for immediate notification
+        admin_email = frappe.db.get_single_value("System Settings", "email")
+        if not admin_email:
+            print("--- No admin email configured in System Settings. Skipping email notification. ---")
+            return
 
         frappe.sendmail(
-            recipients=["sinyage@gmail.com"],
+            recipients=[admin_email],
             subject=subject,
             message=log_content,
             now=True
         )
-        print(f"--- {subject_prefix} log email sent to sinyage@gmail.com ---")
+        print(f"--- {subject_prefix} notification email sent to {admin_email} ---")
     except Exception as e:
-        print(f"--- FAILED to send {subject_prefix} log email. Reason: {e} ---")
-        frappe.log_error(f"Failed to send {subject_prefix} log email", "Email Error")
+        print(f"--- FAILED to send {subject_prefix} notification email. Reason: {e} ---")
+        # Log the email failure itself
+        frappe.log_error(f"Failed to send {subject_prefix} notification email for site {site_name}", "Email Error")
 
 # ------------------------------------------------------------------------------
 # Tenant Provisioning Job - Step 1: Site Creation
@@ -102,7 +113,7 @@ def create_tenant_site_job(subscription_id, site_name, user_details):
         logs.append(f"CLEANUP: Deleted failed subscription record {subscription.name}.")
 
     finally:
-        _send_log_email(site_name, logs, success, "Site Creation")
+        _log_and_notify(site_name, logs, success, "Site Creation")
 
 # ------------------------------------------------------------------------------
 # Tenant Provisioning Job - Step 2: Final Setup
@@ -177,7 +188,7 @@ def _handle_failed_setup(subscription_id, site_name, logs):
     logs.append(f"Subscription status set to 'Setup Failed'.")
 
     # Send an email to the system administrator
-    _send_log_email(site_name, logs, False, "Critical Tenant Setup Failure")
+    _log_and_notify(site_name, logs, False, "Critical Tenant Setup Failure")
 
 # ------------------------------------------------------------------------------
 # Maintenance Jobs (Omitted for brevity, they are unchanged)
