@@ -69,6 +69,10 @@ def create_tenant_site_job(subscription_id, site_name, user_details):
         logs.append(f"SUCCESS: Site '{site_name}' created.")
 
         plan = frappe.get_doc("Subscription Plan", subscription.plan)
+        if not plan:
+            # This is a critical error, something is wrong with the data setup.
+            # Fail loudly so it can be fixed.
+            raise frappe.ValidationError(f"FATAL: Subscription Plan '{subscription.plan}' not found.")
         plan_apps = [d.module for d in plan.get("modules", [])]
         common_apps = ["frappe", "erpnext", "payments", "swagger", "rokct"]
         final_apps = list(dict.fromkeys(common_apps + plan_apps))
