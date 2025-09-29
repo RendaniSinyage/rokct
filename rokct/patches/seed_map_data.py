@@ -2,11 +2,6 @@ import frappe
 import json
 
 def execute():
-    # Site-specific check
-    if frappe.local.site != "bwi.tenant.rokct.ai":
-        print(f"SKIPPING: Seeding Master Map Data for site {frappe.local.site}")
-        return
-
     """
     Seeds the Competitor Zone and Competitor Route tables from a JSON file.
     This patch is designed to be hyper-verbose for clear installation logging.
