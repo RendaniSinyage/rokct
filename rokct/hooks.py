@@ -202,7 +202,8 @@ whitelisted_methods = {
     "rokct.rokct.tenant.api.disable_temporary_support_user": "rokct.rokct.tenant.api.disable_temporary_support_user",
     "rokct.rokct.tenant.api.create_sales_invoice": "rokct.rokct.tenant.api.create_sales_invoice",
     "rokct.rokct.tenant.api.log_frontend_error": "rokct.rokct.tenant.api.log_frontend_error",
-    "rokct.rokct.tenant.api.get_subscription_details": "rokct.rokct.tenant.api.get_subscription_details"
+    "rokct.rokct.tenant.api.get_subscription_details": "rokct.rokct.tenant.api.get_subscription_details",
+    "rokct.rokct.scripts.setup_control_panel.configure_control_panel": "rokct.rokct.scripts.setup_control_panel.configure_control_panel"
 }
 #
 # each overriding function accepts a `data` argument;
