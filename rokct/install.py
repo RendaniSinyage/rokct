@@ -63,9 +63,49 @@ def after_install():
 
     update_site_apps_txt_with_error_handling()
 
+    set_control_panel_configs()
+
     set_website_homepage()
 
     print("\n--- ROKCT App Installation Complete ---")
+
+def set_control_panel_configs():
+    """
+    Sets critical configuration values in site_config.json for the control panel.
+    This should only run on the `platform.rokct.ai` site.
+    """
+    if frappe.local.site != "platform.rokct.ai":
+        return
+
+    print("--- Running Post-Install Step: Set Control Panel Configs ---")
+
+    try:
+        bench_path = frappe.utils.get_bench_path()
+        common_config_path = os.path.join(bench_path, "sites", "common_site_config.json")
+
+        if os.path.exists(common_config_path):
+            with open(common_config_path, 'r') as f:
+                common_config = json.load(f)
+
+            db_root_password = common_config.get("db_root_password")
+            if db_root_password:
+                frappe.conf.set_value("db_root_password", db_root_password)
+                print("SUCCESS: Set 'db_root_password' in site_config.json")
+            else:
+                print("SKIPPED: 'db_root_password' not found in common_site_config.json")
+        else:
+            print("SKIPPED: common_site_config.json not found.")
+
+        # Set other control panel specific configs
+        frappe.conf.set_value("app_role", "control_panel")
+        print("SUCCESS: Set 'app_role' to 'control_panel'")
+        frappe.conf.set_value("tenant_domain", "tenant.rokct.ai")
+        print("SUCCESS: Set 'tenant_domain' to 'tenant.rokct.ai'")
+
+    except Exception as e:
+        print(f"ERROR: Failed to set control panel configs. Reason: {e}")
+        frappe.log_error(frappe.get_traceback(), "Set Control Panel Configs Error")
+
 
 def set_website_homepage():
     """
