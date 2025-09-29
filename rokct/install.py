@@ -1,16 +1,11 @@
 import frappe
 import os
+import json
 import subprocess
 
 def before_install():
-    """
-    This function is called before the app is installed.
-    It prints a manifest of components to be installed.
-    """
     print("--- Starting ROKCT App Installation ---")
     print("\n--- Pre-Installation Manifest ---")
-
-    # --- Print DocTypes ---
     print("\nThe following DocTypes will be installed/updated:")
     try:
         app_path = frappe.get_app_path("rokct")
@@ -24,7 +19,6 @@ def before_install():
     except Exception as e:
         print(f"ERROR: Could not list DocTypes. Reason: {e}")
 
-    # --- Print Fixtures ---
     print("\nThe following Fixtures will be installed/updated:")
     try:
         from rokct.hooks import fixtures
@@ -40,55 +34,35 @@ def before_install():
 
 
 def after_install():
-    """
-    This function is called after the app is installed.
-    It consolidates all post-installation steps for clear, robust logging.
-    """
     print("\n--- Frappe Installation Process Finished ---")
-
-    # Manually executing seeders from the after_install hook to ensure they run.
-    # This bypasses the patch system which can skip patches that have failed once.
     print("\n--- Manually Executing Data Seeders ---")
     try:
         from rokct.patches import seed_map_data, seed_subscription_plans_v4
-
-        # Calling the execute function from each seeder module
         seed_map_data.execute()
         seed_subscription_plans_v4.execute()
-
         print("--- Data Seeders Finished Successfully ---")
     except Exception as e:
         print(f"FATAL ERROR during manual seeder execution: {e}")
         frappe.log_error(message=frappe.get_traceback(), title="Manual Seeder Execution Error")
 
     update_site_apps_txt_with_error_handling()
-
     set_control_panel_configs()
-
     set_website_homepage()
-
     print("\n--- ROKCT App Installation Complete ---")
 
 def set_control_panel_configs():
-    """
-    Sets critical configuration values for the control panel after installation.
-    This includes site-specific configs and default system settings.
-    This should only run on the `platform.rokct.ai` site.
-    """
     if frappe.local.site != "platform.rokct.ai":
         return
 
     print("--- Running Post-Install Step: Set Control Panel Configs ---")
-
     try:
-        # --- Set values in site_config.json ---
         bench_path = frappe.utils.get_bench_path()
         common_config_path = os.path.join(bench_path, "sites", "common_site_config.json")
-
+        
         if os.path.exists(common_config_path):
             with open(common_config_path, 'r') as f:
                 common_config = json.load(f)
-
+            
             db_root_password = common_config.get("db_root_password")
             if db_root_password:
                 frappe.conf.set_value("db_root_password", db_root_password)
@@ -103,7 +77,6 @@ def set_control_panel_configs():
         frappe.conf.set_value("tenant_domain", "tenant.rokct.ai")
         print("SUCCESS: Set 'tenant_domain' to 'tenant.rokct.ai' in site_config.json")
 
-        # --- Set default values in System Settings ---
         system_settings = frappe.get_doc("System Settings")
         if not system_settings.email_sender:
             admin_user = frappe.get_doc("User", "Administrator")
@@ -117,16 +90,12 @@ def set_control_panel_configs():
             print("SKIPPED: Default 'Email Sender' is already set in System Settings.")
 
         frappe.db.commit()
-
     except Exception as e:
         print(f"ERROR: Failed to set control panel configs. Reason: {e}")
         frappe.log_error(frappe.get_traceback(), "Set Control Panel Configs Error")
 
 
 def set_website_homepage():
-    """
-    Programmatically sets the homepage in Website Settings to ensure it is applied.
-    """
     step_name = "Set Website Homepage"
     home_page_to_set = "swagger"
     print(f"--- Running Post-Install Step: {step_name} ---")
@@ -142,21 +111,15 @@ def set_website_homepage():
         frappe.log_error(f"Failed to set homepage: {e}", "Installation Error")
 
 def update_site_apps_txt_with_error_handling():
-    """
-    Updates the site-specific apps.txt file with robust error handling and logging.
-    """
     step_name = "Update site-specific apps.txt"
     print(f"--- Running Post-Install Step: {step_name} ---")
-
     if not frappe.local.site:
         print(f"[{step_name}] No site context found. Skipping.")
         return
-
     try:
         bench_path = frappe.conf.get("bench_path", os.getcwd())
         site_apps_txt_path = os.path.join(bench_path, "sites", frappe.local.site, "apps.txt")
         print(f"[{step_name}] Attempting to update {site_apps_txt_path}")
-
         installed_apps = []
         try:
             print(f"[{step_name}] Listing installed apps via 'bench' command...")
@@ -185,9 +148,7 @@ def update_site_apps_txt_with_error_handling():
         print(f"[{step_name}] Writing final app list to apps.txt...")
         with open(site_apps_txt_path, "w") as f:
             f.write("\n".join(installed_apps))
-
         print(f"SUCCESS: [{step_name}] Site-specific apps.txt updated successfully.")
-
     except Exception as e:
         print(f"FATAL ERROR: [{step_name}] An unexpected error occurred: {e}")
         frappe.log_error(message=frappe.get_traceback(), title=f"Fatal Error in {step_name}")

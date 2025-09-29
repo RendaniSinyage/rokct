@@ -12,9 +12,7 @@ from frappe.utils import nowdate, add_days, getdate, add_months, add_years, now_
 # ------------------------------------------------------------------------------
 
 def _log_and_notify(site_name, log_messages, success, subject_prefix):
-    """
-    Logs the outcome of a job to the Frappe Error Log and sends an email notification.
-    """
+    # Logs the outcome of a job to the Frappe Error Log and sends an email notification.
     status = "SUCCESS" if success else "FAILURE"
     subject = f"{subject_prefix} for {site_name}: {status}"
     log_content = "\n".join(log_messages)
@@ -47,7 +45,7 @@ def _log_and_notify(site_name, log_messages, success, subject_prefix):
 # ------------------------------------------------------------------------------
 
 def create_tenant_site_job(subscription_id, site_name, user_details):
-    """Background job to create the actual tenant site using bench commands."""
+    # Background job to create the actual tenant site using bench commands.
     logs = [f"--- Starting Site Creation for {site_name} at {now_datetime()} ---"]
     success = False
     subscription = frappe.get_doc("Company Subscription", subscription_id)
@@ -67,12 +65,9 @@ def create_tenant_site_job(subscription_id, site_name, user_details):
             logs.append("Found db_root_password. Adding to command.")
             command.extend(["--mariadb-root-password", db_root_password])
 
-        # Run the command and stream the output directly to the console for debugging
-        # The `capture_output=True` was hiding the real error.
-        process = subprocess.run(command, cwd=bench_path, text=True, timeout=300)
-
-        # We will still log the return code for the email summary.
-        logs.append(f"--- 'bench new-site' command executed with return code: {process.returncode} ---")
+        process = subprocess.run(command, cwd=bench_path, capture_output=True, text=True, timeout=300)
+        logs.append(f"--- 'bench new-site' STDOUT ---\n{process.stdout or 'No standard output.'}")
+        logs.append(f"--- 'bench new-site' STDERR ---\n{process.stderr or 'No standard error.'}")
         process.check_returncode()
         logs.append(f"SUCCESS: Site '{site_name}' created.")
 
@@ -123,7 +118,7 @@ def create_tenant_site_job(subscription_id, site_name, user_details):
 # ------------------------------------------------------------------------------
 
 def complete_tenant_setup(subscription_id, site_name, user_details):
-    """A background job to complete the setup of a new tenant site by calling its API."""
+    # A background job to complete the setup of a new tenant site by calling its API.
     logs = [f"--- Starting Final Tenant Setup for {site_name} at {now_datetime()} ---"]
     success = False
     max_retries = 5
@@ -181,7 +176,7 @@ def complete_tenant_setup(subscription_id, site_name, user_details):
     _handle_failed_setup(subscription_id, site_name, logs)
 
 def _handle_failed_setup(subscription_id, site_name, logs):
-    """Handles the case where the tenant setup has failed after all retries."""
+    # Handles the case where the tenant setup has failed after all retries.
     logs.append("\n--- CRITICAL: All attempts to setup tenant have failed. ---")
 
     subscription = frappe.get_doc("Company Subscription", subscription_id)
