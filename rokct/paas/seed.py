@@ -489,7 +489,7 @@ class LegacyDataSeeder:
 
 def run_seeder():
     # This seeder is intended to run only on a specific site.
-    target_site_name = "juvo.tenant.rokct.ai"
+    target_site_name = "bwi.tenant.rokct.ai"
     current_site = frappe.local.site
 
     if current_site != target_site_name:

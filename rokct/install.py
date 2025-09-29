@@ -51,10 +51,12 @@ def after_install():
     print("\n--- Manually Executing Data Seeders ---")
     try:
         from rokct.patches import seed_map_data, seed_subscription_plans_v4
+        from rokct.paas.seed import run_seeder
 
         # Calling the execute function from each seeder module
         seed_map_data.execute()
         seed_subscription_plans_v4.execute()
+        run_seeder()
 
         print("--- Data Seeders Finished Successfully ---")
     except Exception as e:
