@@ -117,7 +117,7 @@ def complete_tenant_setup(subscription_id, site_name, user_details):
             logs.append(f"Calling tenant API at: {tenant_url}")
 
             headers = {"Content-Type": "application/json", "Authorization": f"Bearer {api_secret}"}
-            data = {"user_details": user_details, "api_secret": api_secret, "control_plane_url": frappe.utils.get_url(), "login_redirect_url": login_redirect_url}
+            data = {**user_details, "api_secret": api_secret, "control_plane_url": frappe.utils.get_url(), "login_redirect_url": login_redirect_url}
 
             response = frappe.make_post_request(tenant_url, headers=headers, data=json.dumps(data))
             logs.append(f"API Response: {json.dumps(response, indent=2)}")
