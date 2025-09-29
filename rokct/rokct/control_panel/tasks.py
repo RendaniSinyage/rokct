@@ -7,22 +7,15 @@ import time
 from datetime import datetime, timedelta
 from frappe.utils import nowdate, add_days, getdate, add_months, add_years, now_datetime, get_datetime
 
-# ------------------------------------------------------------------------------
-# Email Logging Helpers
-# ------------------------------------------------------------------------------
-
 def _log_and_notify(site_name, log_messages, success, subject_prefix):
-    # Logs the outcome of a job to the Frappe Error Log and sends an email notification.
     status = "SUCCESS" if success else "FAILURE"
     subject = f"{subject_prefix} for {site_name}: {status}"
     log_content = "\n".join(log_messages)
 
-    # Always log to Frappe's Error Log for system administrators to review
     if not success:
         frappe.log_error(message=log_content, title=subject)
 
     try:
-        # Also send an email for immediate notification
         admin_email = frappe.db.get_single_value("System Settings", "email")
         if not admin_email:
             print("--- No admin email configured in System Settings. Skipping email notification. ---")
@@ -37,15 +30,9 @@ def _log_and_notify(site_name, log_messages, success, subject_prefix):
         print(f"--- {subject_prefix} notification email sent to {admin_email} ---")
     except Exception as e:
         print(f"--- FAILED to send {subject_prefix} notification email. Reason: {e} ---")
-        # Log the email failure itself
         frappe.log_error(f"Failed to send {subject_prefix} notification email for site {site_name}", "Email Error")
 
-# ------------------------------------------------------------------------------
-# Tenant Provisioning Job - Step 1: Site Creation
-# ------------------------------------------------------------------------------
-
 def create_tenant_site_job(subscription_id, site_name, user_details):
-    # Background job to create the actual tenant site using bench commands.
     logs = [f"--- Starting Site Creation for {site_name} at {now_datetime()} ---"]
     success = False
     subscription = frappe.get_doc("Company Subscription", subscription_id)
@@ -71,7 +58,6 @@ def create_tenant_site_job(subscription_id, site_name, user_details):
         process.check_returncode()
         logs.append(f"SUCCESS: Site '{site_name}' created.")
 
-        # ... App installation logic ...
         plan = frappe.get_doc("Subscription Plan", subscription.plan)
         plan_apps = [d.module for d in plan.get("modules", [])]
         common_apps = ["frappe", "erpnext", "payments", "swagger", "rokct"]
@@ -113,12 +99,7 @@ def create_tenant_site_job(subscription_id, site_name, user_details):
     finally:
         _log_and_notify(site_name, logs, success, "Site Creation")
 
-# ------------------------------------------------------------------------------
-# Tenant Provisioning Job - Step 2: Final Setup
-# ------------------------------------------------------------------------------
-
 def complete_tenant_setup(subscription_id, site_name, user_details):
-    # A background job to complete the setup of a new tenant site by calling its API.
     logs = [f"--- Starting Final Tenant Setup for {site_name} at {now_datetime()} ---"]
     success = False
     max_retries = 5
@@ -162,7 +143,7 @@ def complete_tenant_setup(subscription_id, site_name, user_details):
                 logs.append("SUCCESS: Welcome email sent.")
 
                 success = True
-                return # Exit successfully
+                return
 
             else:
                 logs.append(f"WARNING: Tenant API call failed with message: {response.get('message')}")
@@ -176,7 +157,6 @@ def complete_tenant_setup(subscription_id, site_name, user_details):
     _handle_failed_setup(subscription_id, site_name, logs)
 
 def _handle_failed_setup(subscription_id, site_name, logs):
-    # Handles the case where the tenant setup has failed after all retries.
     logs.append("\n--- CRITICAL: All attempts to setup tenant have failed. ---")
 
     subscription = frappe.get_doc("Company Subscription", subscription_id)
@@ -185,12 +165,8 @@ def _handle_failed_setup(subscription_id, site_name, logs):
     frappe.db.commit()
     logs.append(f"Subscription status set to 'Setup Failed'.")
 
-    # Send an email to the system administrator
     _log_and_notify(site_name, logs, False, "Critical Tenant Setup Failure")
 
-# ------------------------------------------------------------------------------
-# Maintenance Jobs (Omitted for brevity, they are unchanged)
-# ------------------------------------------------------------------------------
 def cleanup_unverified_tenants(): pass
 def manage_daily_subscriptions(): pass
 def _downgrade_subscription(subscription_info): pass
