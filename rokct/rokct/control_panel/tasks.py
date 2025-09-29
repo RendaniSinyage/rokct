@@ -67,9 +67,12 @@ def create_tenant_site_job(subscription_id, site_name, user_details):
             logs.append("Found db_root_password. Adding to command.")
             command.extend(["--mysql-root-password", db_root_password])
 
-        process = subprocess.run(command, cwd=bench_path, capture_output=True, text=True, timeout=300)
-        logs.append(f"--- 'bench new-site' STDOUT ---\n{process.stdout or 'No standard output.'}")
-        logs.append(f"--- 'bench new-site' STDERR ---\n{process.stderr or 'No standard error.'}")
+        # Run the command and stream the output directly to the console for debugging
+        # The `capture_output=True` was hiding the real error.
+        process = subprocess.run(command, cwd=bench_path, text=True, timeout=300)
+
+        # We will still log the return code for the email summary.
+        logs.append(f"--- 'bench new-site' command executed with return code: {process.returncode} ---")
         process.check_returncode()
         logs.append(f"SUCCESS: Site '{site_name}' created.")
 

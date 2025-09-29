@@ -185,7 +185,8 @@ scheduler_events = get_safe_scheduler_events()
 # ------------------------------
 #
 override_whitelisted_methods = {
-       "frappe.utils.change_log.get_versions": "rokct.rokct.api.get_versions"
+    "rokct.rokct.tenant.api.get_subscription_details": "rokct.rokct.tenant.api.get_subscription_details",
+    "rokct.rokct.scripts.debug_provisioning.trigger_provisioning_for_debug": "rokct.rokct.scripts.debug_provisioning.trigger_provisioning_for_debug"
 }
 
 whitelisted_methods = {
