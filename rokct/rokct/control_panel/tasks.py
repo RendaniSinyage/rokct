@@ -13,7 +13,17 @@ def _log_and_notify(site_name, log_messages, success, subject_prefix):
     log_content = "\n".join(log_messages)
 
     if not success:
+        # Print detailed logs to the console for easier debugging of command-line scripts.
+        print("\n--- Provisioning Failure Details ---")
+        print(log_content)
+        print("--- End of Failure Details ---\n")
         frappe.log_error(message=log_content, title=subject)
+
+    # Also print logs to console for debugging, regardless of success
+    elif frappe.flags.from_console:
+        print("\n--- Provisioning Success Details ---")
+        print(log_content)
+        print("--- End of Success Details ---\n")
 
     try:
         admin_email = frappe.db.get_single_value("System Settings", "email")
@@ -90,11 +100,22 @@ def create_tenant_site_job(subscription_id, site_name, user_details):
         frappe.enqueue("rokct.rokct.control_panel.tasks.complete_tenant_setup", queue="long", timeout=1500, subscription_id=subscription.name, site_name=site_name, user_details=user_details)
 
     except (subprocess.CalledProcessError, subprocess.TimeoutExpired, Exception) as e:
-        error_message = f"STDOUT: {getattr(e, 'stdout', 'N/A')}\nSTDERR: {getattr(e, 'stderr', 'N/A')}\nTRACEBACK: {frappe.get_traceback()}"
-        logs.append(f"\n--- FATAL ERROR ---\n{error_message}")
-        frappe.delete_doc("Company Subscription", subscription.name, ignore_permissions=True, force=True)
-        frappe.db.commit()
-        logs.append(f"CLEANUP: Deleted failed subscription record {subscription.name}.")
+        # Construct a detailed error message
+        error_message = f"STDOUT: {getattr(e, 'stdout', 'N/A')}\nSTDERR: {getattr(e, 'stderr', 'N/A')}"
+        # For non-subprocess errors, add the traceback
+        if not isinstance(e, subprocess.CalledProcessError):
+            error_message += f"\nTRACEBACK: {frappe.get_traceback()}"
+
+        logs.append(f"\n--- FATAL ERROR during site creation ---\n{error_message}")
+        print(f"\n--- FATAL ERROR during site creation for {site_name} ---\n{error_message}\n") # Also print directly to console
+
+        # Clean up the failed subscription
+        try:
+            frappe.delete_doc("Company Subscription", subscription.name, ignore_permissions=True, force=True)
+            frappe.db.commit()
+            logs.append(f"CLEANUP: Deleted failed subscription record {subscription.name}.")
+        except Exception as cleanup_e:
+            logs.append(f"CRITICAL: Failed to cleanup subscription {subscription.name}. Reason: {cleanup_e}")
 
     finally:
         _log_and_notify(site_name, logs, success, "Site Creation")
@@ -117,7 +138,7 @@ def complete_tenant_setup(subscription_id, site_name, user_details):
             logs.append(f"Calling tenant API at: {tenant_url}")
 
             headers = {"Content-Type": "application/json", "Authorization": f"Bearer {api_secret}"}
-            data = {**user_details, "api_secret": api_secret, "control_plane_url": frappe.utils.get_url(), "login_redirect_url": login_redirect_url}
+            data = {"user_details": user_details, "api_secret": api_secret, "control_plane_url": frappe.utils.get_url(), "login_redirect_url": login_redirect_url}
 
             response = frappe.make_post_request(tenant_url, headers=headers, data=json.dumps(data))
             logs.append(f"API Response: {json.dumps(response, indent=2)}")
