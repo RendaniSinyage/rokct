@@ -65,7 +65,7 @@ def create_tenant_site_job(subscription_id, site_name, user_details):
         command = ["bench", "new-site", site_name, "--db-name", site_name.replace(".", "_"), "--admin-password", admin_password]
         if db_root_password:
             logs.append("Found db_root_password. Adding to command.")
-            command.extend(["--mysql-root-password", db_root_password])
+            command.extend(["--mariadb-root-password", db_root_password])
 
         # Run the command and stream the output directly to the console for debugging
         # The `capture_output=True` was hiding the real error.
