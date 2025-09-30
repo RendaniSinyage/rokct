@@ -77,4 +77,8 @@ def trigger_provisioning_for_debug():
         print("\n--- SYNCHRONOUS DEBUG PROVISIONING COMPLETE ---")
     except Exception as e:
         print(f"--- FAILED during complete_tenant_setup ---")
+        # Explicitly print the traceback to the console for immediate diagnosis.
+        print("\n--- TRACEBACK ---")
+        print(frappe.get_traceback())
+        print("--- END TRACEBACK ---\n")
         frappe.log_error(frappe.get_traceback(), "Debug Provisioning Error")
