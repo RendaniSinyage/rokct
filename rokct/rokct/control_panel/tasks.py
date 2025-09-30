@@ -3,7 +3,6 @@ import os
 import json
 import stripe
 import subprocess
-import requests
 import time
 from datetime import datetime, timedelta
 from frappe.utils import nowdate, add_days, getdate, add_months, add_years, now_datetime, get_datetime
@@ -130,12 +129,24 @@ def complete_tenant_setup(subscription_id, site_name, user_details):
             tenant_url = f"{scheme}://{site_name}/api/method/rokct.rokct.tenant.api.initial_setup"
             logs.append(f"Calling tenant API at: {tenant_url}")
 
-            headers = {"X-Rokct-Secret": api_secret}
+            headers = {"X-Rokct-Secret": api_secret, "Content-Type": "application/json"}
             data = {**user_details, "api_secret": api_secret, "control_plane_url": frappe.utils.get_url(), "login_redirect_url": login_redirect_url}
 
-            response = requests.post(tenant_url, headers=headers, json=data, timeout=120)
-            response.raise_for_status()
-            response_json = response.json()
+            # Use curl to avoid issues with Python requests library in this environment
+            command = [
+                "curl", "-s", "-S", "-X", "POST", tenant_url,
+                "-H", f"X-Rokct-Secret: {api_secret}",
+                "-H", "Content-Type: application/json",
+                "-d", json.dumps(data)
+            ]
+
+            # Log the command for debugging, redacting the secret
+            logged_command = list(command)
+            logged_command[7] = "X-Rokct-Secret: <REDACTED>"
+            logs.append(f"Executing command: {' '.join(logged_command)}")
+
+            process = subprocess.run(command, capture_output=True, text=True, check=True, timeout=120)
+            response_json = json.loads(process.stdout)
 
             logs.append(f"API Response: {json.dumps(response_json, indent=2)}")
 
