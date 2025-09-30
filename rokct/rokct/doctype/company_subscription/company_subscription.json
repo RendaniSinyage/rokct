@@ -45,7 +45,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Status",
-   "options": "Provisioning\nTrialing\nActive\nGrace Period\nPast Due\nCanceled\nFree\nDowngraded",
+   "options": "Trialing\nActive\nGrace Period\nPast Due\nCanceled\nFree\nDowngraded",
    "reqd": 1
   },
   {
