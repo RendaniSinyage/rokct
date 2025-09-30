@@ -104,6 +104,9 @@ def create_tenant_site_job(subscription_id, site_name, user_details, synchronous
             logs.append("\nSUCCESS: Site created. Skipping enqueue for synchronous execution.")
 
     except (subprocess.CalledProcessError, subprocess.TimeoutExpired, Exception) as e:
+        print("\n--- TRACEBACK from create_tenant_site_job ---")
+        print(frappe.get_traceback())
+        print("--- END TRACEBACK ---\n")
         error_message = f"STDOUT: {getattr(e, 'stdout', 'N/A')}\nSTDERR: {getattr(e, 'stderr', 'N/A')}\nTRACEBACK: {frappe.get_traceback()}"
         logs.append(f"\n--- FATAL ERROR ---\n{error_message}")
         frappe.delete_doc("Company Subscription", subscription.name, ignore_permissions=True, force=True)
