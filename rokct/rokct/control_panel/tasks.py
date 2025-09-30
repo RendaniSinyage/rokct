@@ -132,8 +132,7 @@ def complete_tenant_setup(subscription_id, site_name, user_details):
 
             headers = {
                 "Content-Type": "application/json",
-                "X-Rokct-Secret": api_secret,
-                "Connection": "close"
+                "X-Rokct-Secret": api_secret
             }
             data = {**user_details, "api_secret": api_secret, "control_plane_url": frappe.utils.get_url(), "login_redirect_url": login_redirect_url}
 
