@@ -3,7 +3,6 @@ import os
 import json
 import stripe
 import subprocess
-import requests
 import time
 from datetime import datetime, timedelta
 from frappe.utils import nowdate, add_days, getdate, add_months, add_years, now_datetime, get_datetime
@@ -130,16 +129,16 @@ def complete_tenant_setup(subscription_id, site_name, user_details):
             tenant_url = f"{scheme}://{site_name}/api/method/rokct.tenant.api.initial_setup"
             logs.append(f"Calling tenant API at: {tenant_url}")
 
-            headers = {"Content-Type": "application/json", "X-Rokct-Secret": api_secret, "Expect": ""}
+            headers = {"X-Rokct-Secret": api_secret}
             data = {**user_details, "api_secret": api_secret, "control_plane_url": frappe.utils.get_url(), "login_redirect_url": login_redirect_url}
 
-            response = requests.post(tenant_url, headers=headers, data=json.dumps(data), timeout=120)
-            response.raise_for_status()
-            response_json = response.json()
+            # Use Frappe's built-in request function to avoid proxy/server issues with `requests`.
+            # It handles JSON encoding and response parsing automatically.
+            response_json = frappe.make_post_request(tenant_url, headers=headers, data=data, timeout=120)
 
             logs.append(f"API Response: {json.dumps(response_json, indent=2)}")
 
-            if response_json.get("status") == "success":
+            if isinstance(response_json, dict) and response_json.get("status") == "success":
                 logs.append("SUCCESS: Tenant API reported successful setup.")
                 plan = frappe.get_doc("Subscription Plan", subscription.plan)
                 if plan.cost == 0:
@@ -161,9 +160,9 @@ def complete_tenant_setup(subscription_id, site_name, user_details):
 
                 success = True
                 return
-
             else:
-                logs.append(f"WARNING: Tenant API call failed with message: {response_json.get('message')}")
+                message = response_json.get('message') if isinstance(response_json, dict) else str(response_json)
+                logs.append(f"WARNING: Tenant API call failed with message: {message}")
 
         except Exception as e:
             print("\n--- TRACEBACK from complete_tenant_setup ---")
