@@ -27,7 +27,7 @@ def _notify_control_panel_of_verification():
         frappe.log_error(frappe.get_traceback(), "Verification Notification Failed")
 
 
-@frappe.whitelist()
+@frappe.whitelist(allow_guest=True)
 def initial_setup(email, password, first_name, last_name, company_name, api_secret, control_plane_url, currency, country, verification_token, login_redirect_url):
     """
     Sets up the first user and company.
