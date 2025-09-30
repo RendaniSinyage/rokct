@@ -1,4 +1,6 @@
 import frappe
+import os
+import json
 from frappe.utils import validate_email_address, get_url
 from rokct.rokct.tenant.utils import send_tenant_email
 
@@ -76,8 +78,16 @@ def initial_setup(email, password, first_name, last_name, company_name, api_secr
 
     try:
         # Store control panel details for future communication
-        frappe.conf.set_value("api_secret", api_secret)
-        frappe.conf.set_value("control_plane_url", control_plane_url)
+        # Manually update site_config.json to bypass potential framework init issues.
+        site_config_path = frappe.get_site_path("site_config.json")
+        with open(site_config_path, "r") as f:
+            site_config = json.load(f)
+
+        site_config["api_secret"] = api_secret
+        site_config["control_plane_url"] = control_plane_url
+
+        with open(site_config_path, "w") as f:
+            json.dump(site_config, f, indent=4)
 
         # Create the first user
         user = frappe.get_doc({
