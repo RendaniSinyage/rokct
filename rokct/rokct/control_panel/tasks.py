@@ -150,8 +150,13 @@ def complete_tenant_setup(subscription_id, site_name, user_details):
 
             logs.append(f"API Response: {json.dumps(response_json, indent=2)}")
 
-            if response_json.get("status") == "success":
-                logs.append("SUCCESS: Tenant API reported successful setup.")
+            status = response_json.get("status")
+            if status in ["success", "warning"]:
+                if status == "success":
+                    logs.append("SUCCESS: Tenant API reported successful setup.")
+                else:  # status == "warning"
+                    logs.append(f"NOTE: Tenant API reported a warning: {response_json.get('message')}. This is expected if the user already exists. Continuing setup.")
+
                 plan = frappe.get_doc("Subscription Plan", subscription.plan)
                 if plan.cost == 0:
                     subscription.status = "Free"
