@@ -32,12 +32,7 @@ def _log_and_notify(site_name, log_messages, success, subject_prefix):
         print(f"--- FAILED to send {subject_prefix} notification email. Reason: {e} ---")
         frappe.log_error(f"Failed to send {subject_prefix} notification email for site {site_name}", "Email Error")
 
-def create_tenant_site_job(subscription_id, site_name, user_details, synchronous=False):
-    """
-    Creates the tenant site, installs apps, and sets initial config.
-    If `synchronous` is True, it will not enqueue the final setup job,
-    allowing the caller to run it directly for debugging.
-    """
+def create_tenant_site_job(subscription_id, site_name, user_details):
     logs = [f"--- Starting Site Creation for {site_name} at {now_datetime()} ---"]
     success = False
     subscription = frappe.get_doc("Company Subscription", subscription_id)
@@ -65,6 +60,8 @@ def create_tenant_site_job(subscription_id, site_name, user_details, synchronous
 
         plan = frappe.get_doc("Subscription Plan", subscription.plan)
         if not plan:
+            # This is a critical error, something is wrong with the data setup.
+            # Fail loudly so it can be fixed.
             raise frappe.ValidationError(f"FATAL: Subscription Plan '{subscription.plan}' not found.")
 
         # Gracefully handle if 'modules' is None or not present.
@@ -97,11 +94,7 @@ def create_tenant_site_job(subscription_id, site_name, user_details, synchronous
         logs.append("\nSUCCESS: Site created. Enqueuing final setup job.")
 
         success = True
-        if not synchronous:
-            frappe.enqueue("rokct.rokct.control_panel.tasks.complete_tenant_setup", queue="long", timeout=1500, subscription_id=subscription.name, site_name=site_name, user_details=user_details)
-            logs.append("\nSUCCESS: Site created. Enqueued final setup job.")
-        else:
-            logs.append("\nSUCCESS: Site created. Skipping enqueue for synchronous execution.")
+        frappe.enqueue("rokct.rokct.control_panel.tasks.complete_tenant_setup", queue="long", timeout=1500, subscription_id=subscription.name, site_name=site_name, user_details=user_details)
 
     except (subprocess.CalledProcessError, subprocess.TimeoutExpired, Exception) as e:
         error_message = f"STDOUT: {getattr(e, 'stdout', 'N/A')}\nSTDERR: {getattr(e, 'stderr', 'N/A')}\nTRACEBACK: {frappe.get_traceback()}"
@@ -123,7 +116,7 @@ def complete_tenant_setup(subscription_id, site_name, user_details):
         logs.append(f"\n--- Attempt {i+1} of {max_retries} ---")
         try:
             subscription = frappe.get_doc("Company Subscription", subscription_id)
-            api_secret = frappe.utils.get_password(doctype="Company Subscription", name=subscription.name, fieldname="api_secret")
+            api_secret = frappe.get_doc_password("Company Subscription", subscription.name, "api_secret")
 
             login_redirect_url = (subscription.custom_login_redirect_url or frappe.db.get_single_value("Subscription Settings", "marketing_site_login_url") or frappe.db.get_single_value("Subscription Settings", "default_login_redirect_url"))
             scheme = frappe.conf.get("tenant_site_scheme", "http")
@@ -163,9 +156,6 @@ def complete_tenant_setup(subscription_id, site_name, user_details):
                 logs.append(f"WARNING: Tenant API call failed with message: {response.get('message')}")
 
         except Exception as e:
-            print("\n--- TRACEBACK from complete_tenant_setup ---")
-            print(frappe.get_traceback())
-            print("--- END TRACEBACK ---\n")
             logs.append(f"ERROR: An unexpected error occurred during API call. Reason: {frappe.get_traceback()}")
 
         logs.append(f"Retrying in {retry_delay} seconds...")
