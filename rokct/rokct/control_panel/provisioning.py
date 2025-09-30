@@ -152,8 +152,6 @@ def create_subscription_record(plan, company_name, industry, site_name, currency
         elif subscription_plan.billing_cycle == 'Year':
             next_billing_date = add_years(nowdate(), 1)
 
-    api_secret = frappe.generate_hash(length=48)
-
     subscription = frappe.get_doc({
         "doctype": "Company Subscription",
         "customer": customer.name,
@@ -171,4 +169,3 @@ def create_subscription_record(plan, company_name, industry, site_name, currency
 
     frappe.db.commit()
     return subscription
-
