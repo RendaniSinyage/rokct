@@ -41,9 +41,6 @@ def trigger_provisioning_for_debug():
         print(f"--- Created new subscription record: {subscription.name} ---")
     except Exception as e:
         print(f"--- FAILED to create subscription record ---")
-        print("\n--- TRACEBACK ---")
-        print(frappe.get_traceback())
-        print("--- END TRACEBACK ---\n")
         frappe.log_error(frappe.get_traceback(), "Debug Provisioning Error")
         return
 
