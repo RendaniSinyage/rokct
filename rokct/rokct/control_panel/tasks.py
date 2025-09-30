@@ -3,6 +3,7 @@ import os
 import json
 import stripe
 import subprocess
+import requests
 import time
 from datetime import datetime, timedelta
 from frappe.utils import nowdate, add_days, getdate, add_months, add_years, now_datetime, get_datetime
@@ -129,16 +130,20 @@ def complete_tenant_setup(subscription_id, site_name, user_details):
             tenant_url = f"{scheme}://{site_name}/api/method/rokct.tenant.api.initial_setup"
             logs.append(f"Calling tenant API at: {tenant_url}")
 
-            headers = {"X-Rokct-Secret": api_secret}
+            headers = {
+                "Content-Type": "application/json",
+                "X-Rokct-Secret": api_secret,
+                "Connection": "close"
+            }
             data = {**user_details, "api_secret": api_secret, "control_plane_url": frappe.utils.get_url(), "login_redirect_url": login_redirect_url}
 
-            # Use Frappe's built-in request function to avoid proxy/server issues with `requests`.
-            # It handles JSON encoding and response parsing automatically.
-            response_json = frappe.make_post_request(tenant_url, headers=headers, data=data, timeout=120)
+            response = requests.post(tenant_url, headers=headers, data=json.dumps(data), timeout=120)
+            response.raise_for_status()
+            response_json = response.json()
 
             logs.append(f"API Response: {json.dumps(response_json, indent=2)}")
 
-            if isinstance(response_json, dict) and response_json.get("status") == "success":
+            if response_json.get("status") == "success":
                 logs.append("SUCCESS: Tenant API reported successful setup.")
                 plan = frappe.get_doc("Subscription Plan", subscription.plan)
                 if plan.cost == 0:
