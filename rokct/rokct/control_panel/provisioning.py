@@ -163,8 +163,8 @@ def create_subscription_record(plan, company_name, industry, site_name, currency
         "next_billing_date": next_billing_date,
     }).insert(ignore_permissions=True)
 
-    # Use the .set() method for password fields, which correctly handles encryption.
-    subscription.set("api_secret", frappe.generate_hash(length=48))
+    # Use the .set_password() method for password fields, which correctly handles encryption.
+    subscription.set_password("api_secret", frappe.generate_hash(length=48))
     subscription.save(ignore_permissions=True)
 
     frappe.db.commit()
