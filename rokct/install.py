@@ -78,16 +78,20 @@ def set_control_panel_configs():
         print("SUCCESS: Set 'tenant_domain' to 'tenant.rokct.ai' in site_config.json")
 
         system_settings = frappe.get_doc("System Settings")
-        if not system_settings.email_sender:
-            admin_user = frappe.get_doc("User", "Administrator")
-            if admin_user and admin_user.email:
-                system_settings.email_sender = admin_user.email
-                system_settings.save(ignore_permissions=True)
-                print(f"SUCCESS: Set default 'Email Sender' in System Settings to '{admin_user.email}'")
+        # Defensively check if email_sender attribute exists before accessing it
+        if hasattr(system_settings, "email_sender"):
+            if not system_settings.email_sender:
+                admin_user = frappe.get_doc("User", "Administrator")
+                if admin_user and admin_user.email:
+                    system_settings.email_sender = admin_user.email
+                    system_settings.save(ignore_permissions=True)
+                    print(f"SUCCESS: Set default 'Email Sender' in System Settings to '{admin_user.email}'")
+                else:
+                    print("SKIPPED: Could not set default email sender, Administrator email not found.")
             else:
-                print("SKIPPED: Could not set default email sender, Administrator email not found.")
+                print("SKIPPED: Default 'Email Sender' is already set in System Settings.")
         else:
-            print("SKIPPED: Default 'Email Sender' is already set in System Settings.")
+            print("SKIPPED: The 'email_sender' field does not exist in System Settings for this version.")
 
         frappe.db.commit()
     except Exception as e:

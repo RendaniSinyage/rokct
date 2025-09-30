@@ -32,12 +32,7 @@ def _log_and_notify(site_name, log_messages, success, subject_prefix):
         print(f"--- FAILED to send {subject_prefix} notification email. Reason: {e} ---")
         frappe.log_error(f"Failed to send {subject_prefix} notification email for site {site_name}", "Email Error")
 
-def create_tenant_site_job(subscription_id, site_name, user_details, synchronous=False):
-    """
-    Creates the tenant site, installs apps, and sets initial config.
-    If `synchronous` is True, it will not enqueue the final setup job,
-    allowing the caller to run it directly for debugging.
-    """
+def create_tenant_site_job(subscription_id, site_name, user_details):
     logs = [f"--- Starting Site Creation for {site_name} at {now_datetime()} ---"]
     success = False
     subscription = frappe.get_doc("Company Subscription", subscription_id)
@@ -64,7 +59,12 @@ def create_tenant_site_job(subscription_id, site_name, user_details, synchronous
         logs.append(f"SUCCESS: Site '{site_name}' created.")
 
         plan = frappe.get_doc("Subscription Plan", subscription.plan)
-        plan_apps = [d.module for d in plan.get("modules", [])]
+        if not plan:
+            raise frappe.ValidationError(f"FATAL: Subscription Plan '{subscription.plan}' not found.")
+
+        # Gracefully handle if 'modules' is None or not present.
+        plan_modules = plan.get("modules") or []
+        plan_apps = [d.module for d in plan_modules]
         common_apps = ["frappe", "erpnext", "payments", "swagger", "rokct"]
         final_apps = list(dict.fromkeys(common_apps + plan_apps))
         if "rokct" in final_apps:
@@ -92,11 +92,7 @@ def create_tenant_site_job(subscription_id, site_name, user_details, synchronous
         logs.append("\nSUCCESS: Site created. Enqueuing final setup job.")
 
         success = True
-        if not synchronous:
-            frappe.enqueue("rokct.rokct.control_panel.tasks.complete_tenant_setup", queue="long", timeout=1500, subscription_id=subscription.name, site_name=site_name, user_details=user_details)
-            logs.append("\nSUCCESS: Site created. Enqueued final setup job.")
-        else:
-            logs.append("\nSUCCESS: Site created. Skipping enqueue for synchronous execution.")
+        frappe.enqueue("rokct.rokct.control_panel.tasks.complete_tenant_setup", queue="long", timeout=1500, subscription_id=subscription.name, site_name=site_name, user_details=user_details)
 
     except (subprocess.CalledProcessError, subprocess.TimeoutExpired, Exception) as e:
         error_message = f"STDOUT: {getattr(e, 'stdout', 'N/A')}\nSTDERR: {getattr(e, 'stderr', 'N/A')}\nTRACEBACK: {frappe.get_traceback()}"
@@ -126,7 +122,7 @@ def complete_tenant_setup(subscription_id, site_name, user_details):
             logs.append(f"Calling tenant API at: {tenant_url}")
 
             headers = {"Content-Type": "application/json", "Authorization": f"Bearer {api_secret}"}
-            data = {"user_details": user_details, "api_secret": api_secret, "control_plane_url": frappe.utils.get_url(), "login_redirect_url": login_redirect_url}
+            data = {**user_details, "api_secret": api_secret, "control_plane_url": frappe.utils.get_url(), "login_redirect_url": login_redirect_url}
 
             response = frappe.make_post_request(tenant_url, headers=headers, data=json.dumps(data))
             logs.append(f"API Response: {json.dumps(response, indent=2)}")
