@@ -34,9 +34,6 @@ def initial_setup(email, password, first_name, last_name, company_name, api_secr
     This is called by the control panel during provisioning.
     """
     # --- Validation ---
-    if frappe.conf.get("app_role") != "tenant":
-        frappe.throw("This action can only be performed on a tenant site.", title="Action Not Allowed")
-
     required_params = [email, password, first_name, last_name, company_name, api_secret, control_plane_url, currency, country, verification_token, login_redirect_url]
     if not all(required_params):
         frappe.throw("All parameters are required for initial setup.", title="Missing Information")
