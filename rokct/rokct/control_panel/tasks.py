@@ -70,10 +70,11 @@ def create_tenant_site_job(subscription_id, site_name, user_details):
 
         plan = frappe.get_doc("Subscription Plan", subscription.plan)
         if not plan:
-            # This is a critical error, something is wrong with the data setup.
-            # Fail loudly so it can be fixed.
             raise frappe.ValidationError(f"FATAL: Subscription Plan '{subscription.plan}' not found.")
-        plan_apps = [d.module for d in plan.get("modules", [])]
+
+        # Gracefully handle if 'modules' is None or not present.
+        plan_modules = plan.get("modules") or []
+        plan_apps = [d.module for d in plan_modules]
         common_apps = ["frappe", "erpnext", "payments", "swagger", "rokct"]
         final_apps = list(dict.fromkeys(common_apps + plan_apps))
         if "rokct" in final_apps:
@@ -142,7 +143,7 @@ def complete_tenant_setup(subscription_id, site_name, user_details):
             logs.append(f"Calling tenant API at: {tenant_url}")
 
             headers = {"Content-Type": "application/json", "Authorization": f"Bearer {api_secret}"}
-            data = {"user_details": user_details, "api_secret": api_secret, "control_plane_url": frappe.utils.get_url(), "login_redirect_url": login_redirect_url}
+            data = {**user_details, "api_secret": api_secret, "control_plane_url": frappe.utils.get_url(), "login_redirect_url": login_redirect_url}
 
             response = frappe.make_post_request(tenant_url, headers=headers, data=json.dumps(data))
             logs.append(f"API Response: {json.dumps(response, indent=2)}")
