@@ -127,7 +127,7 @@ def complete_tenant_setup(subscription_id, site_name, user_details):
 
             login_redirect_url = (subscription.custom_login_redirect_url or frappe.db.get_single_value("Subscription Settings", "marketing_site_login_url") or frappe.db.get_single_value("Subscription Settings", "default_login_redirect_url"))
             scheme = frappe.conf.get("tenant_site_scheme", "http")
-            tenant_url = f"{scheme}://{site_name}/api/method/rokct.tenant.api.initial_setup"
+            tenant_url = f"{scheme}://{site_name}/api/method/rokct.rokct.tenant.api.initial_setup"
             logs.append(f"Calling tenant API at: {tenant_url}")
 
             headers = {
