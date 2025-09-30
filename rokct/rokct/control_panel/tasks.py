@@ -33,12 +33,7 @@ def _log_and_notify(site_name, log_messages, success, subject_prefix):
         print(f"--- FAILED to send {subject_prefix} notification email. Reason: {e} ---")
         frappe.log_error(f"Failed to send {subject_prefix} notification email for site {site_name}", "Email Error")
 
-def create_tenant_site_job(subscription_id, site_name, user_details, synchronous=False):
-    """
-    Creates the tenant site, installs apps, and sets initial config.
-    If `synchronous` is True, it will not enqueue the final setup job,
-    allowing the caller to run it directly for debugging.
-    """
+def create_tenant_site_job(subscription_id, site_name, user_details):
     logs = [f"--- Starting Site Creation for {site_name} at {now_datetime()} ---"]
     success = False
     subscription = frappe.get_doc("Company Subscription", subscription_id)
@@ -100,11 +95,7 @@ def create_tenant_site_job(subscription_id, site_name, user_details, synchronous
         logs.append("\nSUCCESS: Site created. Enqueuing final setup job.")
 
         success = True
-        if not synchronous:
-            frappe.enqueue("rokct.rokct.control_panel.tasks.complete_tenant_setup", queue="long", timeout=1500, subscription_id=subscription.name, site_name=site_name, user_details=user_details)
-            logs.append("\nSUCCESS: Site created. Enqueued final setup job.")
-        else:
-            logs.append("\nSUCCESS: Site created. Skipping enqueue for synchronous execution.")
+        frappe.enqueue("rokct.rokct.control_panel.tasks.complete_tenant_setup", queue="long", timeout=1500, subscription_id=subscription.name, site_name=site_name, user_details=user_details)
 
     except (subprocess.CalledProcessError, subprocess.TimeoutExpired, Exception) as e:
         error_message = f"STDOUT: {getattr(e, 'stdout', 'N/A')}\nSTDERR: {getattr(e, 'stderr', 'N/A')}\nTRACEBACK: {frappe.get_traceback()}"
@@ -172,9 +163,6 @@ def complete_tenant_setup(subscription_id, site_name, user_details):
                 logs.append(f"WARNING: Tenant API call failed with message: {response_json.get('message')}")
 
         except Exception as e:
-            print("\n--- TRACEBACK from complete_tenant_setup ---")
-            print(frappe.get_traceback())
-            print("--- END TRACEBACK ---\n")
             logs.append(f"ERROR: An unexpected error occurred during API call. Reason: {frappe.get_traceback()}")
 
         logs.append(f"Retrying in {retry_delay} seconds...")
