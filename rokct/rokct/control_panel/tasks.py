@@ -2,7 +2,7 @@ import frappe
 import os
 import json
 import stripe
-import subprocess
+import requests
 import time
 from datetime import datetime, timedelta
 from frappe.utils import nowdate, add_days, getdate, add_months, add_years, now_datetime, get_datetime
@@ -113,13 +113,18 @@ def create_tenant_site_job(subscription_id, site_name, user_details, synchronous
         _log_and_notify(site_name, logs, success, "Site Creation")
 
 def complete_tenant_setup(subscription_id, site_name, user_details):
-    logs = [f"--- Starting Final Tenant Setup for {site_name} at {now_datetime()} ---"]
+    logs = []
+    def log_and_print(message):
+        print(message)
+        logs.append(str(message))
+
+    log_and_print(f"--- Starting Final Tenant Setup for {site_name} at {now_datetime()} ---")
     success = False
     max_retries = 5
     retry_delay = 30
 
     for i in range(max_retries):
-        logs.append(f"\n--- Attempt {i+1} of {max_retries} ---")
+        log_and_print(f"\n--- Attempt {i+1} of {max_retries} ---")
         try:
             subscription = frappe.get_doc("Company Subscription", subscription_id)
             api_secret = subscription.get_password("api_secret")
@@ -127,35 +132,39 @@ def complete_tenant_setup(subscription_id, site_name, user_details):
             login_redirect_url = (subscription.custom_login_redirect_url or frappe.db.get_single_value("Subscription Settings", "marketing_site_login_url") or frappe.db.get_single_value("Subscription Settings", "default_login_redirect_url"))
             scheme = frappe.conf.get("tenant_site_scheme", "http")
             tenant_url = f"{scheme}://{site_name}/api/method/rokct.rokct.tenant.api.initial_setup"
-            logs.append(f"Calling tenant API at: {tenant_url}")
+            log_and_print(f"Calling tenant API at: {tenant_url}")
 
-            headers = {"X-Rokct-Secret": api_secret, "Content-Type": "application/json"}
-            data = {**user_details, "api_secret": api_secret, "control_plane_url": frappe.utils.get_url(), "login_redirect_url": login_redirect_url}
-
-            # Use curl to avoid issues with Python requests library in this environment
-            command = [
-                "curl", "-s", "-S", "-X", "POST", tenant_url,
-                "-H", f"X-Rokct-Secret: {api_secret}",
-                "-H", "Content-Type: application/json",
-                "-d", json.dumps(data)
+            expected_keys = [
+                "email", "password", "first_name", "last_name", "company_name",
+                "currency", "country", "verification_token"
             ]
+            filtered_user_details = {k: v for k, v in user_details.items() if k in expected_keys}
 
-            # Log the command for debugging, redacting the secret
-            logged_command = list(command)
-            logged_command[7] = "X-Rokct-Secret: <REDACTED>"
-            logs.append(f"Executing command: {' '.join(logged_command)}")
+            headers = {"X-Rokct-Secret": api_secret}
+            data = {
+                **filtered_user_details,
+                "api_secret": api_secret,
+                "control_plane_url": frappe.utils.get_url(),
+                "login_redirect_url": login_redirect_url
+            }
 
-            process = subprocess.run(command, capture_output=True, text=True, check=True, timeout=120)
-            response_json = json.loads(process.stdout)
+            log_and_print(f"Request Headers: {headers}")
+            log_and_print(f"Request Data: {data}")
 
-            logs.append(f"API Response: {json.dumps(response_json, indent=2)}")
+            response = requests.post(tenant_url, headers=headers, json=data, timeout=120)
+
+            log_and_print(f"API Response Status Code: {response.status_code}")
+            log_and_print(f"API Response Body: {response.text}")
+
+            response.raise_for_status()
+            response_json = response.json()
 
             status = response_json.get("status")
             if status in ["success", "warning"]:
                 if status == "success":
-                    logs.append("SUCCESS: Tenant API reported successful setup.")
-                else:  # status == "warning"
-                    logs.append(f"NOTE: Tenant API reported a warning: {response_json.get('message')}. This is expected if the user already exists. Continuing setup.")
+                    log_and_print("SUCCESS: Tenant API reported successful setup.")
+                else:
+                    log_and_print(f"NOTE: Tenant API reported a warning: {response_json.get('message')}. This is expected if the user already exists. Continuing setup.")
 
                 plan = frappe.get_doc("Subscription Plan", subscription.plan)
                 if plan.cost == 0:
@@ -166,28 +175,28 @@ def complete_tenant_setup(subscription_id, site_name, user_details):
                     subscription.status = "Active"
                 subscription.save(ignore_permissions=True)
                 frappe.db.commit()
-                logs.append(f"Subscription status updated to '{subscription.status}'.")
+                log_and_print(f"Subscription status updated to '{subscription.status}'.")
 
                 verification_url = f"{scheme}://{site_name}/api/method/rokct.tenant.api.verify_my_email?token={user_details['verification_token']}"
                 email_context = {"first_name": user_details["first_name"], "company_name": user_details["company_name"], "verification_url": verification_url}
 
-                logs.append(f"Attempting to send welcome email to {user_details['email']}...")
+                log_and_print(f"Attempting to send welcome email to {user_details['email']}...")
                 frappe.sendmail(recipients=[user_details["email"]], template="New User Welcome", args=email_context, now=True)
-                logs.append("SUCCESS: Welcome email sent.")
+                log_and_print("SUCCESS: Welcome email sent.")
 
                 success = True
                 return
             else:
                 message = response_json.get('message') if isinstance(response_json, dict) else str(response_json)
-                logs.append(f"WARNING: Tenant API call failed with message: {message}")
+                log_and_print(f"WARNING: Tenant API call failed with message: {message}")
 
+        except requests.exceptions.RequestException as e:
+            log_and_print(f"CRITICAL: The API request failed. Reason: {e}")
         except Exception as e:
-            print("\n--- TRACEBACK from complete_tenant_setup ---")
-            print(frappe.get_traceback())
-            print("--- END TRACEBACK ---\n")
-            logs.append(f"ERROR: An unexpected error occurred during API call. Reason: {frappe.get_traceback()}")
+            log_and_print(f"CRITICAL: An unexpected error occurred. Reason: {e}")
+            log_and_print(f"TRACEBACK: {frappe.get_traceback()}")
 
-        logs.append(f"Retrying in {retry_delay} seconds...")
+        log_and_print(f"Retrying in {retry_delay} seconds...")
         time.sleep(retry_delay)
 
     _handle_failed_setup(subscription_id, site_name, logs)
