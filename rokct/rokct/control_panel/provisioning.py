@@ -152,8 +152,6 @@ def create_subscription_record(plan, company_name, industry, site_name, currency
         elif subscription_plan.billing_cycle == 'Year':
             next_billing_date = add_years(nowdate(), 1)
 
-    api_secret = frappe.generate_hash(length=48)
-
     subscription = frappe.get_doc({
         "doctype": "Company Subscription",
         "customer": customer.name,
@@ -165,8 +163,8 @@ def create_subscription_record(plan, company_name, industry, site_name, currency
         "next_billing_date": next_billing_date,
     }).insert(ignore_permissions=True)
 
-    # Store the API secret separately as it's a password field
-    subscription.api_secret = api_secret
+    # Use the .set() method for password fields, which correctly handles encryption.
+    subscription.set("api_secret", frappe.generate_hash(length=48))
     subscription.save(ignore_permissions=True)
 
     frappe.db.commit()
