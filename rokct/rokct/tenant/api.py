@@ -1,6 +1,6 @@
 import frappe
 from frappe.utils import validate_email_address, get_url
-from rokct.tenant.utils import send_tenant_email
+from rokct.rokct.tenant.utils import send_tenant_email
 
 def _notify_control_panel_of_verification():
     """Makes a secure backend call to the control panel to mark the subscription as verified."""
