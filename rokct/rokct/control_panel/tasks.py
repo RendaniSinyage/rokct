@@ -163,6 +163,9 @@ def complete_tenant_setup(subscription_id, site_name, user_details):
                 logs.append(f"WARNING: Tenant API call failed with message: {response.get('message')}")
 
         except Exception as e:
+            print("\n--- TRACEBACK from complete_tenant_setup ---")
+            print(frappe.get_traceback())
+            print("--- END TRACEBACK ---\n")
             logs.append(f"ERROR: An unexpected error occurred during API call. Reason: {frappe.get_traceback()}")
 
         logs.append(f"Retrying in {retry_delay} seconds...")
