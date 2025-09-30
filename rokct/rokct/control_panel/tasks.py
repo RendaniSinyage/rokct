@@ -88,7 +88,7 @@ def create_tenant_site_job(subscription_id, site_name, user_details, synchronous
             logs.append(f"  - SUCCESS: Installed '{app}'.")
 
         logs.append("\nStep 3: Setting app_role...")
-        subprocess.run(["bench", "--site", site_name, "set-config", "-g", "app_role", "tenant"], cwd=bench_path, check=True, capture_output=True, text=True)
+        subprocess.run(["bench", "--site", site_name, "set-config", "app_role", "tenant"], cwd=bench_path, check=True, capture_output=True, text=True)
         logs.append("SUCCESS: app_role set to 'tenant'.")
 
         subscription.status = "Provisioning"
