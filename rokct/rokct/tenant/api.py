@@ -33,6 +33,8 @@ def initial_setup(email, password, first_name, last_name, company_name, api_secr
     Sets up the first user and company.
     This is called by the control panel during provisioning.
     """
+    print("\n--- DEBUG: Received request at initial_setup ---")
+    print(f"--- DEBUG: Incoming Headers: {frappe.local.request.headers}")
     # --- Validation ---
     if frappe.conf.get("app_role") != "tenant":
         frappe.throw("This action can only be performed on a tenant site.", title="Action Not Allowed")
