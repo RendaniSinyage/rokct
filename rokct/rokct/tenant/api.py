@@ -34,9 +34,25 @@ def initial_setup(email, password, first_name, last_name, company_name, api_secr
     This is called by the control panel during provisioning.
     """
     # --- Validation ---
-    required_params = [email, password, first_name, last_name, company_name, api_secret, control_plane_url, currency, country, verification_token, login_redirect_url]
-    if not all(required_params):
-        frappe.throw("All parameters are required for initial setup.", title="Missing Information")
+    params_to_check = {
+        "email": email,
+        "password": password,
+        "first_name": first_name,
+        "last_name": last_name,
+        "company_name": company_name,
+        "api_secret": api_secret,
+        "control_plane_url": control_plane_url,
+        "currency": currency,
+        "country": country,
+        "verification_token": verification_token,
+    }
+
+    for param_name, param_value in params_to_check.items():
+        if not param_value:
+            frappe.throw(f"Parameter '{param_name}' is missing or empty.", title="Missing Information")
+
+    if login_redirect_url is None:
+        frappe.throw("The 'login_redirect_url' parameter must be provided, even if it's an empty string.", title="Missing Information")
 
     try:
         validate_email_address(email, throw=True)
