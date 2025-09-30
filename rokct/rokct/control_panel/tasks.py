@@ -130,7 +130,7 @@ def complete_tenant_setup(subscription_id, site_name, user_details):
             tenant_url = f"{scheme}://{site_name}/api/method/rokct.tenant.api.initial_setup"
             logs.append(f"Calling tenant API at: {tenant_url}")
 
-            headers = {"Content-Type": "application/json", "Authorization": f"Bearer {api_secret}"}
+            headers = {"Content-Type": "application/json", "X-Rokct-Secret": api_secret}
             data = {**user_details, "api_secret": api_secret, "control_plane_url": frappe.utils.get_url(), "login_redirect_url": login_redirect_url}
 
             response = requests.post(tenant_url, headers=headers, data=json.dumps(data), timeout=120)

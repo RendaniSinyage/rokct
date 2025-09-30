@@ -49,11 +49,10 @@ def initial_setup(email, password, first_name, last_name, company_name, api_secr
     if len(password) < 8:
         frappe.throw("Password must be at least 8 characters long.", title="Weak Password")
 
-    auth_header = frappe.local.request.headers.get("Authorization")
-    if not auth_header or not auth_header.startswith("Bearer "):
-        frappe.throw("Missing or invalid Authorization header.", frappe.AuthenticationError)
+    received_secret = frappe.local.request.headers.get("X-Rokct-Secret")
+    if not received_secret:
+        frappe.throw("Missing X-Rokct-Secret header.", frappe.AuthenticationError)
 
-    received_secret = auth_header.split(" ")[1]
     if received_secret != api_secret:
         frappe.throw("Authentication failed. Secrets do not match.", frappe.AuthenticationError)
 
