@@ -12,6 +12,8 @@
   "trial_ends_on",
   "subscription_start_date",
   "next_billing_date",
+  "custom_login_redirect_url",
+  "column_break_1",
   "api_secret",
   "email_verified_on"
  ],
@@ -62,6 +64,16 @@
    "fieldname": "next_billing_date",
    "fieldtype": "Date",
    "label": "Next Billing Date"
+  },
+  {
+   "fieldname": "custom_login_redirect_url",
+   "fieldtype": "Data",
+   "label": "Custom Login Redirect URL",
+   "description": "If set, this URL will be used for the login redirect instead of the default."
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
   },
   {
    "fieldname": "api_secret",
