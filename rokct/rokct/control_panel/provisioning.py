@@ -161,11 +161,11 @@ def create_subscription_record(plan, company_name, industry, site_name, currency
         "trial_ends_on": trial_ends_on,
         "subscription_start_date": nowdate(),
         "next_billing_date": next_billing_date,
-    }).insert(ignore_permissions=True)
+    })
 
-    # Use the .set() method for password fields, which correctly handles encryption.
+    # Set the password on the doc object before insert, which is the most reliable way.
     subscription.set("api_secret", frappe.generate_hash(length=48))
-    subscription.save(ignore_permissions=True)
+    subscription.insert(ignore_permissions=True)
 
     frappe.db.commit()
     return subscription
