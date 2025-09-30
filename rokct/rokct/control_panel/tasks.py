@@ -125,7 +125,7 @@ def complete_tenant_setup(subscription_id, site_name, user_details):
         logs.append(f"\n--- Attempt {i+1} of {max_retries} ---")
         try:
             subscription = frappe.get_doc("Company Subscription", subscription_id)
-            api_secret = frappe.get_doc_password("Company Subscription", subscription.name, "api_secret")
+            api_secret = subscription.get_password("api_secret")
 
             login_redirect_url = (subscription.custom_login_redirect_url or frappe.db.get_single_value("Subscription Settings", "marketing_site_login_url") or frappe.db.get_single_value("Subscription Settings", "default_login_redirect_url"))
             scheme = frappe.conf.get("tenant_site_scheme", "http")
