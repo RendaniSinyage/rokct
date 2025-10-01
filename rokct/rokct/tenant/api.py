@@ -119,9 +119,9 @@ def initial_setup(email, password, first_name, last_name, company_name, api_secr
         user.save(ignore_permissions=True)
 
         # Mark setup as complete to bypass the wizard for the new tenant
-        system_settings = frappe.get_doc("System Settings")
-        system_settings.setup_complete = 1
-        system_settings.save(ignore_permissions=True)
+        # Use db.set_value to avoid validation errors on System Settings for v15
+        frappe.db.set_value("System Settings", "System Settings", "setup_complete", 1)
+
 
         # Disable signup and redirect /login to the main marketing site
         website_settings = frappe.get_doc("Website Settings", "Website Settings")
