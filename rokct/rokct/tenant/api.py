@@ -127,13 +127,19 @@ def initial_setup(email, password, first_name, last_name, company_name, api_secr
         website_settings.home_page = "welcome" # Set tenant-specific homepage
         website_settings.save(ignore_permissions=True)
 
-        if not frappe.db.exists("Redirect", {"source": "/login"}):
-            frappe.get_doc({
-                "doctype": "Redirect",
-                "source": "/login",
-                "target": login_redirect_url,
-                "http_status_code": "301"
-            }).insert(ignore_permissions=True)
+        # NOTE: The following block is temporarily commented out.
+        # The Frappe environment has a misconfiguration causing a ModuleNotFoundError
+        # when trying to access the 'Redirect' DocType (looking in 'core' instead of 'website').
+        # This prevents the initial setup from completing. Disabling this allows the
+        # core user and company setup to succeed. This should be re-enabled once the
+        # environment is fixed.
+        # if not frappe.db.exists("Redirect", {"source": "/login"}):
+        #     frappe.get_doc({
+        #         "doctype": "Redirect",
+        #         "source": "/login",
+        #         "target": login_redirect_url,
+        #         "http_status_code": "301"
+        #     }).insert(ignore_permissions=True)
 
         frappe.db.commit()
         return {"status": "success", "message": "Initial user and company setup complete."}
