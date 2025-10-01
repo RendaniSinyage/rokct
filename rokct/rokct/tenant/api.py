@@ -100,6 +100,10 @@ def initial_setup(email, password, first_name, last_name, company_name, api_secr
         })
         user.set("new_password", password)
         user.insert(ignore_permissions=True)
+
+        # We need to reload the user doc here to prevent a race condition-like error
+        # where the user object is not fully initialized before we try to modify it.
+        user = frappe.get_doc("User", user.name)
         user.add_roles("System Manager", "Company User")
 
         # Configure the default company
@@ -111,9 +115,6 @@ def initial_setup(email, password, first_name, last_name, company_name, api_secr
         default_company.save(ignore_permissions=True)
 
         # Link user to the company
-        # We need to reload the user doc here to prevent a race condition-like error
-        # where the user object is not fully initialized before we try to append to its child table.
-        user = frappe.get_doc("User", email)
         user.append("user_companies", {"company": default_company.name, "is_default": 1})
         user.save(ignore_permissions=True)
 
