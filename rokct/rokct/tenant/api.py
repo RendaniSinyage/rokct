@@ -71,9 +71,6 @@ def initial_setup(email, password, first_name, last_name, company_name, api_secr
     if received_secret != api_secret:
         frappe.throw("Authentication failed. Secrets do not match.", frappe.AuthenticationError)
 
-    if frappe.db.exists("User", {"email": email}):
-        frappe.log_error(f"Initial setup called for existing user {email}", "Tenant Initial Setup Warning")
-        return {"status": "warning", "message": f"User {email} already exists."}
     # --- End Validation ---
 
     try:
@@ -111,7 +108,14 @@ def initial_setup(email, password, first_name, last_name, company_name, api_secr
             }]
         })
         user.set("new_password", password)
-        user.insert(ignore_permissions=True)
+        try:
+            user.insert(ignore_permissions=True)
+        except frappe.DuplicateEntryError:
+            # This can happen on a retry if the user was created but the overall
+            # transaction failed later.
+            frappe.log_error(f"Initial setup called for existing user {email}", "Tenant Initial Setup Warning")
+            return {"status": "warning", "message": f"User {email} already exists."}
+
 
         # Explicitly add roles and save the user to ensure the changes are persisted
         # before any subsequent operations in the setup process.
