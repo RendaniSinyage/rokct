@@ -184,9 +184,13 @@ def complete_tenant_setup(subscription_id, site_name, user_details):
                 verification_url = f"{scheme}://{site_name}/api/method/rokct.tenant.api.verify_my_email?token={user_details['verification_token']}"
                 email_context = {"first_name": user_details["first_name"], "company_name": user_details["company_name"], "verification_url": verification_url}
 
-                log_and_print(f"Attempting to send welcome email to {user_details['email']}...")
-                frappe.sendmail(recipients=[user_details["email"]], template="New User Welcome", args=email_context, now=True)
-                log_and_print("SUCCESS: Welcome email sent.")
+                try:
+                    log_and_print(f"Attempting to send welcome email to {user_details['email']}...")
+                    frappe.sendmail(recipients=[user_details["email"]], template="New User Welcome", args=email_context, now=True)
+                    log_and_print("SUCCESS: Welcome email sent.")
+                except Exception as e:
+                    # Log the error but don't fail the entire setup process if the email template is missing.
+                    log_and_print(f"WARNING: Could not send welcome email. Reason: {e}")
 
                 success = True
                 return
