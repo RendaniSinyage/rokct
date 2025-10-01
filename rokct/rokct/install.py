@@ -140,43 +140,50 @@ def after_install():
     # Step 1: Configure the control panel site if applicable.
     _setup_control_panel_config()
 
-    # Step 2: Create the Welcome page and initial data for the control panel.
+    # Step 2: Configure site based on its role
     app_role = frappe.conf.get("app_role")
+
     if app_role == "control_panel":
+        print("--- Configuring site as Control Panel ---")
         _create_welcome_page()
         _create_initial_roadmap_data()
         _disable_public_signup()
 
-        # Set the default workspace for System Managers
-        frappe.db.set_value("Role", "System Manager", "home_page", "ROKCT Platform")
-        print("Set default workspace for System Managers to 'ROKCT Platform'.")
+        # Set the default workspace for Administrator to 'Platform'
+        try:
+            admin_user = frappe.get_doc("User", "Administrator")
+            if admin_user.default_workspace != "Platform":
+                admin_user.default_workspace = "Platform"
+                admin_user.save(ignore_permissions=True)
+                print("Set default workspace for Administrator to 'Platform'.")
+        except Exception as e:
+            print(f"WARNING: Could not set default workspace for Administrator. Reason: {e}")
 
-    # Step 4: Set the homepage based on the app_role.
-    if not app_role:
-        print("`app_role` not set. Skipping homepage configuration.")
-        return
+        # Set the homepage to 'swagger'
+        try:
+            website_settings = frappe.get_doc("Website Settings", "Website Settings")
+            if website_settings.home_page != "swagger":
+                website_settings.home_page = "swagger"
+                website_settings.save(ignore_permissions=True)
+                print("Set homepage to 'swagger' for control panel.")
+        except Exception as e:
+            frappe.log_error(f"Failed to set control panel homepage: {e}", "Homepage Configuration Failed")
 
-    try:
-        website_settings = frappe.get_doc("Website Settings", "Website Settings")
-        homepage_changed = False
-        if app_role == "control_panel" and website_settings.home_page != "welcome":
-            website_settings.home_page = "welcome"
-            homepage_changed = True
-            print("Set homepage to 'welcome' for control panel.")
+    elif app_role == "tenant":
+        print("--- Configuring site as Tenant ---")
+        # Set the homepage to 'welcome'
+        try:
+            website_settings = frappe.get_doc("Website Settings", "Website Settings")
+            if website_settings.home_page != "welcome":
+                website_settings.home_page = "welcome"
+                website_settings.save(ignore_permissions=True)
+                print("Set homepage to 'welcome' for tenant.")
+        except Exception as e:
+            frappe.log_error(f"Failed to set tenant homepage: {e}", "Homepage Configuration Failed")
 
-        elif app_role == "tenant" and website_settings.home_page != "tenant_home":
-            website_settings.home_page = "tenant_home"
-            homepage_changed = True
-            print("Set homepage to 'tenant_home' for tenant.")
+    else:
+        print(f"`app_role` is '{app_role}'. Skipping role-specific setup.")
 
-        if homepage_changed:
-            website_settings.save(ignore_permissions=True)
-            print("Homepage configuration saved.")
-        else:
-            print(f"Homepage already correctly set for role '{app_role}'.")
-
-    except Exception as e:
-        frappe.log_error(f"Failed to set homepage during after_install: {e}", "Homepage Configuration Failed")
 
     # Reorder bench apps.txt to ensure rokct is last
     try:
