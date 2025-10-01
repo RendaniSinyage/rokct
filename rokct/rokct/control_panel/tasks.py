@@ -160,7 +160,6 @@ def complete_tenant_setup(subscription_id, site_name, user_details):
             log_and_print(f"--- 'bench execute' STDERR ---\n{process.stderr or 'No standard error.'}")
 
             # The result from `bench execute` is printed to stdout. Parse it as JSON.
-            # The result from `bench execute` is printed to stdout. Parse it as JSON.
             response_json = json.loads(process.stdout) if process.stdout else {}
             status = response_json.get("status")
 
@@ -181,21 +180,11 @@ def complete_tenant_setup(subscription_id, site_name, user_details):
                 frappe.db.commit()
                 log_and_print(f"Subscription status updated to '{subscription.status}'.")
 
-                scheme = frappe.conf.get("tenant_site_scheme", "http")
-                verification_url = f"{scheme}://{site_name}/api/method/rokct.tenant.api.verify_my_email?token={user_details['verification_token']}"
-                email_context = {"first_name": user_details["first_name"], "company_name": user_details["company_name"], "verification_url": verification_url}
-
-                try:
-                    log_and_print(f"Attempting to send welcome email to {user_details['email']}...")
-                    frappe.sendmail(recipients=[user_details["email"]], template="New User Welcome", args=email_context, now=True)
-                    log_and_print("SUCCESS: Welcome email sent.")
-                except Exception as e:
-                    log_and_print(f"WARNING: Could not send welcome email. Reason: {e}")
-
+                # The welcome email is now sent by the tenant site itself upon user creation.
                 success = True
                 return
             else:
-                message = api_message.get('message') if isinstance(api_message, dict) else str(api_message)
+                message = response_json.get('message') if isinstance(response_json, dict) else str(response_json)
                 log_and_print(f"WARNING: Tenant setup function failed with message: {message}")
 
         except subprocess.CalledProcessError as e:

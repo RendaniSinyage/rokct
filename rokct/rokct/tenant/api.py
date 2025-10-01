@@ -1,6 +1,7 @@
 import frappe
 import os
 import json
+import pytz
 from frappe.utils import validate_email_address, get_url
 from rokct.rokct.tenant.utils import send_tenant_email
 
@@ -98,9 +99,22 @@ def initial_setup(email, password, first_name, last_name, company_name, api_secr
             "company_name": company_name,
             "default_currency": currency,
             "country": country,
-            "is_group": 0
+            "is_group": 0,
+            "chart_of_accounts": "Standard with Numbers"
         })
         company.insert(ignore_permissions=True)
+
+        # Get the timezone from the country to set for the user
+        time_zone = "Asia/Kolkata"  # Default timezone
+        try:
+            country_code = frappe.db.get_value("Country", country, "code")
+            if country_code:
+                timezones = pytz.country_timezones.get(country_code.upper())
+                if timezones:
+                    time_zone = timezones[0]
+        except Exception:
+            # If there's any error, just proceed with the default timezone
+            frappe.log_error(f"Could not determine timezone for country {country}", "Timezone Lookup Failed")
 
         # Create the first user and link them to the company in a single operation.
         user = frappe.get_doc({
@@ -108,7 +122,9 @@ def initial_setup(email, password, first_name, last_name, company_name, api_secr
             "email": email,
             "first_name": first_name,
             "last_name": last_name,
-            "send_welcome_email": 0,
+            "time_zone": time_zone,
+            "onboarding_status": "Complete", # Disable the backend tour for new users
+            "send_welcome_email": 1, # Let the tenant send its own standard welcome email
             "email_verification_token": verification_token, # Use token from control panel
             "user_companies": [{
                 "company": company.name,
