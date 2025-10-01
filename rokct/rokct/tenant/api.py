@@ -124,7 +124,7 @@ def initial_setup(email, password, first_name, last_name, company_name, api_secr
             "last_name": last_name,
             "time_zone": time_zone,
             "onboarding_status": "Complete", # Disable the backend tour for new users
-            "send_welcome_email": 1, # Let the tenant send its own standard welcome email
+            "send_welcome_email": 0, # The control plane will send the welcome email
             "email_verification_token": verification_token, # Use token from control panel
             "user_companies": [{
                 "company": company.name,
