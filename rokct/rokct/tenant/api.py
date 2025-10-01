@@ -155,7 +155,7 @@ def initial_setup(email, password, first_name, last_name, company_name, api_secr
         website_settings.allow_signup = 0
         website_settings.save(ignore_permissions=True)
 
-        if not frappe.db.exists("Redirect", {"source": "/login"}):
+        if login_redirect_url and not frappe.db.exists("Redirect", {"source": "/login"}):
             frappe.get_doc({
                 "doctype": "Redirect",
                 "source": "/login",
