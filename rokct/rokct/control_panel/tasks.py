@@ -141,7 +141,7 @@ def complete_tenant_setup(subscription_id, site_name, user_details):
             ]
             filtered_user_details = {k: v for k, v in user_details.items() if k in expected_keys}
 
-            headers = {"X-Rokct-Secret": api_secret}
+            headers = {"X-Rokct-Secret": api_secret, "Host": site_name}
             data = {
                 **filtered_user_details,
                 "api_secret": api_secret,
