@@ -150,18 +150,12 @@ def initial_setup(email, password, first_name, last_name, company_name, api_secr
         frappe.db.set_value("System Settings", "System Settings", "setup_complete", 1)
 
 
-        # Disable signup on the new tenant site
+        # Disable signup and set custom login redirect on the new tenant site
         website_settings = frappe.get_doc("Website Settings", "Website Settings")
         website_settings.allow_signup = 0
+        if login_redirect_url:
+            website_settings.custom_login_redirect_url = login_redirect_url
         website_settings.save(ignore_permissions=True)
-
-        if login_redirect_url and not frappe.db.exists("Redirect", {"source": "/login"}):
-            frappe.get_doc({
-                "doctype": "Redirect",
-                "source": "/login",
-                "target": login_redirect_url,
-                "http_status_code": "301"
-            }).insert(ignore_permissions=True)
 
         frappe.db.commit()
         return {"status": "success", "message": "Initial user and company setup complete."}
