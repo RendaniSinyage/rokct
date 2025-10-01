@@ -160,14 +160,17 @@ def complete_tenant_setup(subscription_id, site_name, user_details):
             log_and_print(f"--- 'bench execute' STDERR ---\n{process.stderr or 'No standard error.'}")
 
             # The result from `bench execute` is printed to stdout. Parse it as JSON.
+            # Note: `bench execute` wraps the return value in a `message` key if it's a dict.
             response_json = json.loads(process.stdout) if process.stdout else {}
-            status = response_json.get("status")
+            api_message = response_json.get("message", {})
+            status = api_message.get("status")
+
 
             if status in ["success", "warning"]:
                 if status == "success":
                     log_and_print("SUCCESS: Tenant setup function executed successfully.")
                 else:
-                    log_and_print(f"NOTE: Tenant setup function returned a warning: {response_json.get('message')}. This is expected on retry.")
+                    log_and_print(f"NOTE: Tenant setup function returned a warning: {api_message.get('message')}. This is expected on retry.")
 
                 plan = frappe.get_doc("Subscription Plan", subscription.plan)
                 if plan.cost == 0:
@@ -194,7 +197,7 @@ def complete_tenant_setup(subscription_id, site_name, user_details):
                 success = True
                 return
             else:
-                message = response_json.get('message') if isinstance(response_json, dict) else str(response_json)
+                message = api_message.get('message') if isinstance(api_message, dict) else str(api_message)
                 log_and_print(f"WARNING: Tenant setup function failed with message: {message}")
 
         except subprocess.CalledProcessError as e:

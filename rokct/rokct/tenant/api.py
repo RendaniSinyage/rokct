@@ -64,12 +64,14 @@ def initial_setup(email, password, first_name, last_name, company_name, api_secr
     if len(password) < 8:
         frappe.throw("Password must be at least 8 characters long.", title="Weak Password")
 
-    received_secret = frappe.local.request.headers.get("X-Rokct-Secret")
-    if not received_secret:
-        frappe.throw("Missing X-Rokct-Secret header.", frappe.AuthenticationError)
-
-    if received_secret != api_secret:
-        frappe.throw("Authentication failed. Secrets do not match.", frappe.AuthenticationError)
+    # The security check is only relevant in an HTTP context.
+    # When run via `bench execute`, `frappe.local.request` does not exist.
+    if hasattr(frappe.local, "request"):
+        received_secret = frappe.local.request.headers.get("X-Rokct-Secret")
+        if not received_secret:
+            frappe.throw("Missing X-Rokct-Secret header.", frappe.AuthenticationError)
+        if received_secret != api_secret:
+            frappe.throw("Authentication failed. Secrets do not match.", frappe.AuthenticationError)
 
     # --- End Validation ---
 
