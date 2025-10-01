@@ -89,20 +89,7 @@ def initial_setup(email, password, first_name, last_name, company_name, api_secr
         with open(site_config_path, "w") as f:
             json.dump(site_config, f, indent=4)
 
-        # Create the first user
-        user = frappe.get_doc({
-            "doctype": "User",
-            "email": email,
-            "first_name": first_name,
-            "last_name": last_name,
-            "send_welcome_email": 0,
-            "email_verification_token": verification_token # Use token from control panel
-        })
-        user.set("new_password", password)
-        user.insert(ignore_permissions=True)
-        user.add_roles("System Manager", "Company User")
-
-        # Configure the default company
+        # Configure the default company first
         default_company_name = frappe.get_all("Company")[0].name
         default_company = frappe.get_doc("Company", default_company_name)
         default_company.company_name = company_name
@@ -110,8 +97,23 @@ def initial_setup(email, password, first_name, last_name, company_name, api_secr
         default_company.default_currency = currency
         default_company.save(ignore_permissions=True)
 
-        # Link user to the company
-        user.append("user_companies", {"company": default_company.name, "is_default": 1})
+        # Create the first user and link them to the company in a single operation.
+        # This avoids the AttributeError by constructing the document correctly from the start.
+        user = frappe.get_doc({
+            "doctype": "User",
+            "email": email,
+            "first_name": first_name,
+            "last_name": last_name,
+            "send_welcome_email": 0,
+            "email_verification_token": verification_token, # Use token from control panel
+            "user_companies": [{
+                "company": default_company.name,
+                "is_default": 1
+            }]
+        })
+        user.set("new_password", password)
+        user.insert(ignore_permissions=True)
+        user.add_roles("System Manager", "Company User")
         user.save(ignore_permissions=True)
 
         # Mark setup as complete to bypass the wizard for the new tenant
