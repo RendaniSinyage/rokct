@@ -186,8 +186,7 @@ def complete_tenant_setup(subscription_id, site_name, user_details):
                 email_context = {
                     "first_name": user_details["first_name"],
                     "company_name": user_details["company_name"],
-                    "verification_url": verification_url,
-                    "title": f"Welcome to ROKCT, {user_details['first_name']}"
+                    "verification_url": verification_url
                 }
 
                 try:
