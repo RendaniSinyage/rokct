@@ -88,6 +88,10 @@ def initial_setup(email, password, first_name, last_name, company_name, api_secr
         with open(site_config_path, "w") as f:
             json.dump(site_config, f, indent=4)
 
+        # The Company creation hook requires this Warehouse Type to exist.
+        if not frappe.db.exists("Warehouse Type", "Transit"):
+            frappe.get_doc({"doctype": "Warehouse Type", "name": "Transit"}).insert(ignore_permissions=True)
+
         # Create the new company for the tenant
         company = frappe.get_doc({
             "doctype": "Company",
@@ -96,7 +100,6 @@ def initial_setup(email, password, first_name, last_name, company_name, api_secr
             "country": country,
             "is_group": 0
         })
-        company.flags.ignore_links = True
         company.insert(ignore_permissions=True)
 
         # Create the first user and link them to the company in a single operation.
