@@ -71,6 +71,9 @@ def initial_setup(email, password, first_name, last_name, company_name, api_secr
     if received_secret != api_secret:
         frappe.throw("Authentication failed. Secrets do not match.", frappe.AuthenticationError)
 
+    if frappe.db.exists("User", {"email": email}):
+        frappe.log_error(f"Initial setup called for existing user {email}", "Tenant Initial Setup Warning")
+        return {"status": "warning", "message": f"User {email} already exists."}
     # --- End Validation ---
 
     try:
@@ -86,7 +89,20 @@ def initial_setup(email, password, first_name, last_name, company_name, api_secr
         with open(site_config_path, "w") as f:
             json.dump(site_config, f, indent=4)
 
-        # Configure the default company first
+        # Create the first user
+        user = frappe.get_doc({
+            "doctype": "User",
+            "email": email,
+            "first_name": first_name,
+            "last_name": last_name,
+            "send_welcome_email": 0,
+            "email_verification_token": verification_token # Use token from control panel
+        })
+        user.set("new_password", password)
+        user.insert(ignore_permissions=True)
+        user.add_roles("System Manager", "Company User")
+
+        # Configure the default company
         default_company_name = frappe.get_all("Company")[0].name
         default_company = frappe.get_doc("Company", default_company_name)
         default_company.company_name = company_name
@@ -94,40 +110,14 @@ def initial_setup(email, password, first_name, last_name, company_name, api_secr
         default_company.default_currency = currency
         default_company.save(ignore_permissions=True)
 
-        # Create the first user and link them to the company in a single operation.
-        user = frappe.get_doc({
-            "doctype": "User",
-            "email": email,
-            "first_name": first_name,
-            "last_name": last_name,
-            "send_welcome_email": 0,
-            "email_verification_token": verification_token, # Use token from control panel
-            "user_companies": [{
-                "company": default_company.name,
-                "is_default": 1
-            }]
-        })
-        user.set("new_password", password)
-        try:
-            user.insert(ignore_permissions=True)
-        except frappe.DuplicateEntryError:
-            # This can happen on a retry if the user was created but the overall
-            # transaction failed later, OR if the calling context is wrong and the
-            # user exists on the control plane. We log the event and return success
-            # to allow the provisioning script to continue.
-            frappe.log_error(f"User {email} already exists. Continuing setup.", "Tenant Initial Setup")
-            return {"status": "success", "message": f"User {email} already exists, continuing setup."}
-
-
-        # Explicitly add roles and save the user to ensure the changes are persisted
-        # before any subsequent operations in the setup process.
-        user.add_roles("System Manager", "Company User")
+        # Link user to the company
+        user.append("user_companies", {"company": default_company.name, "is_default": 1})
         user.save(ignore_permissions=True)
 
         # Mark setup as complete to bypass the wizard for the new tenant
-        # Use db.set_value to avoid validation errors on System Settings for v15
-        frappe.db.set_value("System Settings", "System Settings", "setup_complete", 1)
-
+        system_settings = frappe.get_doc("System Settings")
+        system_settings.setup_complete = 1
+        system_settings.save(ignore_permissions=True)
 
         # Disable signup and redirect /login to the main marketing site
         website_settings = frappe.get_doc("Website Settings", "Website Settings")
@@ -135,19 +125,13 @@ def initial_setup(email, password, first_name, last_name, company_name, api_secr
         website_settings.home_page = "welcome" # Set tenant-specific homepage
         website_settings.save(ignore_permissions=True)
 
-        # NOTE: The following block is temporarily commented out.
-        # The Frappe environment has a misconfiguration causing a ModuleNotFoundError
-        # when trying to access the 'Redirect' DocType (looking in 'core' instead of 'website').
-        # This prevents the initial setup from completing. Disabling this allows the
-        # core user and company setup to succeed. This should be re-enabled once the
-        # environment is fixed.
-        # if not frappe.db.exists("Redirect", {"source": "/login"}):
-        #     frappe.get_doc({
-        #         "doctype": "Redirect",
-        #         "source": "/login",
-        #         "target": login_redirect_url,
-        #         "http_status_code": "301"
-        #     }).insert(ignore_permissions=True)
+        if not frappe.db.exists("Redirect", {"source": "/login"}):
+            frappe.get_doc({
+                "doctype": "Redirect",
+                "source": "/login",
+                "target": login_redirect_url,
+                "http_status_code": "301"
+            }).insert(ignore_permissions=True)
 
         frappe.db.commit()
         return {"status": "success", "message": "Initial user and company setup complete."}

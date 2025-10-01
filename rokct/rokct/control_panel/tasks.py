@@ -160,12 +160,15 @@ def complete_tenant_setup(subscription_id, site_name, user_details):
             response.raise_for_status()
             response_json = response.json()
 
-            status = response_json.get("status")
+            # Frappe wraps API responses in a "message" key. We need to look inside it.
+            api_message = response_json.get("message", {})
+            status = api_message.get("status")
+
             if status in ["success", "warning"]:
                 if status == "success":
                     log_and_print("SUCCESS: Tenant API reported successful setup.")
                 else:
-                    log_and_print(f"NOTE: Tenant API reported a warning: {response_json.get('message')}. This is expected if the user already exists. Continuing setup.")
+                    log_and_print(f"NOTE: Tenant API reported a warning: {api_message.get('message')}. This is expected if the user already exists. Continuing setup.")
 
                 plan = frappe.get_doc("Subscription Plan", subscription.plan)
                 if plan.cost == 0:
