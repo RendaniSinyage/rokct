@@ -71,9 +71,6 @@ def initial_setup(email, password, first_name, last_name, company_name, api_secr
     if received_secret != api_secret:
         frappe.throw("Authentication failed. Secrets do not match.", frappe.AuthenticationError)
 
-    if frappe.db.exists("User", {"email": email}):
-        frappe.log_error(f"Initial setup called for existing user {email}", "Tenant Initial Setup Warning")
-        return {"status": "warning", "message": f"User {email} already exists."}
     # --- End Validation ---
 
     try:
@@ -98,7 +95,6 @@ def initial_setup(email, password, first_name, last_name, company_name, api_secr
         default_company.save(ignore_permissions=True)
 
         # Create the first user and link them to the company in a single operation.
-        # This avoids the AttributeError by constructing the document correctly from the start.
         user = frappe.get_doc({
             "doctype": "User",
             "email": email,
@@ -112,14 +108,24 @@ def initial_setup(email, password, first_name, last_name, company_name, api_secr
             }]
         })
         user.set("new_password", password)
-        user.insert(ignore_permissions=True)
+        try:
+            user.insert(ignore_permissions=True)
+        except frappe.DuplicateEntryError:
+            # This can happen on a retry if the user was created but the overall
+            # transaction failed later.
+            frappe.log_error(f"Initial setup called for existing user {email}", "Tenant Initial Setup Warning")
+            return {"status": "warning", "message": f"User {email} already exists."}
+
+
+        # Explicitly add roles and save the user to ensure the changes are persisted
+        # before any subsequent operations in the setup process.
         user.add_roles("System Manager", "Company User")
         user.save(ignore_permissions=True)
 
         # Mark setup as complete to bypass the wizard for the new tenant
-        system_settings = frappe.get_doc("System Settings")
-        system_settings.setup_complete = 1
-        system_settings.save(ignore_permissions=True)
+        # Use db.set_value to avoid validation errors on System Settings for v15
+        frappe.db.set_value("System Settings", "System Settings", "setup_complete", 1)
+
 
         # Disable signup and redirect /login to the main marketing site
         website_settings = frappe.get_doc("Website Settings", "Website Settings")

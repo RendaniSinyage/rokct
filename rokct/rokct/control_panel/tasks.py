@@ -127,48 +127,47 @@ def complete_tenant_setup(subscription_id, site_name, user_details):
     for i in range(max_retries):
         log_and_print(f"\n--- Attempt {i+1} of {max_retries} ---")
         try:
+            bench_path = frappe.conf.get("bench_path")
+            if not bench_path:
+                raise frappe.ValidationError("`bench_path` not set in control plane site_config.json")
+
             subscription = frappe.get_doc("Company Subscription", subscription_id)
             api_secret = subscription.get_password("api_secret")
-
             login_redirect_url = (subscription.custom_login_redirect_url or frappe.db.get_single_value("Subscription Settings", "marketing_site_login_url") or frappe.db.get_single_value("Subscription Settings", "default_login_redirect_url"))
-            scheme = frappe.conf.get("tenant_site_scheme", "http")
-            tenant_url = f"{scheme}://{site_name}/api/method/rokct.rokct.tenant.api.initial_setup"
-            log_and_print(f"Calling tenant API at: {tenant_url}")
 
+            # Prepare kwargs for the `bench execute` command
             expected_keys = [
                 "email", "password", "first_name", "last_name", "company_name",
                 "currency", "country", "verification_token"
             ]
-            filtered_user_details = {k: v for k, v in user_details.items() if k in expected_keys}
-
-            headers = {"X-Rokct-Secret": api_secret, "Host": site_name}
-            data = {
-                **filtered_user_details,
+            kwargs = {k: v for k, v in user_details.items() if k in expected_keys}
+            kwargs.update({
                 "api_secret": api_secret,
                 "control_plane_url": frappe.utils.get_url(),
                 "login_redirect_url": login_redirect_url
-            }
+            })
 
-            log_and_print(f"Request Headers: {headers}")
-            log_and_print(f"Request Data: {data}")
+            command = [
+                "bench", "--site", site_name, "execute",
+                "rokct.rokct.tenant.api.initial_setup",
+                "--kwargs", json.dumps(kwargs)
+            ]
+            log_and_print(f"Executing command: {' '.join(command)}")
 
-            response = requests.post(tenant_url, headers=headers, json=data, timeout=120)
+            # Execute the setup function directly on the tenant site, bypassing the web server
+            process = subprocess.run(command, cwd=bench_path, capture_output=True, text=True, check=True, timeout=180)
+            log_and_print(f"--- 'bench execute' STDOUT ---\n{process.stdout or 'No standard output.'}")
+            log_and_print(f"--- 'bench execute' STDERR ---\n{process.stderr or 'No standard error.'}")
 
-            log_and_print(f"API Response Status Code: {response.status_code}")
-            log_and_print(f"API Response Body: {response.text}")
-
-            response.raise_for_status()
-            response_json = response.json()
-
-            # Frappe wraps API responses in a "message" key. We need to look inside it.
-            api_message = response_json.get("message", {})
-            status = api_message.get("status")
+            # The result from `bench execute` is printed to stdout. Parse it as JSON.
+            response_json = json.loads(process.stdout) if process.stdout else {}
+            status = response_json.get("status")
 
             if status in ["success", "warning"]:
                 if status == "success":
-                    log_and_print("SUCCESS: Tenant API reported successful setup.")
+                    log_and_print("SUCCESS: Tenant setup function executed successfully.")
                 else:
-                    log_and_print(f"NOTE: Tenant API reported a warning: {api_message.get('message')}. This is expected if the user already exists. Continuing setup.")
+                    log_and_print(f"NOTE: Tenant setup function returned a warning: {response_json.get('message')}. This is expected on retry.")
 
                 plan = frappe.get_doc("Subscription Plan", subscription.plan)
                 if plan.cost == 0:
@@ -181,6 +180,7 @@ def complete_tenant_setup(subscription_id, site_name, user_details):
                 frappe.db.commit()
                 log_and_print(f"Subscription status updated to '{subscription.status}'.")
 
+                scheme = frappe.conf.get("tenant_site_scheme", "http")
                 verification_url = f"{scheme}://{site_name}/api/method/rokct.tenant.api.verify_my_email?token={user_details['verification_token']}"
                 email_context = {"first_name": user_details["first_name"], "company_name": user_details["company_name"], "verification_url": verification_url}
 
@@ -189,17 +189,18 @@ def complete_tenant_setup(subscription_id, site_name, user_details):
                     frappe.sendmail(recipients=[user_details["email"]], template="New User Welcome", args=email_context, now=True)
                     log_and_print("SUCCESS: Welcome email sent.")
                 except Exception as e:
-                    # Log the error but don't fail the entire setup process if the email template is missing.
                     log_and_print(f"WARNING: Could not send welcome email. Reason: {e}")
 
                 success = True
                 return
             else:
                 message = response_json.get('message') if isinstance(response_json, dict) else str(response_json)
-                log_and_print(f"WARNING: Tenant API call failed with message: {message}")
+                log_and_print(f"WARNING: Tenant setup function failed with message: {message}")
 
-        except requests.exceptions.RequestException as e:
-            log_and_print(f"CRITICAL: The API request failed. Reason: {e}")
+        except subprocess.CalledProcessError as e:
+            log_and_print(f"CRITICAL: The 'bench execute' command failed.")
+            log_and_print(f"STDOUT: {e.stdout}")
+            log_and_print(f"STDERR: {e.stderr}")
         except Exception as e:
             log_and_print(f"CRITICAL: An unexpected error occurred. Reason: {e}")
             log_and_print(f"TRACEBACK: {frappe.get_traceback()}")
