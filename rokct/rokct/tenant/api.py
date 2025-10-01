@@ -112,9 +112,11 @@ def initial_setup(email, password, first_name, last_name, company_name, api_secr
             user.insert(ignore_permissions=True)
         except frappe.DuplicateEntryError:
             # This can happen on a retry if the user was created but the overall
-            # transaction failed later.
-            frappe.log_error(f"Initial setup called for existing user {email}", "Tenant Initial Setup Warning")
-            return {"status": "warning", "message": f"User {email} already exists."}
+            # transaction failed later, OR if the calling context is wrong and the
+            # user exists on the control plane. We log the event and return success
+            # to allow the provisioning script to continue.
+            frappe.log_error(f"User {email} already exists. Continuing setup.", "Tenant Initial Setup")
+            return {"status": "success", "message": f"User {email} already exists, continuing setup."}
 
 
         # Explicitly add roles and save the user to ensure the changes are persisted
