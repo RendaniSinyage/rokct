@@ -96,6 +96,7 @@ def initial_setup(email, password, first_name, last_name, company_name, api_secr
             "country": country,
             "is_group": 0
         })
+        company.flags.ignore_on_update_hook = True
         company.insert(ignore_permissions=True)
 
         # Create the first user and link them to the company in a single operation.
