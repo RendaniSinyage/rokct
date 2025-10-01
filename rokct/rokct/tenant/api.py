@@ -88,13 +88,15 @@ def initial_setup(email, password, first_name, last_name, company_name, api_secr
         with open(site_config_path, "w") as f:
             json.dump(site_config, f, indent=4)
 
-        # Configure the default company first
-        default_company_name = frappe.get_all("Company")[0].name
-        default_company = frappe.get_doc("Company", default_company_name)
-        default_company.company_name = company_name
-        default_company.country = country
-        default_company.default_currency = currency
-        default_company.save(ignore_permissions=True)
+        # Create the new company for the tenant
+        company = frappe.get_doc({
+            "doctype": "Company",
+            "company_name": company_name,
+            "default_currency": currency,
+            "country": country,
+            "is_group": 0
+        })
+        company.insert(ignore_permissions=True)
 
         # Create the first user and link them to the company in a single operation.
         user = frappe.get_doc({
@@ -105,7 +107,7 @@ def initial_setup(email, password, first_name, last_name, company_name, api_secr
             "send_welcome_email": 0,
             "email_verification_token": verification_token, # Use token from control panel
             "user_companies": [{
-                "company": default_company.name,
+                "company": company.name,
                 "is_default": 1
             }]
         })
