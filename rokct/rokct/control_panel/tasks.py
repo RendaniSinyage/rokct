@@ -234,3 +234,43 @@ def cleanup_failed_provisions(): pass
 def run_weekly_maintenance(): pass
 def generate_subscription_invoices(): pass
 def _charge_invoice(invoice, customer, settings): pass
+
+def drop_tenant_site(site_name, force=True):
+    """
+    Drops a tenant site from the bench. This is a destructive action.
+    """
+    import subprocess
+    logs = [f"--- Starting Drop Site for {site_name} at {now_datetime()} ---"]
+    success = False
+
+    try:
+        bench_path = frappe.conf.get("bench_path")
+        if not bench_path:
+            raise frappe.ValidationError("`bench_path` not set in control plane site_config.json")
+        logs.append(f"Using bench path: {bench_path}")
+
+        db_root_password = frappe.conf.get("db_root_password")
+        if not db_root_password:
+            raise frappe.ValidationError("`db_root_password` not set in control plane site_config.json. Cannot drop site.")
+
+        command = [
+            "bench", "drop-site", site_name,
+            "--db-root-password", db_root_password,
+        ]
+        if force:
+            command.append("--force")
+
+        logs.append(f"Executing command: {' '.join(command)}")
+        process = subprocess.run(command, cwd=bench_path, capture_output=True, text=True, timeout=300)
+        logs.append(f"--- 'bench drop-site' STDOUT ---\n{process.stdout or 'No standard output.'}")
+        logs.append(f"--- 'bench drop-site' STDERR ---\n{process.stderr or 'No standard error.'}")
+        process.check_returncode()
+        logs.append(f"SUCCESS: Site '{site_name}' dropped.")
+        success = True
+
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired, Exception) as e:
+        error_message = f"STDOUT: {getattr(e, 'stdout', 'N/A')}\nSTDERR: {getattr(e, 'stderr', 'N/A')}\nTRACEBACK: {frappe.get_traceback()}"
+        logs.append(f"\n--- FATAL ERROR during site drop ---\n{error_message}")
+
+    finally:
+        _log_and_notify(site_name, logs, success, "Site Deletion")

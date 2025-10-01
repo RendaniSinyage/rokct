@@ -134,13 +134,11 @@ after_app_uninstall = "rokct.rokct.utils.update_site_apps_txt"
 # ---------------
 # Hook on document methods and events
 
-# doc_events = {
-#       "*": {
-#               "on_update": "method",
-#               "on_cancel": "method",
-#               "on_trash": "method"
-#       }
-# }
+doc_events = {
+    "Customer": {
+        "on_trash": "rokct.rokct.control_panel.hooks.handle_customer_deletion"
+    }
+}
 
 # Scheduled Tasks
 # ---------------
