@@ -281,23 +281,6 @@ def drop_tenant_site(site_name):
                 raise Exception(f"`bench drop-site` command completed with exit code 0, but the site directory '{site_path}' still exists.")
 
         log_and_print(f"SUCCESS: Site '{site_name}' and its database have been dropped.")
-
-        # After successful drop, update the subscription status
-        try:
-            log_and_print(f"Attempting to update subscription status for site '{site_name}'...")
-            subscription_name = frappe.db.get_value("Company Subscription", {"site_name": site_name}, "name")
-            if subscription_name:
-                subscription = frappe.get_doc("Company Subscription", subscription_name)
-                subscription.status = "Dropped"
-                subscription.save(ignore_permissions=True)
-                frappe.db.commit()
-                log_and_print(f"SUCCESS: Updated subscription {subscription_name} status to 'Dropped'.")
-            else:
-                log_and_print(f"WARNING: No Company Subscription found for site '{site_name}'. Cannot update status.")
-        except Exception as e:
-            log_and_print(f"ERROR: Failed to update subscription status. Reason: {e}")
-            frappe.log_error(frappe.get_traceback(), "Subscription Status Update Failed")
-
         success = True
 
     except (subprocess.CalledProcessError, subprocess.TimeoutExpired, Exception) as e:
@@ -315,7 +298,7 @@ def cleanup_unverified_tenants():
     Finds and cancels subscriptions that have not been email-verified
     within a specific timeframe after their creation.
     """
-    print("--- Running Cleanup for Unverified Tenants ---")
+    frappe.log("Running Cleanup for Unverified Tenants...")
     verification_period_days = 3
     cutoff_date = add_days(nowdate(), -verification_period_days)
 
@@ -330,10 +313,10 @@ def cleanup_unverified_tenants():
     )
 
     if not unverified_subscriptions:
-        print("No unverified subscriptions found that require cleanup. Exiting.")
+        frappe.log("No unverified subscriptions found that require cleanup. Exiting.")
         return
 
-    print(f"Found {len(unverified_subscriptions)} unverified subscriptions to cancel.")
+    frappe.log(f"Found {len(unverified_subscriptions)} unverified subscriptions to cancel.")
 
     for sub_data in unverified_subscriptions:
         try:
@@ -347,21 +330,16 @@ def cleanup_unverified_tenants():
                 f"(Site: {sub_data.site_name}) due to missing email verification. "
                 f"Start date: {sub_data.subscription_start_date}."
             )
-            print(log_message)
-            # Optionally, log to Frappe's error log for visibility
-            frappe.log_error(message=log_message, title="Subscription Canceled (No Verification)")
+            frappe.log(log_message, title="Subscription Canceled (No Verification)")
 
         except Exception as e:
             error_message = (
                 f"Failed to cancel unverified subscription {sub_data.name}. "
                 f"Reason: {e}\n{frappe.get_traceback()}"
             )
-            print(error_message)
             frappe.log_error(message=error_message, title="Subscription Cleanup Failed")
 
-    print("--- Unverified Tenant Cleanup Complete ---")
-
-
+    frappe.log("--- Unverified Tenant Cleanup Complete ---")
 def manage_daily_subscriptions():
     """
     Manages the daily lifecycle of all subscriptions.
@@ -369,9 +347,8 @@ def manage_daily_subscriptions():
     - Moves active subscriptions with failed payments to a grace period.
     - Downgrades subscriptions after the grace period expires.
     """
-    print("--- Running Daily Subscription Management ---")
+    frappe.log("--- Running Daily Subscription Management ---", "Subscription Management")
     today = getdate(nowdate())
-    settings = frappe.get_doc("Subscription Settings")
 
     # --- 1. Handle expiring trials ---
     expiring_trials = frappe.get_all(
@@ -379,7 +356,7 @@ def manage_daily_subscriptions():
         filters={"status": "Trialing", "trial_ends_on": ("<=", today)},
         fields=["name", "customer", "plan"]
     )
-    print(f"Found {len(expiring_trials)} expiring trial subscriptions to process.")
+    frappe.log(f"Found {len(expiring_trials)} expiring trial subscriptions to process.", "Subscription Management")
     for sub_info in expiring_trials:
         try:
             subscription = frappe.get_doc("Company Subscription", sub_info.name)
@@ -388,7 +365,7 @@ def manage_daily_subscriptions():
             if has_payment_method:
                 # TODO: In the future, this is where payment would be attempted.
                 # For now, we assume success and convert to Active.
-                print(f"Subscription {sub_info.name}: Trial ended with payment method. Converting to Active.")
+                frappe.log(f"Subscription {sub_info.name}: Trial ended with payment method. Converting to Active.", "Subscription Management")
                 subscription.status = "Active"
                 plan = frappe.get_doc("Subscription Plan", sub_info.plan)
                 if plan.billing_cycle == 'Month':
@@ -398,35 +375,33 @@ def manage_daily_subscriptions():
                 subscription.trial_ends_on = None
                 subscription.save(ignore_permissions=True)
             else:
-                # No payment method, so downgrade to the default free plan.
-                if settings.default_free_plan:
-                    print(f"Subscription {sub_info.name}: Trial ended without payment method. Downgrading to free plan.")
-                    subscription.status = "Downgraded"
-                    subscription.plan = settings.default_free_plan
-                    subscription.trial_ends_on = None
-                    subscription.next_billing_date = None
-                    subscription.save(ignore_permissions=True)
-                else:
-                    # Fallback: if no free plan is configured, cancel the subscription.
-                    print(f"Subscription {sub_info.name}: No payment method and no default free plan. Canceling.")
-                    subscription.status = "Canceled"
-                    subscription.save(ignore_permissions=True)
+                # No payment method, so downgrade to the 'Free-Monthly' plan.
+                frappe.log(f"Subscription {sub_info.name}: Trial ended without payment method. Downgrading to free plan.", "Subscription Management")
+                subscription.previous_plan = subscription.plan
+                subscription.status = "Downgraded"
+                subscription.plan = 'Free-Monthly'
+                subscription.trial_ends_on = None
+                subscription.next_billing_date = None
+                subscription.save(ignore_permissions=True)
             frappe.db.commit()
         except Exception as e:
             frappe.log_error(f"Failed to process trial expiration for {sub_info.name}: {e}", "Subscription Management Error")
 
     # --- 2. Handle renewals / failed payments for active subscriptions ---
-    subscriptions_for_renewal = frappe.get_all(
-        "Company Subscription",
-        filters={"status": "Active", "next_billing_date": ("<=", today)},
-        fields=["name"]
-    )
-    print(f"Found {len(subscriptions_for_renewal)} active subscriptions due for renewal.")
+    # We explicitly exclude free plans from this logic.
+    renewal_filters = {
+        "status": "Active",
+        "next_billing_date": ("<=", today),
+        "plan": ("!=", "Free-Monthly")
+    }
+
+    subscriptions_for_renewal = frappe.get_all("Company Subscription", filters=renewal_filters, fields=["name"])
+    frappe.log(f"Found {len(subscriptions_for_renewal)} active, non-free subscriptions due for renewal.", "Subscription Management")
     for sub_info in subscriptions_for_renewal:
         try:
             # TODO: In the future, payment would be attempted here.
             # For now, we assume it fails and move the subscription to a grace period.
-            print(f"Subscription {sub_info.name}: Renewal due. Moving to Grace Period.")
+            frappe.log(f"Subscription {sub_info.name}: Renewal due. Moving to Grace Period.", "Subscription Management")
             subscription = frappe.get_doc("Company Subscription", sub_info.name)
             subscription.status = "Grace Period"
             subscription.save(ignore_permissions=True)
@@ -435,35 +410,29 @@ def manage_daily_subscriptions():
             frappe.log_error(f"Failed to move subscription {sub_info.name} to grace period: {e}", "Subscription Management Error")
 
     # --- 3. Handle expired grace periods ---
-    grace_period_days = settings.grace_period_days or 5  # Default to 5 days if not set
+    grace_period_days = frappe.db.get_single_value("Subscription Settings", "grace_period_days") or 5
     subscriptions_in_grace = frappe.get_all(
         "Company Subscription",
         filters={"status": "Grace Period"},
-        fields=["name", "next_billing_date"]  # next_billing_date is when the grace period started
+        fields=["name", "plan", "next_billing_date"]
     )
-    print(f"Found {len(subscriptions_in_grace)} subscriptions in grace period. Checking for expiry.")
+    frappe.log(f"Found {len(subscriptions_in_grace)} subscriptions in grace period. Checking for expiry.", "Subscription Management")
     for sub_info in subscriptions_in_grace:
         try:
             grace_period_ends = add_days(getdate(sub_info.next_billing_date), grace_period_days)
             if today >= grace_period_ends:
                 subscription = frappe.get_doc("Company Subscription", sub_info.name)
-                if settings.default_free_plan:
-                    print(f"Subscription {sub_info.name}: Grace period ended. Downgrading to free plan.")
-                    subscription.status = "Downgraded"
-                    subscription.plan = settings.default_free_plan
-                    subscription.next_billing_date = None
-                    subscription.save(ignore_permissions=True)
-                else:
-                    # Fallback: if no free plan is configured, cancel the subscription.
-                    print(f"Subscription {sub_info.name}: Grace period ended and no default free plan set. Canceling.")
-                    subscription.status = "Canceled"
-                    subscription.save(ignore_permissions=True)
+                frappe.log(f"Subscription {sub_info.name}: Grace period ended. Downgrading to free plan.", "Subscription Management")
+                subscription.previous_plan = subscription.plan
+                subscription.status = "Downgraded"
+                subscription.plan = 'Free-Monthly'
+                subscription.next_billing_date = None
+                subscription.save(ignore_permissions=True)
                 frappe.db.commit()
         except Exception as e:
             frappe.log_error(f"Failed to process grace period for {sub_info.name}: {e}", "Subscription Management Error")
 
-    print("--- Daily Subscription Management Complete ---")
-
+    frappe.log("--- Daily Subscription Management Complete ---", "Subscription Management")
 def _downgrade_subscription(subscription_info): pass
 def _send_trial_ending_notification(subscription_info): pass
 def cleanup_failed_provisions(): pass

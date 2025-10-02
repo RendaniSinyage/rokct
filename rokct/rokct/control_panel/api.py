@@ -4,7 +4,7 @@
 import frappe
 
 # Import whitelisted methods from other files to expose them under a single API namespace
-from .billing import save_payment_method
+from .billing import save_payment_method, reinstate_subscription
 from .provisioning import provision_new_tenant
 from .support import grant_support_access, revoke_support_access
 
@@ -12,6 +12,7 @@ from .support import grant_support_access, revoke_support_access
 __all__ = [
     "get_subscription_status",
     "save_payment_method",
+    "reinstate_subscription",
     "provision_new_tenant",
     "grant_support_access",
     "revoke_support_access",

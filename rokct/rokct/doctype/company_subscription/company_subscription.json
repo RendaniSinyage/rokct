@@ -8,6 +8,7 @@
   "customer",
   "site_name",
   "plan",
+  "previous_plan",
   "status",
   "trial_ends_on",
   "subscription_start_date",
@@ -42,6 +43,16 @@
    "label": "Plan",
    "options": "Subscription Plan",
    "reqd": 1
+  },
+  {
+   "fieldname": "previous_plan",
+   "fieldtype": "Link",
+   "label": "Previous Plan",
+   "options": "Subscription Plan",
+   "read_only": 1,
+   "no_copy": 1,
+   "print_hide": 1,
+   "description": "The plan the user was on before being downgraded."
   },
   {
    "fieldname": "status",
