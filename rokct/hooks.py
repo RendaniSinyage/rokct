@@ -135,6 +135,9 @@ after_app_uninstall = "rokct.rokct.utils.update_site_apps_txt"
 # Hook on document methods and events
 
 doc_events = {
+    "Customer": {
+        "on_trash": "rokct.rokct.utils.customer.on_trash_customer"
+    },
     "Company Subscription": {
         "on_trash": "rokct.rokct.utils.company_subscription.on_trash_company_subscription",
         "on_update": "rokct.rokct.utils.company_subscription.on_update_company_subscription"
@@ -237,7 +240,7 @@ fixtures = [
 # Ignore links to specified DocTypes when deleting documents
 # -----------------------------------------------------------
 
-# ignore_links_on_delete = ["Company Subscription"]
+ignore_links_on_delete = ["Company Subscription"]
 
 # Request Events
 # ----------------

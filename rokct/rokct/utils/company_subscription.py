@@ -6,16 +6,16 @@ def on_trash_company_subscription(doc, method):
     When a Company Subscription is deleted, enqueue a job to drop the tenant site.
     """
     try:
-        # Reload the document to ensure all fields are loaded, preventing AttributeError.
-        doc = frappe.get_doc(doc.doctype, doc.name)
+        # CORRECT WAY: Get the value directly from the DB. The 'doc' object in hooks is incomplete.
+        site_name = frappe.db.get_value("Company Subscription", doc.name, "tenant_site_name")
 
         print(f"Subscription Deletion: on_trash hook triggered for subscription {doc.name}")
-        if doc.tenant_site_name:
-            print(f"Subscription Deletion: Queueing site deletion for {doc.tenant_site_name}")
+        if site_name:
+            print(f"Subscription Deletion: Queueing site deletion for {site_name}")
             frappe.enqueue(
                 "rokct.rokct.control_panel.tasks.drop_tenant_site",
                 queue="long",
-                site_name=doc.tenant_site_name
+                site_name=site_name
             )
             print("Subscription Deletion: Successfully enqueued site deletion job.")
         else:
@@ -35,8 +35,6 @@ def on_update_company_subscription(doc, method):
     """
     print(f"Subscription Update: on_update hook triggered for {doc.name} with status {doc.status}")
     try:
-        # IMPORTANT: Do NOT reload the doc here. It breaks the get_doc_before_save() method.
-        # The `doc` object passed to on_update is complete enough for this check.
         doc_before_save = doc.get_doc_before_save()
         if not doc_before_save:
             print("Subscription Update: No doc_before_save found. Exiting.")
@@ -47,12 +45,14 @@ def on_update_company_subscription(doc, method):
 
         if status_changed and doc.status.lower() == "canceled":
             print("Subscription Update: Status changed to Canceled.")
-            if doc.tenant_site_name:
-                print(f"Subscription Update: Queueing site deletion for {doc.tenant_site_name}")
+            # CORRECT WAY: Get the value directly from the DB. The 'doc' object in hooks is incomplete.
+            site_name = frappe.db.get_value("Company Subscription", doc.name, "tenant_site_name")
+            if site_name:
+                print(f"Subscription Update: Queueing site deletion for {site_name}")
                 frappe.enqueue(
                     "rokct.rokct.control_panel.tasks.drop_tenant_site",
                     queue="long",
-                    site_name=doc.tenant_site_name
+                    site_name=site_name
                 )
                 print("Subscription Update: Successfully enqueued site deletion job.")
             else:
