@@ -17,7 +17,10 @@ def on_update_company_subscription(doc, method):
 
         if status_changed and doc.status.lower() == "canceled":
             print("Subscription Update: Status changed to Canceled.")
+            # CORRECTED: Fetch the site_name from the database
             site_name = frappe.db.get_value("Company Subscription", doc.name, "tenant_site_name")
+
+            # CORRECTED: Use the site_name variable, not doc.tenant_site_name
             if site_name:
                 print(f"Subscription Update: Queueing site deletion for {site_name}")
                 # Use is_async=False to run the job immediately via the scheduler from a web worker
@@ -25,7 +28,7 @@ def on_update_company_subscription(doc, method):
                     "rokct.rokct.control_panel.tasks.drop_tenant_site",
                     queue="long",
                     is_async=False,
-                    site_name=site_name
+                    site_name=site_name # CORRECTED
                 )
                 print("Subscription Update: Successfully enqueued site deletion job.")
             else:
