@@ -82,10 +82,15 @@ def provision_new_tenant(plan, email, password, first_name, last_name, company_n
     existing_subscription = frappe.db.get_value("Company Subscription", {"site_name": site_name}, ["customer"], as_dict=True)
     if existing_subscription:
         customer_name = existing_subscription.customer
-        frappe.throw(
-            f"The generated site name '{site_name}' is already in use by '{customer_name}'. Please choose a different company name to resolve the conflict.",
-            title="Site Name Conflict"
-        )
+        # This is not an error, but an alert to the frontend that this company is already a customer.
+        # We halt the process and return a specific JSON structure.
+        return {
+            "status": "failed",
+            "alert": {
+                "title": "Site Name Conflict",
+                "message": f"The generated site name '{site_name}' is already in use by '{customer_name}'. Please choose a different company name to resolve the conflict."
+            }
+        }
 
     # 4. Create the subscription record in the control plane
     try:

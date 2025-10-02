@@ -104,7 +104,7 @@ class TestProvisioningAPI(FrappeTestCase):
         self.assertEqual(response["alert"]["title"], "Existing Subscription Found")
         self.assertIn("A subscription for 'Existing Corp' already exists.", response["alert"]["message"])
 
-    def test_provision_new_tenant_fails_with_clear_error_on_site_name_conflict(self):
+    def test_provision_new_tenant_returns_alert_on_site_name_conflict(self):
         # Arrange: Create a subscription that will cause a site name conflict
         customer = frappe.get_doc({
             "doctype": "Customer",
@@ -118,7 +118,7 @@ class TestProvisioningAPI(FrappeTestCase):
             "customer": customer.name,
             "plan": "Test Plan",
             "status": "Active",
-            "site_name": "ci.test.saas.com" # This will conflict with "C.I."
+            "site_name": "ci.test.saas.com"  # This will conflict with "C.I."
         }).insert(ignore_permissions=True)
         frappe.db.commit()
 
@@ -128,15 +128,17 @@ class TestProvisioningAPI(FrappeTestCase):
             "password": "password123",
             "first_name": "Test",
             "last_name": "User",
-            "company_name": "C.I.", # Different company name, but generates same site name
+            "company_name": "C.I.",  # Different company name, but generates same site name
             "currency": "USD",
             "country": "USA",
             "industry": "Tech"
         }
 
-        # Act & Assert
-        with self.assertRaises(frappe.exceptions.ValidationError) as cm:
-            provision_new_tenant(**test_data)
+        # Act
+        response = provision_new_tenant(**test_data)
 
-        self.assertEqual(cm.exception.title, "Site Name Conflict")
-        self.assertIn("The generated site name 'ci.test.saas.com' is already in use by 'Conflict Inc.'.", str(cm.exception))
+        # Assert
+        self.assertEqual(response["status"], "failed")
+        self.assertIn("alert", response)
+        self.assertEqual(response["alert"]["title"], "Site Name Conflict")
+        self.assertIn("The generated site name 'ci.test.saas.com' is already in use by 'Conflict Inc.'.", response["alert"]["message"])
