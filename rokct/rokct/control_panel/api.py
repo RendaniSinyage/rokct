@@ -57,12 +57,14 @@ def mark_subscription_as_verified():
 
     # 1. Get tenant identity and secret from request
     tenant_site = frappe.local.request.host
-    received_secret = frappe.local.request.headers.get("X-Rokct-Secret")
+    auth_header = frappe.local.request.headers.get("Authorization")
 
     if not tenant_site:
         frappe.throw("Could not identify tenant site from request.")
-    if not received_secret:
-        frappe.throw("Missing or invalid X-Rokct-Secret header.")
+    if not auth_header or not auth_header.startswith("Bearer "):
+        frappe.throw("Missing or invalid Authorization header.")
+
+    received_secret = auth_header.split(" ")[1]
 
     # 2. Find the subscription and get the stored secret
     subscription_name = frappe.db.get_value("Company Subscription", {"site_name": tenant_site}, "name")
@@ -101,12 +103,14 @@ def get_subscription_status():
 
     # 1. Get tenant identity and secret from request
     tenant_site = frappe.local.request.host
-    received_secret = frappe.local.request.headers.get("X-Rokct-Secret")
+    auth_header = frappe.local.request.headers.get("Authorization")
 
     if not tenant_site:
         frappe.throw("Could not identify tenant site from request.")
-    if not received_secret:
-        frappe.throw("Missing or invalid X-Rokct-Secret header.")
+    if not auth_header or not auth_header.startswith("Bearer "):
+        frappe.throw("Missing or invalid Authorization header.")
+
+    received_secret = auth_header.split(" ")[1]
 
     # 2. Find the subscription and get the stored secret
     subscription_name = frappe.db.get_value("Company Subscription", {"site_name": tenant_site}, "name")
@@ -159,7 +163,7 @@ def resend_welcome_email(subscription_id: str):
         tenant_url = f"{scheme}://{site_name}/api/method/rokct.tenant.api.get_welcome_email_details"
         headers = {
             "Content-Type": "application/json",
-            "X-Rokct-Secret": api_secret
+            "Authorization": f"Bearer {api_secret}"
         }
         response = frappe.make_post_request(tenant_url, headers=headers)
 
