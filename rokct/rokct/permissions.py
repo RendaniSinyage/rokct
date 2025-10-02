@@ -32,7 +32,7 @@ def sync_user_roles_on_login(login_manager):
 
         headers = {
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {api_secret}"
+            "X-Rokct-Secret": api_secret
         }
 
         response = frappe.make_post_request(api_url, headers=headers)

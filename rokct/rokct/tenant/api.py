@@ -18,7 +18,7 @@ def _notify_control_panel_of_verification():
         scheme = frappe.conf.get("control_plane_scheme", "https")
         api_url = f"{scheme}://{control_plane_url}/api/method/rokct.control_panel.api.mark_subscription_as_verified"
 
-        headers = {"Authorization": f"Bearer {api_secret}"}
+        headers = {"X-Rokct-Secret": api_secret}
         # The site name is implicitly sent via the request's Host header,
         # which the control panel will use to identify the subscription.
         response = frappe.make_post_request(api_url, headers=headers)
@@ -281,10 +281,10 @@ def create_temporary_support_user(agent_id: str, reason: str, support_email_doma
 
     # --- Authentication/Authorization ---
     api_secret = frappe.conf.get("api_secret")
-    auth_header = frappe.local.request.headers.get("Authorization")
-    if not api_secret or not auth_header or not auth_header.startswith("Bearer "):
+    received_secret = frappe.local.request.headers.get("X-Rokct-Secret")
+    if not api_secret or not received_secret:
         frappe.throw("Authentication failed: Missing credentials.", frappe.AuthenticationError)
-    if auth_header.split(" ")[1] != api_secret:
+    if received_secret != api_secret:
         frappe.throw("Authentication failed: Invalid credentials.", frappe.AuthenticationError)
     # --- End Authentication ---
 
@@ -341,13 +341,13 @@ def disable_temporary_support_user(support_user_email):
     # --- End Validation ---
 
     api_secret = frappe.conf.get("api_secret")
-    auth_header = frappe.local.request.headers.get("Authorization")
+    received_secret = frappe.local.request.headers.get("X-Rokct-Secret")
 
-    if not api_secret or not auth_header or not auth_header.startswith("Bearer "):
-        frappe.throw("Authentication failed: Missing credentials.")
+    if not api_secret or not received_secret:
+        frappe.throw("Authentication failed: Missing credentials.", frappe.AuthenticationError)
 
-    if auth_header.split(" ")[1] != api_secret:
-        frappe.throw("Authentication failed: Invalid credentials.")
+    if received_secret != api_secret:
+        frappe.throw("Authentication failed: Invalid credentials.", frappe.AuthenticationError)
 
     try:
         if not frappe.db.exists("User", support_user_email):
@@ -453,7 +453,7 @@ def get_subscription_details():
         scheme = frappe.conf.get("control_plane_scheme", "https")
         api_url = f"{scheme}://{control_plane_url}/api/method/rokct.control_panel.api.get_subscription_status"
 
-        headers = {"Authorization": f"Bearer {api_secret}"}
+        headers = {"X-Rokct-Secret": api_secret}
         response = frappe.make_post_request(api_url, headers=headers)
 
         return response.get("message")
@@ -497,10 +497,10 @@ def get_welcome_email_details():
 
     # --- Authentication/Authorization ---
     api_secret = frappe.conf.get("api_secret")
-    auth_header = frappe.local.request.headers.get("Authorization")
-    if not api_secret or not auth_header or not auth_header.startswith("Bearer "):
+    received_secret = frappe.local.request.headers.get("X-Rokct-Secret")
+    if not api_secret or not received_secret:
         frappe.throw("Authentication failed: Missing credentials.", frappe.AuthenticationError)
-    if auth_header.split(" ")[1] != api_secret:
+    if received_secret != api_secret:
         frappe.throw("Authentication failed: Invalid credentials.", frappe.AuthenticationError)
     # --- End Authentication ---
 
