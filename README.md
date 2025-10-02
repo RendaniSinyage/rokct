@@ -40,6 +40,14 @@ The following scripts are available for debugging common complex processes:
         bench --site platform.rokct.ai execute rokct.rokct.scripts.debug_cancellation.trigger_cancellation_for_debug --kwargs '{"site_name": "your-tenant-site.rokct.ai"}'
         ```
 
+3.  **To debug the full customer deletion cascade:**
+    *   This script deletes a Customer record, which should trigger the cancellation of their subscriptions and the deletion of their site(s).
+    *   You must replace `'Customer Name'` with the exact name of the customer you want to delete.
+    *   **Command:**
+        ```bash
+        bench --site platform.rokct.ai execute rokct.rokct.scripts.debug_customer_deletion.trigger_customer_deletion_for_debug --kwargs '{"customer_name": "Customer Name"}'
+        ```
+
 ### Post-Installation Setup
 
 This app includes an automated setup process that runs when you install it.
