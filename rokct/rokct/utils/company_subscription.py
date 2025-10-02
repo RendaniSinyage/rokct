@@ -32,9 +32,11 @@ def on_update_company_subscription(doc, method):
     """
     When a Company Subscription's status changes to 'Canceled', enqueue a job to drop the tenant site.
     """
-    frappe.log(f"Subscription Update: on_update hook triggered for {doc.name} with status {doc.status}")
     try:
+        # Reload the document to ensure all fields are loaded, preventing AttributeError.
+        doc = frappe.get_doc(doc.doctype, doc.name)
         doc_before_save = doc.get_doc_before_save()
+        frappe.log(f"Subscription Update: on_update hook triggered for {doc.name} with status {doc.status}")
         if not doc_before_save:
             frappe.log("Subscription Update: No doc_before_save found. Exiting.")
             return
