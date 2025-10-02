@@ -61,11 +61,11 @@ class TestProvisioningAPI(FrappeTestCase):
 
         # Assert that the background job was enqueued
         mock_enqueue.assert_called_once()
-        self.assertEqual(mock_enqueue.call_args.args[0], "rokct.control_panel.tasks.complete_tenant_setup")
-        self.assertEqual(mock_enqueue.call_args.kwargs["site_name"], expected_site_name)
+        self.assertEqual(mock_enqueue.call_args.args[0], "rokct.rokct.control_panel.tasks.create_tenant_site_job")
+        self.assertEqual(mock_enqueue.call_args.kwargs["site_name"], "tc.test.saas.com")
         self.assertEqual(mock_enqueue.call_args.kwargs["user_details"]["email"], "test@example.com")
 
-    def test_provision_new_tenant_fails_if_subscription_exists(self):
+    def test_provision_new_tenant_returns_alert_if_subscription_exists(self):
         # Arrange: Create an existing customer and subscription
         customer = frappe.get_doc({
             "doctype": "Customer",
@@ -81,7 +81,6 @@ class TestProvisioningAPI(FrappeTestCase):
             "status": "Active",
             "site_name": "existing.test.saas.com"
         }).insert(ignore_permissions=True)
-
         frappe.db.commit()
 
         test_data = {
@@ -96,9 +95,48 @@ class TestProvisioningAPI(FrappeTestCase):
             "industry": "Retail"
         }
 
+        # Act
+        response = provision_new_tenant(**test_data)
+
+        # Assert
+        self.assertEqual(response["status"], "failed")
+        self.assertIn("alert", response)
+        self.assertEqual(response["alert"]["title"], "Existing Subscription Found")
+        self.assertIn("A subscription for 'Existing Corp' already exists.", response["alert"]["message"])
+
+    def test_provision_new_tenant_fails_with_clear_error_on_site_name_conflict(self):
+        # Arrange: Create a subscription that will cause a site name conflict
+        customer = frappe.get_doc({
+            "doctype": "Customer",
+            "customer_name": "Conflict Inc.",
+            "customer_group": "All Customer Groups",
+            "default_currency": "USD"
+        }).insert(ignore_permissions=True)
+
+        frappe.get_doc({
+            "doctype": "Company Subscription",
+            "customer": customer.name,
+            "plan": "Test Plan",
+            "status": "Active",
+            "site_name": "ci.test.saas.com" # This will conflict with "C.I."
+        }).insert(ignore_permissions=True)
+        frappe.db.commit()
+
+        test_data = {
+            "plan": "Test Plan",
+            "email": "user@ci.com",
+            "password": "password123",
+            "first_name": "Test",
+            "last_name": "User",
+            "company_name": "C.I.", # Different company name, but generates same site name
+            "currency": "USD",
+            "country": "USA",
+            "industry": "Tech"
+        }
+
         # Act & Assert
         with self.assertRaises(frappe.exceptions.ValidationError) as cm:
             provision_new_tenant(**test_data)
 
-        self.assertEqual(cm.exception.title, "Existing Subscription Found")
-        self.assertIn("A subscription for 'Existing Corp' already exists.", str(cm.exception))
+        self.assertEqual(cm.exception.title, "Site Name Conflict")
+        self.assertIn("The generated site name 'ci.test.saas.com' is already in use by 'Conflict Inc.'.", str(cm.exception))

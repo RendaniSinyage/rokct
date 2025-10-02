@@ -53,10 +53,15 @@ def provision_new_tenant(plan, email, password, first_name, last_name, company_n
     customer_id = frappe.db.get_value("Customer", {"customer_name": company_name})
     if customer_id:
         if frappe.db.exists("Company Subscription", {"customer": customer_id, "status": ["!=", "Dropped"]}):
-            frappe.throw(
-                f"A subscription for '{company_name}' already exists. If you need assistance, please contact support.",
-                title="Existing Subscription Found"
-            )
+            # This is not an error, but an alert to the frontend that this company is already a customer.
+            # We halt the process and return a specific JSON structure.
+            return {
+                "status": "failed",
+                "alert": {
+                    "title": "Existing Subscription Found",
+                    "message": f"A subscription for '{company_name}' already exists. If you need assistance, please contact support."
+                }
+            }
 
     # 3. Determine site name and check for conflicts
     tenant_domain = frappe.conf.get("tenant_domain")
@@ -74,17 +79,22 @@ def provision_new_tenant(plan, email, password, first_name, last_name, company_n
 
     site_name = f"{site_prefix}.{tenant_domain}"
 
-    if frappe.db.exists("Company Subscription", {"site_name": site_name}):
-        frappe.throw(f"A site with the name {site_name} already exists. Please choose a different company name.", title="Site Already Exists")
+    existing_subscription = frappe.db.get_value("Company Subscription", {"site_name": site_name}, ["customer"], as_dict=True)
+    if existing_subscription:
+        customer_name = existing_subscription.customer
+        frappe.throw(
+            f"The generated site name '{site_name}' is already in use by '{customer_name}'. Please choose a different company name to resolve the conflict.",
+            title="Site Name Conflict"
+        )
 
-    # 3. Create the subscription record in the control plane
+    # 4. Create the subscription record in the control plane
     try:
         subscription = create_subscription_record(plan, company_name, industry, site_name, currency)
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), "Tenant Provisioning: Subscription Record Failed")
         frappe.throw(f"Failed to create subscription record: {e}")
 
-    # 4. Enqueue a background job to create the site
+    # 5. Enqueue a background job to create the site
     verification_token = frappe.generate_hash(length=48)
 
     frappe.enqueue(
