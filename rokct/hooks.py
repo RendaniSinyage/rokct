@@ -240,9 +240,7 @@ fixtures = [
 # Ignore links to specified DocTypes when deleting documents
 # -----------------------------------------------------------
 
-ignore_links_on_delete = [
-    {"doctype": "Customer", "ignore_link_field": "company_subscription"}
-]
+ignore_links_on_delete = ["Company Subscription"]
 
 # Request Events
 # ----------------
