@@ -139,7 +139,6 @@ doc_events = {
         "on_trash": "rokct.rokct.utils.customer.on_trash_customer"
     },
     "Company Subscription": {
-        "on_trash": "rokct.rokct.utils.company_subscription.on_trash_company_subscription",
         "on_update": "rokct.rokct.utils.company_subscription.on_update_company_subscription"
     }
 }

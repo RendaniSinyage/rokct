@@ -1,34 +1,6 @@
 import frappe
 from frappe import _
 
-def on_trash_company_subscription(doc, method):
-    """
-    When a Company Subscription is deleted, enqueue a job to drop the tenant site.
-    """
-    try:
-        # CORRECT WAY: Get the value directly from the DB. The 'doc' object in hooks is incomplete.
-        site_name = frappe.db.get_value("Company Subscription", doc.name, "tenant_site_name")
-
-        print(f"Subscription Deletion: on_trash hook triggered for subscription {doc.name}")
-        if site_name:
-            print(f"Subscription Deletion: Queueing site deletion for {site_name}")
-            frappe.enqueue(
-                "rokct.rokct.control_panel.tasks.drop_tenant_site",
-                queue="long",
-                site_name=site_name
-            )
-            print("Subscription Deletion: Successfully enqueued site deletion job.")
-        else:
-            print(f"Subscription Deletion: Subscription {doc.name} deleted, but has no tenant_site_name.")
-    except Exception:
-        print(f"--- ERROR IN on_trash_company_subscription for {doc.name} ---")
-        print(frappe.get_traceback())
-        frappe.log_error(
-            message=f"Error in on_trash_company_subscription for {doc.name}: {frappe.get_traceback()}",
-            title="Company Subscription Trash Hook Failed"
-        )
-
-
 def on_update_company_subscription(doc, method):
     """
     When a Company Subscription's status changes to 'Canceled', enqueue a job to drop the tenant site.
@@ -45,13 +17,14 @@ def on_update_company_subscription(doc, method):
 
         if status_changed and doc.status.lower() == "canceled":
             print("Subscription Update: Status changed to Canceled.")
-            # CORRECT WAY: Get the value directly from the DB. The 'doc' object in hooks is incomplete.
             site_name = frappe.db.get_value("Company Subscription", doc.name, "tenant_site_name")
             if site_name:
                 print(f"Subscription Update: Queueing site deletion for {site_name}")
+                # Use is_async=False to run the job immediately via the scheduler from a web worker
                 frappe.enqueue(
                     "rokct.rokct.control_panel.tasks.drop_tenant_site",
                     queue="long",
+                    is_async=False,
                     site_name=site_name
                 )
                 print("Subscription Update: Successfully enqueued site deletion job.")
