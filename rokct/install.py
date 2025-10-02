@@ -145,4 +145,3 @@ def update_site_apps_txt_with_error_handling():
     except Exception as e:
         print(f"FATAL ERROR: [{step_name}] An unexpected error occurred: {e}")
         frappe.log_error(message=frappe.get_traceback(), title=f"Fatal Error in {step_name}")
-Ple
