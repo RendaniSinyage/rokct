@@ -310,7 +310,58 @@ def drop_tenant_site(site_name):
         _log_and_notify(site_name, logs, success, "Site Deletion")
 
 
-def cleanup_unverified_tenants(): pass
+def cleanup_unverified_tenants():
+    """
+    Finds and cancels subscriptions that have not been email-verified
+    within a specific timeframe after their creation.
+    """
+    print("--- Running Cleanup for Unverified Tenants ---")
+    verification_period_days = 3
+    cutoff_date = add_days(nowdate(), -verification_period_days)
+
+    unverified_subscriptions = frappe.get_all(
+        "Company Subscription",
+        filters={
+            "status": ["in", ["Active", "Trialing", "Provisioning"]],
+            "email_verified_on": ("is", "not set"),
+            "subscription_start_date": ("<=", cutoff_date)
+        },
+        fields=["name", "customer", "site_name", "subscription_start_date"]
+    )
+
+    if not unverified_subscriptions:
+        print("No unverified subscriptions found that require cleanup. Exiting.")
+        return
+
+    print(f"Found {len(unverified_subscriptions)} unverified subscriptions to cancel.")
+
+    for sub_data in unverified_subscriptions:
+        try:
+            subscription = frappe.get_doc("Company Subscription", sub_data.name)
+            subscription.status = "Canceled"
+            subscription.save(ignore_permissions=True)
+            frappe.db.commit()
+
+            log_message = (
+                f"Canceled subscription {subscription.name} for customer '{sub_data.customer}' "
+                f"(Site: {sub_data.site_name}) due to missing email verification. "
+                f"Start date: {sub_data.subscription_start_date}."
+            )
+            print(log_message)
+            # Optionally, log to Frappe's error log for visibility
+            frappe.log_error(message=log_message, title="Subscription Canceled (No Verification)")
+
+        except Exception as e:
+            error_message = (
+                f"Failed to cancel unverified subscription {sub_data.name}. "
+                f"Reason: {e}\n{frappe.get_traceback()}"
+            )
+            print(error_message)
+            frappe.log_error(message=error_message, title="Subscription Cleanup Failed")
+
+    print("--- Unverified Tenant Cleanup Complete ---")
+
+
 def manage_daily_subscriptions(): pass
 def _downgrade_subscription(subscription_info): pass
 def _send_trial_ending_notification(subscription_info): pass

@@ -2,7 +2,8 @@ import frappe
 from frappe.tests.utils import FrappeTestCase
 from unittest.mock import patch, MagicMock
 from rokct.rokct.control_panel.api import provision_new_tenant
-from rokct.rokct.control_panel.tasks import drop_tenant_site
+from rokct.rokct.control_panel.tasks import drop_tenant_site, cleanup_unverified_tenants
+from frappe.utils import nowdate, add_days
 import os
 
 class TestProvisioningAPI(FrappeTestCase):
@@ -191,3 +192,74 @@ class TestSiteDeletion(FrappeTestCase):
         mock_subprocess_run.assert_called_once()
         self.assertIn("drop-site", mock_subprocess_run.call_args.args[0])
         self.assertIn(self.subscription.site_name, mock_subprocess_run.call_args.args[0])
+
+
+class TestUnverifiedTenantCleanup(FrappeTestCase):
+    def setUp(self):
+        # 1. Subscription that should be canceled (older than 3 days, not verified)
+        self.sub_to_cancel = frappe.get_doc({
+            "doctype": "Company Subscription",
+            "customer": "Test Customer 1",
+            "plan": "Test Plan",
+            "status": "Active",
+            "site_name": "cancel-me.test.saas.com",
+            "subscription_start_date": add_days(nowdate(), -5),
+            "email_verified_on": None
+        }).insert(ignore_permissions=True)
+
+        # 2. Subscription that should be ignored (older than 3 days, but IS verified)
+        self.sub_to_ignore_verified = frappe.get_doc({
+            "doctype": "Company Subscription",
+            "customer": "Test Customer 2",
+            "plan": "Test Plan",
+            "status": "Active",
+            "site_name": "ignore-me-verified.test.saas.com",
+            "subscription_start_date": add_days(nowdate(), -5),
+            "email_verified_on": nowdate()
+        }).insert(ignore_permissions=True)
+
+        # 3. Subscription that should be ignored (not verified, but too new)
+        self.sub_to_ignore_new = frappe.get_doc({
+            "doctype": "Company Subscription",
+            "customer": "Test Customer 3",
+            "plan": "Test Plan",
+            "status": "Trialing",
+            "site_name": "ignore-me-new.test.saas.com",
+            "subscription_start_date": nowdate(),
+            "email_verified_on": None
+        }).insert(ignore_permissions=True)
+
+        # 4. Subscription that should be ignored (already canceled)
+        self.sub_to_ignore_canceled = frappe.get_doc({
+            "doctype": "Company Subscription",
+            "customer": "Test Customer 4",
+            "plan": "Test Plan",
+            "status": "Canceled",
+            "site_name": "ignore-me-canceled.test.saas.com",
+            "subscription_start_date": add_days(nowdate(), -10),
+            "email_verified_on": None
+        }).insert(ignore_permissions=True)
+
+        frappe.db.commit()
+
+    def tearDown(self):
+        frappe.db.rollback()
+
+    @patch("rokct.rokct.control_panel.tasks.frappe.log_error")
+    def test_cleanup_cancels_only_old_unverified_subscriptions(self, mock_log_error):
+        # Act
+        cleanup_unverified_tenants()
+
+        # Assert
+        # 1. Check that the correct subscription was canceled
+        self.assertEqual(frappe.db.get_value("Company Subscription", self.sub_to_cancel.name, "status"), "Canceled")
+
+        # 2. Check that the other subscriptions were NOT changed
+        self.assertEqual(frappe.db.get_value("Company Subscription", self.sub_to_ignore_verified.name, "status"), "Active")
+        self.assertEqual(frappe.db.get_value("Company Subscription", self.sub_to_ignore_new.name, "status"), "Trialing")
+        self.assertEqual(frappe.db.get_value("Company Subscription", self.sub_to_ignore_canceled.name, "status"), "Canceled")
+
+        # 3. Check that the cancellation was logged
+        mock_log_error.assert_called_once()
+        self.assertIn("Canceled subscription", mock_log_error.call_args.kwargs["message"])
+        self.assertIn(self.sub_to_cancel.name, mock_log_error.call_args.kwargs["message"])
