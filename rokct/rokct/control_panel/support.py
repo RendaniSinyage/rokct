@@ -57,7 +57,7 @@ def grant_support_access(subscription_id: str, reason: str):
         tenant_url = f"{scheme}://{site_name}/api/method/rokct.tenant.api.create_temporary_support_user"
         headers = {
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {api_secret}"
+            "X-Rokct-Secret": api_secret
         }
         data = {
             "agent_id": agent_id,
@@ -116,7 +116,7 @@ def revoke_support_access(subscription_id, support_user_email):
         tenant_url = f"{scheme}://{site_name}/api/method/rokct.tenant.api.disable_temporary_support_user"
         headers = {
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {api_secret}"
+            "X-Rokct-Secret": api_secret
         }
         data = {
             "support_user_email": support_user_email
