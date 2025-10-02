@@ -16,7 +16,7 @@ def on_trash_customer(doc, method):
 
         for sub in subscriptions:
             # frappe.log_info(f"Deleting subscription {sub.name} for customer {doc.name}.", "Customer Deletion")
-            frappe.delete_doc("Company Subscription", sub.name, ignore_permissions=True, force_delete=True)
+            frappe.delete_doc("Company Subscription", sub.name, ignore_permissions=True, delete_permanently=True)
 
         # frappe.log_info(f"Successfully processed on_trash_customer for {doc.name}", "Customer Deletion")
 
