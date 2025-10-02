@@ -292,3 +292,39 @@ def cleanup_failed_provisions(): pass
 def run_weekly_maintenance(): pass
 def generate_subscription_invoices(): pass
 def _charge_invoice(invoice, customer, settings): pass
+
+def delete_customer_data(customer_name):
+    """
+    Background job to delete all data associated with a customer.
+    Currently, this deletes all Company Subscriptions for the customer.
+    """
+    logs = [f"--- Starting Data Deletion for Customer {customer_name} at {now_datetime()} ---"]
+    success = False
+    try:
+        subscriptions = frappe.get_all("Company Subscription", filters={"customer": customer_name})
+        if not subscriptions:
+            logs.append(f"No subscriptions found for customer {customer_name}. Nothing to do.")
+            success = True
+            return
+
+        logs.append(f"Found {len(subscriptions)} subscriptions to delete.")
+        for sub in subscriptions:
+            # Using delete_doc will trigger the 'on_trash' hook for Company Subscription,
+            # which in turn enqueues the site deletion job.
+            frappe.delete_doc(
+                "Company Subscription",
+                sub.name,
+                ignore_permissions=True,
+                delete_permanently=True
+            )
+            logs.append(f"Deleted Company Subscription: {sub.name}")
+
+        logs.append(f"Successfully deleted all data for customer {customer_name}.")
+        success = True
+
+    except Exception as e:
+        logs.append(f"\n--- FATAL ERROR during customer data deletion ---\n{frappe.get_traceback()}")
+        success = False
+    finally:
+        # Using a different subject prefix to distinguish from other operational emails.
+        _log_and_notify(customer_name, logs, success, "Customer Data Deletion")

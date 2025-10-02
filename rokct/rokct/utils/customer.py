@@ -3,27 +3,24 @@ from frappe import _
 
 def on_trash_customer(doc, method):
     """
-    When a Customer is deleted, also delete their associated Company Subscriptions.
-    This is triggered by the on_trash hook.
+    When a Customer is deleted, enqueue a background job to delete their
+    associated data, such as company subscriptions.
     """
     try:
-        # frappe.log_info(f"Attempting to delete subscriptions for customer {doc.name}", "Customer Deletion")
-        subscriptions = frappe.get_all("Company Subscription", filters={"customer": doc.name})
-
-        if not subscriptions:
-            # frappe.log_info(f"No subscriptions found for customer {doc.name}.", "Customer Deletion")
-            return
-
-        for sub in subscriptions:
-            # frappe.log_info(f"Deleting subscription {sub.name} for customer {doc.name}.", "Customer Deletion")
-            frappe.delete_doc("Company Subscription", sub.name, ignore_permissions=True, delete_permanently=True)
-
-        # frappe.log_info(f"Successfully processed on_trash_customer for {doc.name}", "Customer Deletion")
-
+        frappe.log_info(f"on_trash_customer hook triggered for {doc.name}", "Customer Deletion")
+        frappe.enqueue(
+            "rokct.rokct.control_panel.tasks.delete_customer_data",
+            queue="long",
+            customer_name=doc.name
+        )
+        frappe.log_info(
+            f"Successfully enqueued data deletion job for customer {doc.name}.",
+            "Customer Deletion"
+        )
     except Exception as e:
         frappe.log_error(
-            message=f"Error in on_trash_customer for {doc.name}: {frappe.get_traceback()}",
+            message=f"Failed to enqueue data deletion job for customer {doc.name}: {frappe.get_traceback()}",
             title="Customer Deletion Hook Failed"
         )
-        # Do not re-throw the exception, as it might prevent the customer from being deleted.
-        # The error is logged for investigation.
+        # It's important to log the error but not re-throw it,
+        # so the customer deletion itself can complete.
