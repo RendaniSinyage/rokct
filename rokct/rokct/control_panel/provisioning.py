@@ -49,7 +49,41 @@ def provision_new_tenant(plan, email, password, first_name, last_name, company_n
     # 1. Validate all inputs
     _validate_provisioning_input(plan, email, password, first_name, last_name, company_name, currency, country, industry)
 
-    # 2. Determine site name and check for conflicts
+    # 2. Prevent trial abuse and check for existing subscriptions
+    customer_id = frappe.db.get_value("Customer", {"customer_name": company_name})
+    if customer_id:
+        # Check if the new plan is a trial plan
+        new_plan = frappe.get_doc("Subscription Plan", plan)
+        if new_plan.trial_period_days > 0:
+            # Check if this customer has had a trial before using a direct SQL query for efficiency
+            had_previous_trial = frappe.db.sql("""
+                SELECT cs.name
+                FROM `tabCompany Subscription` cs
+                JOIN `tabSubscription Plan` sp ON cs.plan = sp.name
+                WHERE cs.customer = %(customer_id)s AND sp.trial_period_days > 0
+                LIMIT 1
+            """, {"customer_id": customer_id})
+
+            if had_previous_trial:
+                return {
+                    "status": "failed",
+                    "alert": {
+                        "title": "Not Eligible for Trial",
+                        "message": "This account has already had a trial period and is not eligible for another. Please choose a paid plan."
+                    }
+                }
+
+        # Then, check for any existing, non-dropped subscription
+        if frappe.db.exists("Company Subscription", {"customer": customer_id, "status": ["!=", "Dropped"]}):
+            return {
+                "status": "failed",
+                "alert": {
+                    "title": "Existing Subscription Found",
+                    "message": f"A subscription for '{company_name}' already exists. If you need assistance, please contact support."
+                }
+            }
+
+    # 3. Determine site name and check for conflicts
     tenant_domain = frappe.conf.get("tenant_domain")
     if not tenant_domain:
         frappe.throw("`tenant_domain` not set in control plane site_config.json")
@@ -65,17 +99,27 @@ def provision_new_tenant(plan, email, password, first_name, last_name, company_n
 
     site_name = f"{site_prefix}.{tenant_domain}"
 
-    if frappe.db.exists("Company Subscription", {"site_name": site_name}):
-        frappe.throw(f"A site with the name {site_name} already exists. Please choose a different company name.", title="Site Already Exists")
+    existing_subscription = frappe.db.get_value("Company Subscription", {"site_name": site_name}, ["customer"], as_dict=True)
+    if existing_subscription:
+        customer_name = existing_subscription.customer
+        # This is not an error, but an alert to the frontend that this company is already a customer.
+        # We halt the process and return a specific JSON structure.
+        return {
+            "status": "failed",
+            "alert": {
+                "title": "Site Name Conflict",
+                "message": f"The generated site name '{site_name}' is already in use by '{customer_name}'. Please choose a different company name to resolve the conflict."
+            }
+        }
 
-    # 3. Create the subscription record in the control plane
+    # 4. Create the subscription record in the control plane
     try:
         subscription = create_subscription_record(plan, company_name, industry, site_name, currency)
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), "Tenant Provisioning: Subscription Record Failed")
         frappe.throw(f"Failed to create subscription record: {e}")
 
-    # 4. Enqueue a background job to create the site
+    # 5. Enqueue a background job to create the site
     verification_token = frappe.generate_hash(length=48)
 
     frappe.enqueue(
