@@ -226,6 +226,64 @@ def _handle_failed_setup(subscription_id, site_name, logs):
 
     _log_and_notify(site_name, logs, False, "Critical Tenant Setup Failure")
 
+def drop_tenant_site(site_name):
+    """
+    Drops a tenant site and its database. This is a destructive, irreversible action.
+    """
+    logs = [f"--- Starting Site Deletion for {site_name} at {now_datetime()} ---"]
+    success = False
+
+    try:
+        bench_path = frappe.conf.get("bench_path")
+        if not bench_path:
+            raise frappe.ValidationError("`bench_path` not set in control plane site_config.json")
+        logs.append(f"Using bench path: {bench_path}")
+
+        # Check if site exists before trying to drop it
+        sites_dir = os.path.join(bench_path, "sites")
+        if site_name not in os.listdir(sites_dir):
+            logs.append(f"WARNING: Site '{site_name}' does not exist. Nothing to do.")
+            # Consider this a success as the end state is the same.
+            success = True
+            return
+
+        db_name = site_name.replace(".", "_")
+        db_root_password = frappe.conf.get("db_root_password")
+
+        logs.append(f"\nStep 1: Preparing 'bench drop-site' command for '{site_name}'...")
+        command = ["bench", "drop-site", site_name, "--db-name", db_name, "--force"]
+
+        if db_root_password:
+            logs.append("Found db_root_password. Adding to command.")
+            command.extend(["--mariadb-root-password", db_root_password])
+
+        process = subprocess.run(command, cwd=bench_path, capture_output=True, text=True, timeout=180)
+        logs.append(f"--- 'bench drop-site' STDOUT ---\n{process.stdout or 'No standard output.'}")
+        logs.append(f"--- 'bench drop-site' STDERR ---\n{process.stderr or 'No standard error.'}")
+
+        # drop-site can return non-zero exit codes on warnings (e.g., if db doesn't exist)
+        # We check for success by verifying the site directory is gone.
+        if os.path.exists(os.path.join(sites_dir, site_name)):
+             # If the command had a non-zero return code and the site still exists, it's a failure.
+            if process.returncode != 0:
+                process.check_returncode() # This will raise CalledProcessError
+            else:
+                # This case is unlikely but indicates something went wrong.
+                raise Exception("`bench drop-site` command completed with exit code 0, but the site directory still exists.")
+
+        logs.append(f"SUCCESS: Site '{site_name}' and its database have been dropped.")
+        success = True
+
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired, Exception) as e:
+        error_message = f"STDOUT: {getattr(e, 'stdout', 'N/A')}\nSTDERR: {getattr(e, 'stderr', 'N/A')}\nTRACEBACK: {frappe.get_traceback()}"
+        logs.append(f"\n--- FATAL ERROR during site deletion ---\n{error_message}")
+        # Mark as not successful, the finally block will handle notification
+        success = False
+
+    finally:
+        _log_and_notify(site_name, logs, success, "Site Deletion")
+
+
 def cleanup_unverified_tenants(): pass
 def manage_daily_subscriptions(): pass
 def _downgrade_subscription(subscription_info): pass
