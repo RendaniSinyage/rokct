@@ -32,7 +32,8 @@ def on_update_company_subscription(doc, method):
         frappe.log_info(f"Previous status was {doc_before_save.status}", "Subscription Update")
         status_changed = doc_before_save.status != doc.status
 
-        if status_changed and doc.status == "Cancelled":
+        # Use .lower() to make the comparison case-insensitive, as pointed out by the user.
+        if status_changed and doc.status.lower() == "cancelled":
             frappe.log_info("Status changed to Cancelled.", "Subscription Update")
             if doc.tenant_site_name:
                 frappe.log_info(f"Queueing site deletion for {doc.tenant_site_name}", "Subscription Update")
