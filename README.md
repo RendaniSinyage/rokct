@@ -12,15 +12,13 @@ bench get-app $URL_OF_THIS_REPO --branch develop
 bench install-app rokct
 ```
 
-### Working with the AI Agent
+### Debugging with the AI Agent
 
-The owner of this repository is not a developer and relies on an AI software engineer for maintenance and development. If an issue is complex or persists after an initial fix, the most effective way to debug is to ask the AI agent to create a temporary, command-line debug script.
+The owner of this repository is not a developer and relies on an AI software engineer for maintenance and development.
 
-This script should:
-1.  Mimic the user action or process that is failing.
-2.  Provide detailed, real-time logs of every step.
+When a complex issue cannot be solved quickly, the most effective debugging strategy is to have the AI agent create a **temporary, single-use debug script**. This script is not part of the main application code. Its purpose is to run a specific failing process (like site cancellation) from the command line and print detailed, step-by-step logs.
 
-The owner can then run this script using `bench execute` and provide the full log output to the agent. This workflow provides the necessary information to diagnose and resolve the issue efficiently.
+The owner can then execute this script with a `bench execute` command and provide the logs back to the agent. This gives the agent the precise information needed to diagnose the problem without guesswork.
 
 ### Post-Installation Setup
 
