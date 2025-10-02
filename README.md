@@ -20,6 +20,26 @@ When a complex issue cannot be solved quickly, the most effective debugging stra
 
 The owner can then execute this script with a `bench execute` command and provide the logs back to the agent. This gives the agent the precise information needed to diagnose the problem without guesswork.
 
+#### Example Debug Scripts
+
+The following scripts are available for debugging common complex processes:
+
+1.  **To debug a new site provisioning:**
+    *   This script runs the entire site creation and setup process synchronously.
+    *   It uses hardcoded details for the 'Black Wealth Institute' tenant.
+    *   **Command:**
+        ```bash
+        bench --site platform.rokct.ai execute rokct.rokct.scripts.debug_provisioning.trigger_provisioning_for_debug
+        ```
+
+2.  **To debug a site cancellation:**
+    *   This script mimics changing a subscription status to "Canceled" to trigger the site deletion process.
+    *   You must replace `your-tenant-site.rokct.ai` with the actual site name you want to test.
+    *   **Command:**
+        ```bash
+        bench --site platform.rokct.ai execute rokct.rokct.scripts.debug_cancellation.trigger_cancellation_for_debug --kwargs '{"site_name": "your-tenant-site.rokct.ai"}'
+        ```
+
 ### Post-Installation Setup
 
 This app includes an automated setup process that runs when you install it.
