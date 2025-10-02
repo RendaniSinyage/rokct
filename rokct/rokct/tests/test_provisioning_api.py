@@ -1,7 +1,9 @@
 import frappe
 from frappe.tests.utils import FrappeTestCase
 from unittest.mock import patch, MagicMock
-from rokct.control_panel.api import provision_new_tenant
+from rokct.rokct.control_panel.api import provision_new_tenant
+from rokct.rokct.control_panel.tasks import drop_tenant_site
+import os
 
 class TestProvisioningAPI(FrappeTestCase):
     def setUp(self):
@@ -142,3 +144,50 @@ class TestProvisioningAPI(FrappeTestCase):
         self.assertIn("alert", response)
         self.assertEqual(response["alert"]["title"], "Site Name Conflict")
         self.assertIn("The generated site name 'ci.test.saas.com' is already in use by 'Conflict Inc.'.", response["alert"]["message"])
+
+
+class TestSiteDeletion(FrappeTestCase):
+    def setUp(self):
+        frappe.conf.bench_path = "/tmp/bench"
+        self.customer = frappe.get_doc({
+            "doctype": "Customer",
+            "customer_name": "Test Customer for Deletion",
+            "customer_group": "All Customer Groups",
+        }).insert(ignore_permissions=True)
+
+        self.subscription = frappe.get_doc({
+            "doctype": "Company Subscription",
+            "customer": self.customer.name,
+            "plan": "Test Plan",
+            "status": "Canceled",
+            "site_name": "delete-me.test.saas.com"
+        }).insert(ignore_permissions=True)
+        frappe.db.commit()
+
+    def tearDown(self):
+        frappe.db.rollback()
+        if hasattr(frappe.conf, "bench_path"):
+            del frappe.conf.bench_path
+
+    @patch("rokct.rokct.control_panel.tasks.subprocess.run")
+    @patch("rokct.rokct.control_panel.tasks.os.path.exists")
+    def test_drop_site_updates_subscription_status(self, mock_path_exists, mock_subprocess_run):
+        # Arrange
+        # 1. Mock the site existing before the call, and not existing after.
+        mock_path_exists.side_effect = [True, False]
+        # 2. Mock a successful subprocess run for `bench drop-site`
+        mock_subprocess_run.return_value = MagicMock(check=True, returncode=0, stdout="", stderr="")
+
+        # Act
+        drop_tenant_site(self.subscription.site_name)
+
+        # Assert
+        # 1. Check if the subscription status was updated
+        updated_subscription = frappe.get_doc("Company Subscription", self.subscription.name)
+        self.assertEqual(updated_subscription.status, "Dropped")
+
+        # 2. Verify that the mocks were called as expected
+        self.assertEqual(mock_path_exists.call_count, 2)
+        mock_subprocess_run.assert_called_once()
+        self.assertIn("drop-site", mock_subprocess_run.call_args.args[0])
+        self.assertIn(self.subscription.site_name, mock_subprocess_run.call_args.args[0])

@@ -281,6 +281,23 @@ def drop_tenant_site(site_name):
                 raise Exception(f"`bench drop-site` command completed with exit code 0, but the site directory '{site_path}' still exists.")
 
         log_and_print(f"SUCCESS: Site '{site_name}' and its database have been dropped.")
+
+        # After successful drop, update the subscription status
+        try:
+            log_and_print(f"Attempting to update subscription status for site '{site_name}'...")
+            subscription_name = frappe.db.get_value("Company Subscription", {"site_name": site_name}, "name")
+            if subscription_name:
+                subscription = frappe.get_doc("Company Subscription", subscription_name)
+                subscription.status = "Dropped"
+                subscription.save(ignore_permissions=True)
+                frappe.db.commit()
+                log_and_print(f"SUCCESS: Updated subscription {subscription_name} status to 'Dropped'.")
+            else:
+                log_and_print(f"WARNING: No Company Subscription found for site '{site_name}'. Cannot update status.")
+        except Exception as e:
+            log_and_print(f"ERROR: Failed to update subscription status. Reason: {e}")
+            frappe.log_error(frappe.get_traceback(), "Subscription Status Update Failed")
+
         success = True
 
     except (subprocess.CalledProcessError, subprocess.TimeoutExpired, Exception) as e:
