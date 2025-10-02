@@ -24,7 +24,8 @@
    "in_list_view": 1,
    "label": "Customer",
    "options": "Customer",
-   "reqd": 1
+   "reqd": 1,
+   "on_delete": "Cascade"
   },
   {
    "fieldname": "site_name",

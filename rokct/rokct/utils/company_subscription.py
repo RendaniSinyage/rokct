@@ -5,17 +5,27 @@ def on_trash_company_subscription(doc, method):
     """
     When a Company Subscription is deleted, enqueue a job to drop the tenant site.
     """
-    frappe.log(f"Subscription Deletion: on_trash hook triggered for subscription {doc.name}")
-    if doc.tenant_site_name:
-        frappe.log(f"Subscription Deletion: Queueing site deletion for {doc.tenant_site_name}")
-        frappe.enqueue(
-            "rokct.rokct.control_panel.tasks.drop_tenant_site",
-            queue="long",
-            site_name=doc.tenant_site_name
+    try:
+        # Reload the document to ensure all fields are loaded, preventing AttributeError.
+        # This is crucial because the doc object in on_trash can be a shallow copy.
+        doc = frappe.get_doc(doc.doctype, doc.name)
+
+        frappe.log(f"Subscription Deletion: on_trash hook triggered for subscription {doc.name}")
+        if doc.tenant_site_name:
+            frappe.log(f"Subscription Deletion: Queueing site deletion for {doc.tenant_site_name}")
+            frappe.enqueue(
+                "rokct.rokct.control_panel.tasks.drop_tenant_site",
+                queue="long",
+                site_name=doc.tenant_site_name
+            )
+            frappe.log("Subscription Deletion: Successfully enqueued site deletion job.")
+        else:
+            frappe.log(f"Subscription Deletion: Subscription {doc.name} deleted, but has no tenant_site_name.")
+    except Exception as e:
+        frappe.log_error(
+            message=f"Error in on_trash_company_subscription for {doc.name}: {frappe.get_traceback()}",
+            title="Company Subscription Trash Hook Failed"
         )
-        frappe.log("Subscription Deletion: Successfully enqueued site deletion job.")
-    else:
-        frappe.log(f"Subscription Deletion: Subscription {doc.name} deleted, but has no tenant_site_name.")
 
 
 def on_update_company_subscription(doc, method):
