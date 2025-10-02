@@ -18,23 +18,28 @@ def on_trash_company_subscription(doc, method):
 
 def on_update_company_subscription(doc, method):
     """
-    When a Company Subscription's status changes, handle associated actions.
+    When a Company Subscription's status changes to 'Cancelled', enqueue a job to drop the tenant site.
     """
-    # Get the document before the update to check for status change
-    doc_before_save = doc.get_doc_before_save()
-    if not doc_before_save:
-        return
+    try:
+        doc_before_save = doc.get_doc_before_save()
+        if not doc_before_save:
+            return
 
-    status_changed = doc_before_save.status != doc.status
+        status_changed = doc_before_save.status != doc.status
 
-    if status_changed and doc.status == "Cancelled":
-        if doc.tenant_site_name:
-            frappe.enqueue(
-                "rokct.rokct.control_panel.tasks.drop_tenant_site",
-                queue="long",
-                site_name=doc.tenant_site_name
-            )
-            frappe.log_info(
-                f"Queued site deletion for {doc.tenant_site_name} due to cancellation.",
-                "Company Subscription Cancellation"
-            )
+        if status_changed and doc.status == "Cancelled":
+            if doc.tenant_site_name:
+                frappe.enqueue(
+                    "rokct.rokct.control_panel.tasks.drop_tenant_site",
+                    queue="long",
+                    site_name=doc.tenant_site_name
+                )
+                frappe.log_info(
+                    f"Queued site deletion for {doc.tenant_site_name} due to cancellation.",
+                    "Company Subscription Cancellation"
+                )
+    except Exception as e:
+        frappe.log_error(
+            message=f"Error in on_update_company_subscription for {doc.name}: {frappe.get_traceback()}",
+            title="Company Subscription Update Hook Failed"
+        )
