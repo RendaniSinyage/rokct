@@ -7,6 +7,7 @@
   "default_trial_plan",
   "default_trial_days",
   "grace_period_days",
+  "default_free_plan",
   "subscription_cache_duration",
   "marketing_site_login_url",
   "default_login_redirect_url"
@@ -28,6 +29,13 @@
    "fieldtype": "Int",
    "label": "Grace Period Days",
    "default": "7"
+  },
+  {
+   "fieldname": "default_free_plan",
+   "fieldtype": "Link",
+   "label": "Default Free Plan for Downgrade",
+   "options": "Subscription Plan",
+   "description": "The plan to downgrade users to if their paid subscription lapses."
   },
   {
    "default": "86400",

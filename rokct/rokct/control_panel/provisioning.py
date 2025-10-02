@@ -49,12 +49,32 @@ def provision_new_tenant(plan, email, password, first_name, last_name, company_n
     # 1. Validate all inputs
     _validate_provisioning_input(plan, email, password, first_name, last_name, company_name, currency, country, industry)
 
-    # 2. Check if a subscription already exists for this customer
+    # 2. Prevent trial abuse and check for existing subscriptions
     customer_id = frappe.db.get_value("Customer", {"customer_name": company_name})
     if customer_id:
+        # Check if the new plan is a trial plan
+        new_plan = frappe.get_doc("Subscription Plan", plan)
+        if new_plan.trial_period_days > 0:
+            # Check if this customer has had a trial before using a direct SQL query for efficiency
+            had_previous_trial = frappe.db.sql("""
+                SELECT cs.name
+                FROM `tabCompany Subscription` cs
+                JOIN `tabSubscription Plan` sp ON cs.plan = sp.name
+                WHERE cs.customer = %(customer_id)s AND sp.trial_period_days > 0
+                LIMIT 1
+            """, {"customer_id": customer_id})
+
+            if had_previous_trial:
+                return {
+                    "status": "failed",
+                    "alert": {
+                        "title": "Not Eligible for Trial",
+                        "message": "This account has already had a trial period and is not eligible for another. Please choose a paid plan."
+                    }
+                }
+
+        # Then, check for any existing, non-dropped subscription
         if frappe.db.exists("Company Subscription", {"customer": customer_id, "status": ["!=", "Dropped"]}):
-            # This is not an error, but an alert to the frontend that this company is already a customer.
-            # We halt the process and return a specific JSON structure.
             return {
                 "status": "failed",
                 "alert": {
