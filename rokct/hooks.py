@@ -242,7 +242,7 @@ fixtures = [
 
 # Request Events
 # ----------------
-before_request = ["rokct.rokct.utils.handle_login_redirect"]
+# before_request = ["rokct.rokct.utils.handle_login_redirect"]
 # after_request = ["rokct.utils.after_request"]
 
 # Job Events
