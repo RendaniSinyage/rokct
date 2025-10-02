@@ -77,21 +77,20 @@ def set_control_panel_configs():
         subprocess.run(["bench", "--site", frappe.local.site, "set-config", "tenant_domain", "tenant.rokct.ai"], cwd=bench_path, check=True)
         print("SUCCESS: Set 'tenant_domain' to 'tenant.rokct.ai' in site_config.json")
 
-        system_settings = frappe.get_doc("System Settings")
-        # Defensively check if email_sender attribute exists before accessing it
-        if hasattr(system_settings, "email_sender"):
-            if not system_settings.email_sender:
+        try:
+            notification_settings = frappe.get_doc("Notification Settings")
+            if not notification_settings.send_from:
                 admin_user = frappe.get_doc("User", "Administrator")
                 if admin_user and admin_user.email:
-                    system_settings.email_sender = admin_user.email
-                    system_settings.save(ignore_permissions=True)
-                    print(f"SUCCESS: Set default 'Email Sender' in System Settings to '{admin_user.email}'")
+                    notification_settings.send_from = admin_user.email
+                    notification_settings.save(ignore_permissions=True)
+                    print(f"SUCCESS: Set default 'Send From' email in Notification Settings to '{admin_user.email}'")
                 else:
-                    print("SKIPPED: Could not set default email sender, Administrator email not found.")
+                    print("SKIPPED: Could not set default 'Send From' email, Administrator email not found.")
             else:
-                print("SKIPPED: Default 'Email Sender' is already set in System Settings.")
-        else:
-            print("SKIPPED: The 'email_sender' field does not exist in System Settings for this version.")
+                print("SKIPPED: Default 'Send From' email is already set in Notification Settings.")
+        except frappe.DoesNotExistError:
+            print("SKIPPED: 'Notification Settings' DocType not found.")
 
         frappe.db.commit()
     except Exception as e:
@@ -146,3 +145,4 @@ def update_site_apps_txt_with_error_handling():
     except Exception as e:
         print(f"FATAL ERROR: [{step_name}] An unexpected error occurred: {e}")
         frappe.log_error(message=frappe.get_traceback(), title=f"Fatal Error in {step_name}")
+Ple
