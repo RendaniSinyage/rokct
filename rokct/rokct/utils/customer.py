@@ -7,13 +7,13 @@ def on_trash_customer(doc, method):
     associated data, such as company subscriptions.
     """
     try:
-        frappe.log_info(f"on_trash_customer hook triggered for {doc.name}", "Customer Deletion")
+        frappe.log(f"on_trash_customer hook triggered for {doc.name}", "Customer Deletion")
         frappe.enqueue(
             "rokct.rokct.control_panel.tasks.delete_customer_data",
             queue="long",
             customer_name=doc.name
         )
-        frappe.log_info(
+        frappe.log(
             f"Successfully enqueued data deletion job for customer {doc.name}.",
             "Customer Deletion"
         )
