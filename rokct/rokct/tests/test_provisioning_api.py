@@ -65,3 +65,40 @@ class TestProvisioningAPI(FrappeTestCase):
         self.assertEqual(mock_enqueue.call_args.kwargs["site_name"], expected_site_name)
         self.assertEqual(mock_enqueue.call_args.kwargs["user_details"]["email"], "test@example.com")
 
+    def test_provision_new_tenant_fails_if_subscription_exists(self):
+        # Arrange: Create an existing customer and subscription
+        customer = frappe.get_doc({
+            "doctype": "Customer",
+            "customer_name": "Existing Corp",
+            "customer_group": "All Customer Groups",
+            "default_currency": "USD"
+        }).insert(ignore_permissions=True)
+
+        frappe.get_doc({
+            "doctype": "Company Subscription",
+            "customer": customer.name,
+            "plan": "Test Plan",
+            "status": "Active",
+            "site_name": "existing.test.saas.com"
+        }).insert(ignore_permissions=True)
+
+        frappe.db.commit()
+
+        test_data = {
+            "plan": "Test Plan",
+            "email": "anotheruser@example.com",
+            "password": "password123",
+            "first_name": "Another",
+            "last_name": "User",
+            "company_name": "Existing Corp",  # Same company name
+            "currency": "USD",
+            "country": "USA",
+            "industry": "Retail"
+        }
+
+        # Act & Assert
+        with self.assertRaises(frappe.exceptions.ValidationError) as cm:
+            provision_new_tenant(**test_data)
+
+        self.assertEqual(cm.exception.title, "Existing Subscription Found")
+        self.assertIn("A subscription for 'Existing Corp' already exists.", str(cm.exception))

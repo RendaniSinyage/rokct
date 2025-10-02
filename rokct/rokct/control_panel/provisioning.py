@@ -49,7 +49,16 @@ def provision_new_tenant(plan, email, password, first_name, last_name, company_n
     # 1. Validate all inputs
     _validate_provisioning_input(plan, email, password, first_name, last_name, company_name, currency, country, industry)
 
-    # 2. Determine site name and check for conflicts
+    # 2. Check if a subscription already exists for this customer
+    customer_id = frappe.db.get_value("Customer", {"customer_name": company_name})
+    if customer_id:
+        if frappe.db.exists("Company Subscription", {"customer": customer_id, "status": ["!=", "Dropped"]}):
+            frappe.throw(
+                f"A subscription for '{company_name}' already exists. If you need assistance, please contact support.",
+                title="Existing Subscription Found"
+            )
+
+    # 3. Determine site name and check for conflicts
     tenant_domain = frappe.conf.get("tenant_domain")
     if not tenant_domain:
         frappe.throw("`tenant_domain` not set in control plane site_config.json")
