@@ -256,11 +256,10 @@ def drop_tenant_site(site_name):
             success = True
             return
 
-        db_name = site_name.replace(".", "_")
         db_root_password = frappe.conf.get("db_root_password")
 
         log_and_print(f"\nStep 1: Preparing 'bench drop-site' command for '{site_name}'...")
-        command = ["bench", "drop-site", site_name, "--db-name", db_name, "--force"]
+        command = ["bench", "drop-site", site_name, "--force"]
 
         if db_root_password:
             log_and_print("Found db_root_password. Adding to command.")
