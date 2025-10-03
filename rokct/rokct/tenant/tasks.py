@@ -1,6 +1,65 @@
 import frappe
+import json
 from frappe.utils import now_datetime
 from rokct.tenant.utils import send_tenant_email
+
+def report_active_user_count():
+    """
+    Counts the number of active users on the tenant site and reports it
+    to the control panel for per-seat billing calculations.
+    This is run daily by the scheduler on tenant sites.
+    """
+    if frappe.conf.get("app_role") != "tenant":
+        return
+
+    frappe.log("Running Daily User Count Reporting Job...", "User Count Report")
+
+    try:
+        # 1. Count active (enabled) users
+        active_user_count = frappe.db.count("User", {"enabled": 1})
+        frappe.log(f"Found {active_user_count} active users.", "User Count Report")
+
+        # 2. Get credentials to talk to the control panel
+        settings = frappe.get_single("Subscription Settings")
+        control_plane_url = settings.get("control_plane_url")
+        api_secret = settings.get_password("api_secret")
+
+        if not control_plane_url or not api_secret:
+            frappe.log_error(
+                "Control Plane URL or API Secret is not set in Subscription Settings. Cannot report user count.",
+                "User Count Report Failed"
+            )
+            return
+
+        # 3. Make the API call
+        api_url = f"{control_plane_url}/api/method/rokct.rokct.control_panel.api.update_user_count"
+        headers = {
+            "Content-Type": "application/json",
+            "X-Rokct-Secret": api_secret
+        }
+        data = {
+            "user_count": active_user_count
+        }
+
+        response = frappe.make_post_request(api_url, headers=headers, data=json.dumps(data))
+
+        if response.get("status") == "success":
+            frappe.log(
+                f"Successfully reported user count of {active_user_count} to the control panel.",
+                "User Count Report"
+            )
+        else:
+            error_message = response.get("message") if isinstance(response, dict) else str(response)
+            frappe.log_error(
+                f"Failed to report user count to control panel. Status: {response.get('status')}, Message: {error_message}",
+                "User Count Report Failed"
+            )
+
+    except Exception as e:
+        frappe.log_error(
+            f"An unexpected error occurred during user count reporting: {e}\n{frappe.get_traceback()}",
+            "User Count Report Failed"
+        )
 
 def disable_expired_support_users():
     """
