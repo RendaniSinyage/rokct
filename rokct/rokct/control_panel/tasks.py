@@ -404,7 +404,35 @@ def manage_daily_subscriptions():
         except Exception as e:
             frappe.log_error(f"Failed to process trial expiration for {sub_info.name}: {e}", "Subscription Management Error")
 
-    # --- 2. Handle renewals / failed payments for active subscriptions ---
+    # --- 2. Handle auto-renewals for free plans ---
+    free_renewal_filters = {
+        "status": "Free",
+        "next_billing_date": ("<=", today)
+    }
+    subscriptions_for_free_renewal = frappe.get_all(
+        "Company Subscription",
+        filters=free_renewal_filters,
+        fields=["name", "plan"]
+    )
+    frappe.log(f"Found {len(subscriptions_for_free_renewal)} free subscriptions due for auto-renewal.", "Subscription Management")
+    for sub_info in subscriptions_for_free_renewal:
+        try:
+            subscription = frappe.get_doc("Company Subscription", sub_info.name)
+            plan = frappe.get_doc("Subscription Plan", sub_info.plan)
+
+            if plan.billing_cycle == 'Month':
+                subscription.next_billing_date = add_months(today, 1)
+            elif plan.billing_cycle == 'Year':
+                subscription.next_billing_date = add_years(today, 1)
+
+            subscription.save(ignore_permissions=True)
+            frappe.db.commit()
+            frappe.log(f"Subscription {sub_info.name}: Auto-renewed free plan. New billing date: {subscription.next_billing_date}.", "Subscription Management")
+        except Exception as e:
+            frappe.log_error(f"Failed to auto-renew free subscription {sub_info.name}: {e}", "Subscription Management Error")
+
+
+    # --- 3. Handle renewals / failed payments for active subscriptions ---
     # We explicitly exclude free plans from this logic.
     renewal_filters = {
         "status": "Active",
@@ -426,7 +454,7 @@ def manage_daily_subscriptions():
         except Exception as e:
             frappe.log_error(f"Failed to move subscription {sub_info.name} to grace period: {e}", "Subscription Management Error")
 
-    # --- 3. Handle expired grace periods ---
+    # --- 4. Handle expired grace periods ---
     grace_period_days = frappe.db.get_single_value("Subscription Settings", "grace_period_days") or 5
     subscriptions_in_grace = frappe.get_all(
         "Company Subscription",
