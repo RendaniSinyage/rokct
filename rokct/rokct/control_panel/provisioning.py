@@ -58,7 +58,7 @@ def provision_new_tenant(plan, email, password, first_name, last_name, company_n
     if customer_id:
         # Check if the new plan is a trial plan
         new_plan = frappe.get_doc("Subscription Plan", plan)
-        if new_plan.trial_period_days > 0:
+        if getattr(new_plan, "trial_period_days", 0) > 0:
             # Check if this customer has had a trial before using a direct SQL query for efficiency
             had_previous_trial = frappe.db.sql("""
                 SELECT cs.name
