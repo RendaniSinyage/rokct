@@ -1,0 +1,11 @@
+[
+    {
+        "dt": "Subscription Plan",
+        "fieldname": "is_per_seat_plan",
+        "fieldtype": "Check",
+        "label": "Is Per Seat Plan",
+        "description": "If checked, billing and limits are per user.",
+        "insert_after": "monthly_token_limit",
+        "default": "0"
+    }
+]

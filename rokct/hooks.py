@@ -126,9 +126,9 @@ after_app_uninstall = "rokct.rokct.utils.update_site_apps_txt"
 # ---------------
 # Override standard doctype classes
 
-# override_doctype_class = {
-#       "ToDo": "custom_app.overrides.CustomToDo"
-# }
+override_doctype_class = {
+      "File": "rokct.rokct.overrides.CustomFile"
+}
 
 # Document Events
 # ---------------
@@ -170,6 +170,8 @@ def get_safe_scheduler_events():
 		events["daily"] = [
 			"rokct.rokct.tasks.manage_daily_tenders",
 			"rokct.rokct.tenant.tasks.disable_expired_support_users",
+			"rokct.rokct.tenant.tasks.update_storage_usage",
+			"rokct.rokct.tenant.tasks.reset_monthly_token_usage",
 			"rokct.paas.tasks.remove_expired_stories"
 		]
 	return events
@@ -206,6 +208,7 @@ whitelisted_methods = {
     "rokct.rokct.tenant.api.create_sales_invoice": "rokct.rokct.tenant.api.create_sales_invoice",
     "rokct.rokct.tenant.api.log_frontend_error": "rokct.rokct.tenant.api.log_frontend_error",
     "rokct.rokct.tenant.api.get_subscription_details": "rokct.rokct.tenant.api.get_subscription_details",
+    "rokct.rokct.tenant.api.record_token_usage": "rokct.rokct.tenant.api.record_token_usage",
     "rokct.rokct.scripts.setup_control_panel.configure_control_panel": "rokct.rokct.scripts.setup_control_panel.configure_control_panel"
 }
 #
