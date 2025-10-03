@@ -22,6 +22,10 @@ def _validate_provisioning_input(plan, email, password, first_name, last_name, c
     if frappe.db.exists("User", {"email": email}):
         frappe.throw("A user with this email address already exists.", title="Email Already Registered")
 
+    # Check if a customer with this email already exists
+    if frappe.db.exists("Customer", {"customer_primary_email": email}):
+        frappe.throw("A customer account with this email address already exists.", title="Email Already Registered")
+
     # Check if the subscription plan exists
     if not frappe.db.exists("Subscription Plan", plan):
         frappe.throw(f"Subscription Plan '{plan}' not found.", title="Invalid Plan")
@@ -114,7 +118,7 @@ def provision_new_tenant(plan, email, password, first_name, last_name, company_n
 
     # 4. Create the subscription record in the control plane
     try:
-        subscription = create_subscription_record(plan, company_name, industry, site_name, currency)
+        subscription = create_subscription_record(plan, email, company_name, industry, site_name, currency)
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), "Tenant Provisioning: Subscription Record Failed")
         frappe.throw(f"Failed to create subscription record: {e}")
@@ -148,7 +152,7 @@ def provision_new_tenant(plan, email, password, first_name, last_name, company_n
     }
 
 
-def create_subscription_record(plan, company_name, industry, site_name, currency):
+def create_subscription_record(plan, email, company_name, industry, site_name, currency):
     """
     Creates the Customer and Company Subscription records.
     """
@@ -173,7 +177,8 @@ def create_subscription_record(plan, company_name, industry, site_name, currency
             "customer_name": company_name,
             "customer_group": customer_group,
             "industry": industry,
-            "default_currency": currency
+            "default_currency": currency,
+            "customer_primary_email": email,
         }).insert(ignore_permissions=True)
 
     # 2. Create the subscription record
