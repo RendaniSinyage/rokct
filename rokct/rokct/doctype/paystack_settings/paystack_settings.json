@@ -1,5 +1,5 @@
 {
-    "creation": "2025-10-03 01:39:00.000000",
+    "creation": "2025-10-03 02:17:00.000000",
     "doctype": "DocType",
     "engine": "InnoDB",
     "field_order": [
@@ -27,7 +27,7 @@
         }
     ],
     "issingle": 1,
-    "modified": "2025-10-03 01:39:00.000000",
+    "modified": "2025-10-03 02:17:00.000000",
     "modified_by": "Administrator",
     "module": "rokct",
     "name": "Paystack Settings",

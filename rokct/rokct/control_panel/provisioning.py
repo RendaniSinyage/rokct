@@ -58,7 +58,7 @@ def provision_new_tenant(plan, email, password, first_name, last_name, company_n
     if customer_id:
         # Check if the new plan is a trial plan
         new_plan = frappe.get_doc("Subscription Plan", plan)
-        if getattr(new_plan, "trial_period_days", 0) > 0:
+        if new_plan.trial_period_days > 0:
             # Check if this customer has had a trial before using a direct SQL query for efficiency
             had_previous_trial = frappe.db.sql("""
                 SELECT cs.name
@@ -191,12 +191,7 @@ def create_subscription_record(plan, email, company_name, industry, site_name, c
 
     if subscription_plan.cost == 0:
         status = "Free"
-        # Free plans also need a renewal date to support auto-renewal.
-        if subscription_plan.billing_cycle == 'Month':
-            next_billing_date = add_months(nowdate(), 1)
-        elif subscription_plan.billing_cycle == 'Year':
-            next_billing_date = add_years(nowdate(), 1)
-    elif getattr(subscription_plan, "trial_period_days", 0) > 0:
+    elif subscription_plan.trial_period_days > 0:
         status = "Trialing"
         trial_ends_on = add_days(nowdate(), subscription_plan.trial_period_days)
         # Billing starts after the trial
@@ -204,7 +199,7 @@ def create_subscription_record(plan, email, company_name, industry, site_name, c
             next_billing_date = add_months(trial_ends_on, 1)
         elif subscription_plan.billing_cycle == 'Year':
             next_billing_date = add_years(trial_ends_on, 1)
-    else:  # Paid plan with no trial
+    else: # Paid plan with no trial
         if subscription_plan.billing_cycle == 'Month':
             next_billing_date = add_months(nowdate(), 1)
         elif subscription_plan.billing_cycle == 'Year':

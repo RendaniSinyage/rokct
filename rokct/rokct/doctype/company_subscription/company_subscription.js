@@ -29,7 +29,7 @@ frappe.ui.form.on('Company Subscription', {
                     },
                     callback: function(r) {
                         if (r.message) {
-                            frappe.msgprint(r.message.message);
+                            frappe.msgprint(r.message);
                         }
                     }
                 });

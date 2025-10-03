@@ -1,0 +1,30 @@
+[
+    {
+        "doctype": "Custom Field",
+        "dt": "Customer",
+        "fieldname": "paystack_authorization_code",
+        "fieldtype": "Data",
+        "label": "Paystack Authorization Code",
+        "no_copy": 1,
+        "print_hide": 1,
+        "report_hide": 1,
+        "read_only": 1,
+        "description": "The authorization code from Paystack that allows charging this customer's card."
+    },
+    {
+        "doctype": "Custom Field",
+        "dt": "Customer",
+        "fieldname": "paystack_card_brand",
+        "fieldtype": "Data",
+        "label": "Card Brand",
+        "read_only": 1
+    },
+    {
+        "doctype": "Custom Field",
+        "dt": "Customer",
+        "fieldname": "paystack_last4",
+        "fieldtype": "Data",
+        "label": "Card Last 4 Digits",
+        "read_only": 1
+    }
+]
