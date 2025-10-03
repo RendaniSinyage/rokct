@@ -1,0 +1,10 @@
+[
+    {
+        "dt": "Subscription Plan",
+        "fieldname": "is_per_seat_plan",
+        "fieldtype": "Check",
+        "label": "Is Per Seat Plan",
+        "description": "If checked, the plan cost is per user.",
+        "insert_after": "billing_cycle"
+    }
+]
