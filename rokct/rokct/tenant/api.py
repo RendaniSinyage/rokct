@@ -438,9 +438,14 @@ def log_frontend_error(error_message, context=None):
 def get_subscription_details():
     """
     A secure proxy API for the frontend to get subscription details.
+    Caches the response from the control panel.
     """
     if frappe.conf.get("app_role") != "tenant":
         frappe.throw("This action can only be performed on a tenant site.", title="Action Not Allowed")
+
+    cached_details = frappe.cache().get_value("subscription_details")
+    if cached_details:
+        return cached_details
 
     try:
         control_plane_url = frappe.conf.get("control_plane_url")
@@ -456,10 +461,16 @@ def get_subscription_details():
         headers = {"X-Rokct-Secret": api_secret}
         response = frappe.make_post_request(api_url, headers=headers)
 
-        return response.get("message")
+        details = response.get("message")
+        if details and isinstance(details, dict):
+            cache_duration_seconds = details.get("subscription_cache_duration", 86400)
+            frappe.cache().set_value("subscription_details", details, expires_in_sec=cache_duration_seconds)
+
+        return details
 
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), "Subscription Details Proxy Failed")
+        # On failure, it's better to return a clear error than to let the frontend hang
         frappe.throw("An error occurred while fetching subscription details.")
 
 

@@ -133,6 +133,7 @@ def get_subscription_status():
         "next_billing_date": subscription.next_billing_date,
         "modules": [p.module for p in plan.get("modules", [])],
         "max_companies": getattr(plan, 'max_companies', 1), # Get override from plan, default to 1
+        "storage_quota_gb": getattr(plan, "storage_quota_gb", 0),
         "subscription_cache_duration": settings.subscription_cache_duration or 86400
     }
 

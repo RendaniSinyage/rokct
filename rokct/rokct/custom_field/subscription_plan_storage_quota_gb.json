@@ -1,0 +1,11 @@
+[
+    {
+        "dt": "Subscription Plan",
+        "fieldname": "storage_quota_gb",
+        "fieldtype": "Int",
+        "label": "Storage Quota (GB)",
+        "description": "The storage quota for this plan in Gigabytes (GB). Set to 0 for unlimited storage.",
+        "insert_after": "billing_cycle",
+        "default": "0"
+    }
+]
