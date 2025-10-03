@@ -1,0 +1,11 @@
+{
+    "creation": "2025-10-03 02:35:00.000000",
+    "doctype": "Email Template",
+    "name": "Payment Successful",
+    "owner": "Administrator",
+    "modified": "2025-10-03 02:35:00.000000",
+    "modified_by": "Administrator",
+    "module": "rokct",
+    "subject": "Your payment for {{ company_name }} was successful",
+    "response": "[{\"type\":\"HTML\",\"content\":\"<p>Hi {{ first_name }},</p><p>Thank you for your payment. This email serves as a receipt for your recent subscription renewal for the {{ plan_name }} plan.</p><p><b>Amount Paid:</b> {{ amount_paid }}<br><b>Date:</b> {{ payment_date }}</p><p>Your next renewal date is {{ next_renewal_date }}.</p><p>Thanks,<br>The ROKCT Team</p>\"}]"
+}

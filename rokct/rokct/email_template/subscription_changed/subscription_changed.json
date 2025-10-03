@@ -1,0 +1,11 @@
+{
+    "creation": "2025-10-03 02:34:00.000000",
+    "doctype": "Email Template",
+    "name": "Subscription Changed",
+    "owner": "Administrator",
+    "modified": "2025-10-03 02:34:00.000000",
+    "modified_by": "Administrator",
+    "module": "rokct",
+    "subject": "Your subscription plan has been changed",
+    "response": "[{\"type\":\"HTML\",\"content\":\"<p>Hi {{ first_name }},</p><p>This email confirms that your subscription for {{ company_name }} has been changed from the {{ old_plan }} plan to the {{ new_plan }} plan.</p><p>If you did not authorize this change, please contact our support team immediately.</p><p>Thanks,<br>The ROKCT Team</p>\"}]"
+}

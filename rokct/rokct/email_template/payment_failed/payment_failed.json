@@ -1,0 +1,11 @@
+{
+    "creation": "2025-10-03 02:35:00.000000",
+    "doctype": "Email Template",
+    "name": "Payment Failed",
+    "owner": "Administrator",
+    "modified": "2025-10-03 02:35:00.000000",
+    "modified_by": "Administrator",
+    "module": "rokct",
+    "subject": "Action Required: Your payment for {{ company_name }} failed",
+    "response": "[{\"type\":\"HTML\",\"content\":\"<p>Hi {{ first_name }},</p><p>We were unable to process the payment for your subscription renewal for the {{ plan_name }} plan. The reason provided by our payment processor was: {{ failure_reason }}</p><p>To avoid any interruption in service, please update your payment method in your account settings. We will automatically retry the payment in a few days.</p><p>If you believe this is an error or have any questions, please contact our support team.</p><p>Thanks,<br>The ROKCT Team</p>\"}]"
+}

@@ -16,7 +16,8 @@
   "custom_login_redirect_url",
   "column_break_1",
   "api_secret",
-  "email_verified_on"
+  "email_verified_on",
+  "payment_retry_attempt"
  ],
  "fields": [
   {
@@ -103,6 +104,16 @@
    "read_only": 1,
    "no_copy": 1,
    "print_hide": 1
+  },
+  {
+   "fieldname": "payment_retry_attempt",
+   "fieldtype": "Int",
+   "label": "Payment Retry Attempt",
+   "default": "0",
+   "read_only": 1,
+   "no_copy": 1,
+   "print_hide": 1,
+   "description": "The number of times a payment has been retried for this subscription."
   }
  ],
  "index_web_pages_for_search": 1,
