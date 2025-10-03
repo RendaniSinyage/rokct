@@ -6,6 +6,8 @@
  "currency": "USD",
  "doctype": "Subscription Plan",
  "is_ai": 1,
+ "is_per_seat_plan": 1,
+ "base_user_count": 3,
  "item": "Team Plan",
  "plan_name": "Team (Monthly)",
  "price_determination": "Fixed Rate",

@@ -1,0 +1,10 @@
+[
+    {
+        "dt": "Subscription Plan",
+        "fieldname": "base_user_count",
+        "fieldtype": "Int",
+        "label": "Base User Count",
+        "description": "The minimum number of users for a per-seat plan.",
+        "insert_after": "is_per_seat_plan"
+    }
+]

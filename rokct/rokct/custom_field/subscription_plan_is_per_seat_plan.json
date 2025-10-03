@@ -1,11 +1,11 @@
 [
     {
         "dt": "Subscription Plan",
-        "fieldname": "is_per_seat_plan",
-        "fieldtype": "Check",
-        "label": "Is Per Seat Plan",
-        "description": "If checked, billing and limits are per user.",
-        "insert_after": "monthly_token_limit",
+        "fieldname": "monthly_token_limit",
+        "fieldtype": "Int",
+        "label": "Monthly Token Limit",
+        "description": "The monthly AI token limit for this plan. Set to 0 for unlimited.",
+        "insert_after": "billing_cycle",
         "default": "0"
     }
 ]

@@ -1,3 +1,5 @@
+# Copyright (c) 2025 ROKCT Holdings
+# For license information, please see license.txt
 import frappe
 from frappe.utils import nowdate, add_days, add_months, add_years
 from frappe.utils.change_log import get_versions as frappe_get_versions
