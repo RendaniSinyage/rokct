@@ -17,10 +17,7 @@
   "column_break_1",
   "api_secret",
   "email_verified_on",
-  "payment_retry_attempt",
-  "user_quantity",
-  "add_ons_section",
-  "add_ons"
+  "payment_retry_attempt"
  ],
  "fields": [
   {
@@ -117,27 +114,6 @@
    "no_copy": 1,
    "print_hide": 1,
    "description": "The number of times a payment has been retried for this subscription."
-  },
-  {
-   "fieldname": "user_quantity",
-   "fieldtype": "Int",
-   "label": "User Quantity",
-   "default": "0",
-   "read_only": 1,
-   "no_copy": 1,
-   "print_hide": 1,
-   "description": "The number of users for this subscription. Updated automatically from the tenant site."
-  },
-  {
-   "fieldname": "add_ons_section",
-   "fieldtype": "Section Break",
-   "label": "Add-ons"
-  },
-  {
-   "fieldname": "add_ons",
-   "fieldtype": "Table",
-   "label": "Add-ons",
-   "options": "Company Subscription Add-on"
   }
  ],
  "index_web_pages_for_search": 1,
