@@ -4,8 +4,69 @@ import frappe
 import os
 import json
 import pytz
-from frappe.utils import validate_email_address, get_url
+from frappe.utils import validate_email_address, get_url, nowdate
 from rokct.rokct.tenant.utils import send_tenant_email
+
+@frappe.whitelist()
+def record_token_usage(tokens_used: int):
+    """
+    Records the consumption of AI tokens for the current user and checks against the plan's limit.
+    """
+    if frappe.conf.get("app_role") != "tenant":
+        frappe.throw("This action can only be performed on a tenant site.", title="Action Not Allowed")
+
+    if not isinstance(tokens_used, int) or tokens_used <= 0:
+        frappe.throw("`tokens_used` must be a positive integer.", title="Invalid Input")
+
+    try:
+        # 1. Get subscription details to determine the limit and plan type
+        subscription_details = get_subscription_details()
+        token_limit = subscription_details.get("monthly_token_limit", 0)
+        is_per_seat_plan = subscription_details.get("is_per_seat_plan", 0)
+
+        # If the plan has no token limit, do nothing.
+        if not token_limit or token_limit <= 0:
+            return {"status": "success", "message": "No token limit on this plan."}
+
+        # 2. Identify the entity to track usage against
+        # For per-seat plans, track the individual user. Otherwise, track the whole site using the Administrator user.
+        tracker_user = frappe.session.user if is_per_seat_plan else "Administrator"
+
+        # 3. Get or create the token usage tracker document
+        if not frappe.db.exists("Token Usage Tracker", tracker_user):
+            tracker = frappe.new_doc("Token Usage Tracker")
+            tracker.user = tracker_user
+            tracker.period_start_date = nowdate()
+            tracker.current_period_usage = 0
+            tracker.insert(ignore_permissions=True)
+        else:
+            tracker = frappe.get_doc("Token Usage Tracker", tracker_user)
+
+        # 4. Check if the new usage exceeds the limit
+        if (tracker.current_period_usage + tokens_used) > token_limit:
+            frappe.throw(
+                f"You have exceeded your monthly token limit of {token_limit} tokens.",
+                title="Token Limit Exceeded"
+            )
+
+        # 5. Record the new usage
+        tracker.current_period_usage += tokens_used
+        tracker.save(ignore_permissions=True)
+        frappe.db.commit()
+
+        return {
+            "status": "success",
+            "message": "Token usage recorded.",
+            "remaining_tokens": token_limit - tracker.current_period_usage
+        }
+
+    except Exception as e:
+        frappe.db.rollback()
+        # Avoid logging common "Token Limit Exceeded" errors as system errors
+        if "Token Limit Exceeded" not in str(e):
+            frappe.log_error(frappe.get_traceback(), "Token Usage Recording Failed")
+        # Re-throw the exception to notify the frontend
+        raise
 
 def _notify_control_panel_of_verification():
     """Makes a secure backend call to the control panel to mark the subscription as verified."""
