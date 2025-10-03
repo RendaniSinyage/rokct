@@ -459,13 +459,23 @@ def _handle_paid_plan_renewals(today):
             plan = frappe.get_doc("Subscription Plan", sub_info.plan)
             if plan.cost == 0: continue
 
+            # Calculate final cost based on plan type
+            final_cost = plan.cost
+            if getattr(plan, 'is_per_seat_plan', 0):
+                user_quantity = max(subscription.user_quantity, getattr(plan, 'base_user_count', 1))
+                final_cost = plan.cost * user_quantity
+
+            # Add costs of all add-ons
+            for add_on in subscription.get("add_ons", []):
+                final_cost += add_on.cost * add_on.quantity
+
             customer = frappe.get_doc("Customer", sub_info.customer)
-            payment_result = paystack_controller.charge_customer(customer.customer_primary_email, plan.cost, plan.currency)
+            payment_result = paystack_controller.charge_customer(customer.customer_primary_email, final_cost, plan.currency)
 
             if payment_result.get("success"):
                 subscription.next_billing_date = add_months(today, 1) if plan.billing_cycle == 'Month' else add_years(today, 1)
                 subscription.payment_retry_attempt = 0
-                _send_subscription_notification(subscription, "Payment Successful", {"amount_paid": f"{plan.cost} {plan.currency}", "payment_date": today, "next_renewal_date": subscription.next_billing_date})
+                _send_subscription_notification(subscription, "Payment Successful", {"amount_paid": f"{final_cost} {plan.currency}", "payment_date": today, "next_renewal_date": subscription.next_billing_date})
             else:
                 subscription.status = "Grace Period"
                 subscription.payment_retry_attempt = 1
@@ -503,12 +513,22 @@ def _handle_grace_period_retries(today):
                 subscription.payment_retry_attempt = 0
                 _send_subscription_notification(subscription, "Subscription Changed", {"old_plan": original_plan_name, "new_plan": "Free-Monthly"})
             else:
-                payment_result = paystack_controller.charge_customer(customer.customer_primary_email, plan.cost, plan.currency)
+                # Calculate final cost based on plan type
+                final_cost = plan.cost
+                if getattr(plan, 'is_per_seat_plan', 0):
+                    user_quantity = max(subscription.user_quantity, getattr(plan, 'base_user_count', 1))
+                    final_cost = plan.cost * user_quantity
+
+                # Add costs of all add-ons
+                for add_on in subscription.get("add_ons", []):
+                    final_cost += add_on.cost * add_on.quantity
+
+                payment_result = paystack_controller.charge_customer(customer.customer_primary_email, final_cost, plan.currency)
                 if payment_result.get("success"):
                     subscription.status = "Active"
                     subscription.payment_retry_attempt = 0
                     subscription.next_billing_date = add_months(today, 1) if plan.billing_cycle == 'Month' else add_years(today, 1)
-                    _send_subscription_notification(subscription, "Payment Successful", {"amount_paid": f"{plan.cost} {plan.currency}", "payment_date": today, "next_renewal_date": subscription.next_billing_date})
+                    _send_subscription_notification(subscription, "Payment Successful", {"amount_paid": f"{final_cost} {plan.currency}", "payment_date": today, "next_renewal_date": subscription.next_billing_date})
                 else:
                     subscription.payment_retry_attempt += 1
                     _send_subscription_notification(subscription, "Payment Failed", {"failure_reason": payment_result.get('message', 'Unknown')})
@@ -533,9 +553,20 @@ def retry_payment_for_subscription_job(subscription_name, user):
             return
 
         paystack_controller = PaystackController()
+
+        # Calculate final cost based on plan type
+        final_cost = plan.cost
+        if getattr(plan, 'is_per_seat_plan', 0):
+            user_quantity = max(subscription.user_quantity, getattr(plan, 'base_user_count', 1))
+            final_cost = plan.cost * user_quantity
+
+        # Add costs of all add-ons
+        for add_on in subscription.get("add_ons", []):
+            final_cost += add_on.cost * add_on.quantity
+
         payment_result = paystack_controller.charge_customer(
             customer_email=customer.customer_primary_email,
-            amount_in_base_unit=plan.cost,
+            amount_in_base_unit=final_cost,
             currency=plan.currency
         )
 
