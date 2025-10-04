@@ -1,82 +1,39 @@
 # Copyright (c) 2025 ROKCT Holdings
 # For license information, please see license.txt
-
 import frappe
-import requests
+from frappe.utils import now_datetime
 
-def jules_task_monitor():
+@frappe.whitelist()
+def remove_expired_stories():
     """
-    Monitors the status of tasks assigned to the Jules AI assistant and updates
-    the Roadmap Feature document with the latest progress.
+    Find and delete stories that have expired.
+    This is run daily by the scheduler on tenant sites.
     """
-    # Get all features that are currently assigned to Jules
-    assigned_features = frappe.get_all("Roadmap Feature",
-        filters={"ai_status": ["in", ["Assigned", "In Progress"]]},
-        fields=["name", "jules_session_id", "feature"]
+    if frappe.conf.get("app_role") != "tenant":
+        return
+
+    print("Running Daily Expired Stories Cleanup Job...")
+
+    expired_stories = frappe.get_all("Story",
+        filters={
+            "expires_at": ["<", now_datetime()]
+        },
+        pluck="name"
     )
 
-    if not assigned_features:
+    if not expired_stories:
+        print("No expired stories to delete.")
         return
 
-    jules_api_key = frappe.conf.get("jules_api_key")
-    if not jules_api_key:
-        frappe.log_error("Jules API key is not configured.", "Jules Monitor Error")
-        return
+    print(f"Found {len(expired_stories)} expired stories to delete...")
 
-    for item in assigned_features:
-        session_id = item.get("jules_session_id")
-        if not session_id:
-            continue
-
-        doc = frappe.get_doc("Roadmap Feature", item.get("name"))
-
+    for story_name in expired_stories:
         try:
-            # Prepare the API call to get activities
-            api_url = f"https://jules.googleapis.com/v1alpha/{session_id}/activities"
-            headers = {"X-Goog-Api-Key": jules_api_key}
-
-            # Call the Jules API
-            response = requests.get(api_url, headers=headers, timeout=15)
-            response.raise_for_status()
-
-            activities_data = response.json()
-            activities = activities_data.get("activities", [])
-
-            if not activities:
-                continue
-
-            # Get the latest agent activity
-            latest_agent_activity = None
-            for activity in reversed(activities):
-                if activity.get("agentActivity"):
-                    latest_agent_activity = activity.get("agentActivity")
-                    break
-
-            if not latest_agent_activity:
-                continue
-
-            # Update AI Work Log
-            latest_message = latest_agent_activity.get("message", "No recent updates.")
-            doc.db_set("ai_work_log", latest_message)
-
-            # Check for PR URL
-            if "pull request" in latest_message.lower():
-                # A more robust solution would parse the URL properly
-                # For now, we'll just flag it as PR Ready
-                doc.db_set("ai_status", "PR Ready")
-                # In a real scenario, you'd parse the URL from the message and set it
-                # doc.db_set("pull_request_url", parsed_url)
-
-            # Update status to In Progress if it's still just "Assigned"
-            elif doc.ai_status == "Assigned":
-                 doc.db_set("ai_status", "In Progress")
-
-
-        except requests.exceptions.RequestException as e:
-            frappe.log_error(f"Jules API request failed for session {session_id}: {e}", "Jules Monitor Error")
-            doc.db_set("ai_status", "Error")
-            doc.db_set("ai_work_log", f"API Error: {e}")
+            frappe.delete_doc("Story", story_name, ignore_permissions=True, force=True)
+            print(f"  - Deleted expired story: {story_name}")
         except Exception as e:
-            frappe.log_error(frappe.get_traceback(), f"Jules Monitor Error for session {session_id}")
-            doc.db_set("ai_status", "Error")
-            doc.db_set("ai_work_log", f"An unexpected error occurred: {e}")
+            frappe.log_error(frappe.get_traceback(), f"Failed to delete expired story {story_name}")
+
+    frappe.db.commit()
+    print("Expired Stories Cleanup Job Complete.")
+

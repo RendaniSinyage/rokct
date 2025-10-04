@@ -158,9 +158,7 @@ def get_safe_scheduler_events():
 		return {}
 
 	app_role = frappe.conf.get("app_role", "tenant")
-	events = {
-		"hourly": ["rokct.roadmap.tasks.jules_task_monitor"]
-	}
+	events = {}
 	if app_role == "control_panel":
 		events["daily"] = [
 			"rokct.rokct.control_panel.tasks.manage_daily_subscriptions",

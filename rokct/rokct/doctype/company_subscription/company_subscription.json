@@ -18,9 +18,7 @@
   "api_secret",
   "email_verified_on",
   "payment_retry_attempt",
-  "user_quantity",
-  "ai_features_section",
-  "enable_ai_developer_features"
+  "user_quantity"
  ],
  "fields": [
   {
@@ -127,18 +125,6 @@
    "no_copy": 1,
    "print_hide": 1,
    "description": "The number of users for this subscription. Updated automatically from the tenant site."
-  },
-  {
-   "fieldname": "ai_features_section",
-   "fieldtype": "Section Break",
-   "label": "AI Features"
-  },
-  {
-   "default": "0",
-   "description": "When enabled, this tenant can assign tasks to the Jules AI assistant from their Roadmap.",
-   "fieldname": "enable_ai_developer_features",
-   "fieldtype": "Check",
-   "label": "Enable AI Developer Features"
   }
  ],
  "index_web_pages_for_search": 1,
