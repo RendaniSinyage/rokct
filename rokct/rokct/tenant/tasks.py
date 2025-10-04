@@ -1,3 +1,5 @@
+# Copyright (c) 2025 ROKCT Holdings
+# For license information, please see license.txt
 import frappe
 from frappe.utils import now_datetime, add_days, getdate, nowdate
 from rokct.tenant.utils import send_tenant_email
@@ -39,6 +41,7 @@ def reset_monthly_token_usage():
                 "Token Usage Job Failed"
             )
 
+    
     frappe.db.commit()
     frappe.log("Token Usage Reset Job Complete.", "Token Usage Job")
 
@@ -140,4 +143,5 @@ def disable_expired_support_users():
             frappe.log_error(frappe.get_traceback(), f"Failed to disable expired support user {user_info.email}")
 
     print("Expired Support User Cleanup Job Complete.")
+
 

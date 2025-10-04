@@ -1,3 +1,5 @@
+# Copyright (c) 2025 ROKCT Holdings
+# For license information, please see license.txt
 import frappe
 
 app_name = "rokct"
@@ -195,6 +197,7 @@ override_whitelisted_methods = {
 whitelisted_methods = {
     # Control Panel APIs
     "rokct.rokct.control_panel.api.get_subscription_status": "rokct.rokct.control_panel.api.get_subscription_status",
+    "rokct.rokct.control_panel.api.update_user_count": "rokct.rokct.control_panel.api.update_user_count",
     "rokct.rokct.control_panel.provisioning.provision_new_tenant": "rokct.rokct.control_panel.provisioning.provision_new_tenant",
     "rokct.rokct.control_panel.billing.save_payment_method": "rokct.rokct.control_panel.billing.save_payment_method",
     "rokct.rokct.control_panel.billing.reinstate_subscription": "rokct.rokct.control_panel.billing.reinstate_subscription",
