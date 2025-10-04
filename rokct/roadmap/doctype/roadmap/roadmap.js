@@ -1,5 +1,30 @@
-
 frappe.ui.form.on('Roadmap', {
+    refresh: function(frm) {
+        // Add the "Setup Workflow" button to the main form header
+        if (frm.doc.source_repository && !frm.is_new()) {
+            frm.add_custom_button(__('Setup GitHub Workflow'), function() {
+                frappe.confirm(
+                    'This will create a commit in your repository to add the GitHub workflow file. Are you sure you want to proceed?',
+                    () => {
+                        frappe.call({
+                            method: 'rokct.roadmap.api.setup_github_workflow',
+                            args: {
+                                roadmap_name: frm.doc.name
+                            },
+                            callback: function(r) {
+                                if (r.message && r.message.status === 'success') {
+                                    frappe.msgprint(r.message.message);
+                                }
+                                // On failure, Frappe's default error handling will show a dialog
+                            },
+                            freeze: true,
+                            freeze_message: "Setting up GitHub workflow in your repository..."
+                        });
+                    }
+                ).addClass('btn-primary');
+            });
+        }
+    },
     features_on_form_rendered: function(frm) {
         // This function runs on initial load to set the button visibility for all rows.
         frm.fields_dict['features'].grid.grid_rows.forEach(function(row) {
@@ -16,7 +41,6 @@ frappe.ui.form.on('Roadmap', {
 frappe.ui.form.on('Roadmap Feature', {
     status: function(frm, cdt, cdn) {
         // This function runs when the status of a single row is changed.
-        // It's more efficient as it targets only the row that was modified.
         let row_doc = locals[cdt][cdn];
         let grid_row = frm.fields_dict['features'].grid.grid_rows_by_docname[cdn];
 

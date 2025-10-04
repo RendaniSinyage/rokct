@@ -1,103 +1,105 @@
 import unittest
 from unittest.mock import patch, MagicMock
-import frappe
-from rokct.roadmap.tasks import populate_roadmap_with_ai_ideas
+import sys
+
+# Pre-import mock of frappe to handle its complex structure
+mock_frappe = MagicMock()
+sys.modules['frappe'] = mock_frappe
+
+# Now we can safely import the functions we want to test
+from rokct.roadmap.tasks import (
+    populate_roadmap_with_ai_ideas,
+    _get_api_key,
+    _generate_ideas_for_repo,
+    _save_ideas_to_roadmap,
+    _parse_ideas_from_response
+)
 
 TASKS_MODULE_PATH = 'rokct.roadmap.tasks'
 
-class TestRoadmapTasks(unittest.TestCase):
+class TestRefactoredRoadmapTasks(unittest.TestCase):
 
     def setUp(self):
-        # Mock the entire frappe module within the tasks module's namespace
-        self.patcher_frappe = patch(f'{TASKS_MODULE_PATH}.frappe', MagicMock())
-        self.mock_frappe = self.patcher_frappe.start()
+        # Reset all mocks before each test to ensure a clean state
+        mock_frappe.reset_mock()
 
-        # Mock the requests library
-        self.patcher_requests_post = patch(f'{TASKS_MODULE_PATH}.requests.post')
-        self.mock_requests_post = self.patcher_requests_post.start()
-        self.patcher_requests_get = patch(f'{TASKS_MODULE_PATH}.requests.get')
-        self.mock_requests_get = self.patcher_requests_get.start()
+    @patch(f'{TASKS_MODULE_PATH}._get_api_key')
+    @patch(f'{TASKS_MODULE_PATH}._generate_ideas_for_repo')
+    @patch(f'{TASKS_MODULE_PATH}._save_ideas_to_roadmap')
+    def test_orchestrator_happy_path(self, mock_save, mock_generate, mock_get_key):
+        """Test the main orchestrator function's successful execution path."""
+        # --- Test-specific mock setup ---
+        mock_get_key.return_value = "test_api_key"
+        mock_frappe.get_all.return_value = [{"name": "R1", "source_repository": "r1"}]
+        mock_frappe.db.exists.return_value = False
+        mock_generate.return_value = [{"title": "Generated Idea"}]
 
-        # This side effect allows us to simulate the frappe.conf.get calls
-        def conf_get_side_effect(key, default=None):
-            if key == "app_role":
-                return "control_panel"
-            if key == "jules_api_key":
-                return "test_api_key"
-            if key == "jules_source_repo":
-                return "test_repo"
-            return default
-
-        self.mock_frappe.conf.get.side_effect = conf_get_side_effect
-        self.mock_frappe.db.exists.return_value = False
-
-        self.mock_requests_post.return_value.json.return_value = {'name': 'test_session_id'}
-        self.mock_requests_get.return_value.json.return_value = {
-            'activities': [
-                {},  # User prompt
-                {
-                    'agentActivity': {
-                        'message': '{"ideas": [{"title": "Test Idea", "explanation": "Test Explanation"}]}'
-                    }
-                }
-            ]
-        }
-
-    def tearDown(self):
-        self.patcher_frappe.stop()
-        self.patcher_requests_post.stop()
-        self.patcher_requests_get.stop()
-
-    def test_gating_logic_when_ai_ideas_exist(self):
-        """Test that the function returns early if AI-generated ideas already exist."""
-        self.mock_frappe.db.exists.return_value = True
         populate_roadmap_with_ai_ideas()
-        self.mock_frappe.log_info.assert_called_with("Skipping AI idea generation as pending AI ideas already exist.", "Jules Idea Generation")
-        self.mock_requests_post.assert_not_called()
 
-    def test_roadmap_creation_if_not_exists(self):
-        """Test that the function creates the 'Backend Roadmap' if it does not exist."""
-        self.mock_frappe.db.exists.side_effect = [False, False] # No pending ideas, no roadmap
+        mock_get_key.assert_called_once()
+        mock_frappe.get_all.assert_called_once()
+        mock_generate.assert_called_once_with("r1", "test_api_key")
+        mock_save.assert_called_once_with("R1", [{"title": "Generated Idea"}])
 
+    @patch(f'{TASKS_MODULE_PATH}._get_api_key', return_value=None)
+    def test_orchestrator_no_api_key(self, mock_get_key):
+        """Test that the orchestrator exits early if no API key is found."""
+        populate_roadmap_with_ai_ideas()
+        mock_frappe.get_all.assert_not_called()
+
+    def test_get_api_key_for_control_panel(self):
+        """Test API key retrieval for a control panel role."""
+        mock_frappe.conf.get.side_effect = lambda key: "control_panel" if key == "app_role" else "cp_key"
+        self.assertEqual(_get_api_key(), "cp_key")
+
+    def test_get_api_key_for_tenant(self):
+        """Test API key retrieval for a tenant role with Jules Settings."""
+        # This test now has its own, isolated mock setup
+        with patch.object(mock_frappe.conf, 'get', return_value="tenant"), \
+             patch.object(mock_frappe.db, 'exists', return_value=True):
+
+            mock_settings = MagicMock()
+            mock_settings.get_password.return_value = "tenant_key"
+            mock_frappe.get_doc.return_value = mock_settings
+
+            self.assertEqual(_get_api_key(), "tenant_key")
+            mock_settings.get_password.assert_called_with("jules_api_key")
+
+    @patch(f'{TASKS_MODULE_PATH}._create_jules_session', return_value="sid")
+    @patch(f'{TASKS_MODULE_PATH}._get_jules_activities', return_value=[{}, {"agentActivity": {"message": '{"ideas": [{"title": "A"}]}'}}])
+    def test_generate_ideas_for_repo(self, mock_get_activities, mock_create_session):
+        """Test the core idea generation logic."""
+        ideas = _generate_ideas_for_repo("test/repo", "test_key")
+
+        self.assertEqual(len(ideas), 3) # 3 prompts are run
+        self.assertEqual(ideas[0]['title'], 'A')
+        self.assertIn(ideas[0]['type'], ["Feature", "Bug"])
+        self.assertEqual(mock_create_session.call_count, 3)
+
+    def test_save_ideas_to_roadmap(self):
+        """Test the logic for saving generated ideas to a roadmap document."""
+        ideas = [{"title": "Idea 1", "explanation": "Expl 1", "type": "Feature"}]
         mock_roadmap_doc = MagicMock()
-        self.mock_frappe.new_doc.return_value = mock_roadmap_doc
-        self.mock_frappe.get_doc.return_value = mock_roadmap_doc
-
-        populate_roadmap_with_ai_ideas()
-
-        self.mock_frappe.new_doc.assert_any_call("Roadmap")
-        self.assertEqual(mock_roadmap_doc.title, "Backend Roadmap")
-        mock_roadmap_doc.save.assert_called_with(ignore_permissions=True)
-        self.mock_frappe.log_info.assert_any_call("Created missing Roadmap document: Backend Roadmap", "Jules Idea Generation")
-
-    def test_feature_creation_from_api_response(self):
-        """Test that roadmap features are created correctly from the API response."""
-        self.mock_frappe.db.exists.side_effect = [False, True] # No pending ideas, roadmap exists
-
+        mock_frappe.get_doc.return_value = mock_roadmap_doc
         mock_feature_doc = MagicMock()
-        self.mock_frappe.new_doc.side_effect = lambda doctype: mock_feature_doc if doctype == "Roadmap Feature" else MagicMock()
+        mock_frappe.new_doc.return_value = mock_feature_doc
 
-        mock_roadmap_doc = MagicMock()
-        self.mock_frappe.get_doc.return_value = mock_roadmap_doc
+        _save_ideas_to_roadmap("Test-Roadmap", ideas)
 
-        populate_roadmap_with_ai_ideas()
+        mock_frappe.get_doc.assert_called_with("Roadmap", "Test-Roadmap")
+        mock_frappe.new_doc.assert_called_with("Roadmap Feature")
+        self.assertEqual(mock_feature_doc.feature, "Idea 1")
+        mock_roadmap_doc.append.assert_called_once_with("features", mock_feature_doc)
+        mock_roadmap_doc.save.assert_called_once()
+        mock_frappe.db.commit.assert_called_once()
 
-        self.assertEqual(self.mock_requests_post.call_count, 3)
-        self.mock_frappe.new_doc.assert_any_call("Roadmap Feature")
-        self.assertEqual(mock_feature_doc.feature, "Test Idea")
-        self.assertEqual(mock_feature_doc.explanation, "Test Explanation")
-        self.assertEqual(mock_feature_doc.is_ai_generated, 1)
-        mock_roadmap_doc.append.assert_called_with("features", mock_feature_doc)
-        mock_roadmap_doc.save.assert_called_with(ignore_permissions=True)
-
-    def test_api_error_handling(self):
-        """Test that API errors are caught and logged."""
-        self.mock_requests_post.side_effect = Exception("API is down")
-
-        populate_roadmap_with_ai_ideas()
-
-        self.mock_frappe.log_error.assert_called()
-        self.assertIn("Failed to get AI ideas", self.mock_frappe.log_error.call_args[0][0])
+    def test_parse_ideas_from_response(self):
+        """Test the JSON parsing logic."""
+        with patch.object(mock_frappe, 'log_error') as mock_log_error:
+            self.assertEqual(len(_parse_ideas_from_response('{"ideas": [1, 2]}')), 2)
+            self.assertEqual(_parse_ideas_from_response('{"other_key": []}'), [])
+            self.assertEqual(_parse_ideas_from_response('invalid json'), [])
+            mock_log_error.assert_called_once()
 
 if __name__ == '__main__':
     unittest.main()
