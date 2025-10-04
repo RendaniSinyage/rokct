@@ -41,6 +41,13 @@
             "fieldtype": "Int",
             "label": "Duration (Days)",
             "reqd": 1
+        },
+        {
+            "fieldname": "eligible_plans",
+            "fieldtype": "Table",
+            "label": "Eligible Subscription Plans",
+            "options": "Eligible Plan",
+            "description": "If you leave this empty, the add-on can be purchased by any plan."
         }
     ]
 }
