@@ -2,31 +2,32 @@
 
 ## 1. Executive Summary
 
-This report provides a detailed gap analysis between the original Laravel backend (`rokct/paas/juvo/backend`) and the current Frappe implementation (`rokct/rokct`). The analysis was conducted by mapping the features exposed by the Laravel application's API controllers to the existing DocTypes and APIs in the Frappe application.
+This report provides a detailed gap analysis between the original Laravel backend (`rokct/paas/juvo/backend`) and the current Frappe implementation (`rokct/rokct`). The analysis was conducted by mapping the features exposed by the Laravel application's API controllers for all user roles (Admin, Seller, User, Waiter, Cook, and Deliveryman) to the existing DocTypes and APIs in the Frappe application.
 
 While the core subscription management and basic e-commerce functionalities have been successfully migrated, several significant modules and features from the Laravel application are either missing or only partially implemented in the Frappe version.
 
 **Key Findings:**
 
-*   **Major Missing Modules:** The **Booking/Reservations** system and the **Parcel Delivery** system are completely absent from the Frappe implementation. These represent the most significant gaps.
-*   **Missing Core DocTypes:** Several key data models from the Laravel application do not have corresponding DocTypes in Frappe, including **`Shop`**, `Delivery Zone`, `Product Extras` (Add-ons), `FAQ`, and `Ads Package`.
+*   **Critical Missing DocType:** The most significant omission is the absence of a `Shop` DocType (or `Restaurant` DocType). This is a fundamental data model for the entire platform, and its absence is a critical gap.
+*   **Major Missing Modules:** The **Booking/Reservations** system and the **Parcel Delivery** system are completely absent from the Frappe implementation. These represent major feature gaps that impact multiple user roles.
+*   **Other Missing Core DocTypes:** Several other key data models from the Laravel application do not have corresponding DocTypes in Frappe, including `Delivery Zone`, `Product Extras` (Add-ons), `FAQ`, and `Ads Package`.
 *   **Partially Converted Features:** Payment gateway support in Frappe appears less extensive than in the original Laravel application. The payout process for sellers/drivers also needs to be clearly mapped to a Frappe workflow.
 *   **Successfully Converted Features:** Core functionalities such as user management, product catalog (Items), categories, brands, and sales orders are well-covered by standard Frappe features and have been correctly leveraged. The custom subscription management system is also fully converted.
 
 ## 2. Methodology
 
 The audit was performed in two stages:
-1.  **Discovery:** The directory structures of both the Laravel and Frappe applications were explored to list all API controllers, DocTypes, and key API methods. This created a clear picture of the intended features of the original app and the implemented features of the new app.
-2.  **Comparison:** Each controller in the Laravel application, particularly those for the `Admin` role, was treated as a feature. This feature was then checked for a corresponding implementation (DocType, API, or standard Frappe feature) in the `rokct` Frappe app.
+1.  **Discovery:** The directory structures of both the Laravel and Frappe applications were explored to list all API controllers for all user roles, as well as all DocTypes and key API methods in the Frappe app. This created a clear picture of the intended features of the original app and the implemented features of the new app.
+2.  **Comparison:** Each controller in the Laravel application was treated as a feature. This feature was then checked for a corresponding implementation (DocType, API, or standard Frappe feature) in the `rokct` Frappe app.
 
 ## 3. Detailed Gap Analysis
 
-The following is a feature-by-feature breakdown based on the Laravel Admin controllers.
+The following is a feature-by-feature breakdown based on the Laravel controllers for all roles.
 
 | Feature | Laravel Controller(s) | Frappe Status | Analysis |
 | :--- | :--- | :--- | :--- |
 | **Shops/Restaurants** | `ShopController.php` | **Missing** | This is a critical missing feature. There is no `Shop` or `Restaurant` DocType in the Frappe implementation, which is fundamental for the entire platform. |
-| **Booking & Reservations** | `Booking/` | **Missing** | The entire booking module, including tables, sections, and reservations, is absent in the Frappe app. This is a major feature gap. |
+| **Booking & Reservations** | `Booking/` | **Missing** | The entire booking module, including tables, sections, and reservations, is absent in the Frappe app. This is a major feature gap that affects Admins, Sellers, Waiters, and Users. |
 | **Parcel Delivery** | `ParcelOrderController.php` | **Missing** | The functionality for managing parcel deliveries is completely missing. This requires a new DocType and associated logic. |
 | **Delivery Zones** | `DeliveryZoneController.php` | **Missing** | There is no `Delivery Zone` DocType in Frappe. This is essential for managing delivery logistics and fees. |
 | **Product Add-ons/Extras** | `ExtraGroupController.php`, `ExtraValueController.php` | **Missing** | The ability to define and manage product variations and extras (like pizza toppings) is not implemented. |
@@ -45,9 +46,11 @@ The following is a feature-by-feature breakdown based on the Laravel Admin contr
 
 ## 4. Role-Specific Feature Analysis
 
-*   **Admin:** Has the most comprehensive feature set. The most significant gaps, as detailed above, are the Booking and Parcel modules.
-*   **Seller:** The Laravel backend provides a dedicated API for sellers to manage their shops, products, and orders. In Frappe, this is typically handled via User Permissions on standard DocTypes. While the foundation exists, a full feature-parity check for the seller dashboard is required.
-*   **Cook, Waiter, Deliveryman:** These roles primarily interact with the Order and Parcel systems. The gaps in those modules directly impact these roles. For example, the `Deliveryman` has a `ParcelOrderController` in Laravel, which has no equivalent in Frappe.
+*   **Admin:** Has the most comprehensive feature set. The most significant gaps, as detailed above, are the `Shop` DocType, the Booking module, and the Parcel module.
+*   **Seller:** The Laravel backend provides a dedicated API for sellers to manage their shops, products, and orders. In Frappe, this is typically handled via User Permissions on standard DocTypes. While the foundation exists, a full feature-parity check for the seller dashboard is required. The absence of the `Shop` DocType is a blocker for all seller-specific functionality.
+*   **User:** The user-facing API in Laravel includes features for viewing and managing bookings, parcel orders, and loan applications, all of which are missing from the Frappe implementation.
+*   **Cook & Waiter:** These roles primarily interact with the Order and Booking systems. The gaps in those modules directly impact these roles.
+*   **Deliveryman:** The `Deliveryman` role in Laravel has controllers for managing orders and parcel deliveries, which are not yet present in Frappe.
 
 ## 5. Summary of Missing DocTypes
 
@@ -61,10 +64,12 @@ The following DocTypes need to be created in the Frappe application to match the
 *   `Extra Value`
 *   `FAQ`
 *   `Ads Package`
+*   `Loan` (and related DocTypes for loan documents)
 
 ## 6. Recommendations
 
-1.  **Prioritize Major Modules:** The development team should prioritize the conversion of the **Booking/Reservations** and **Parcel Delivery** modules, as these represent the largest missing pieces of functionality.
-2.  **Create Missing DocTypes:** The DocTypes listed in the section above should be created to provide the necessary data models for the missing features.
-3.  **Conduct Deeper Dive on Partial Gaps:** A more detailed analysis is needed for Payment Gateways and Payouts to ensure the Frappe implementation meets all the business requirements of the original system.
-4.  **Update `AGENTS.md`:** The `AGENTS.md` file should be updated to reflect the correct architecture of the project, which includes both the `rokct/rokct` and `rokct/paas` directories.
+1.  **Prioritize Core DocTypes:** The immediate priority should be the creation of the `Shop` DocType, as it is a foundational element for almost all other features.
+2.  **Implement Major Modules:** The development team should then prioritize the conversion of the **Booking/Reservations** and **Parcel Delivery** modules, as these represent the largest missing pieces of functionality.
+3.  **Create Missing DocTypes:** The other DocTypes listed in the section above should be created to provide the necessary data models for the missing features.
+4.  **Conduct Deeper Dive on Partial Gaps:** A more detailed analysis is needed for Payment Gateways and Payouts to ensure the Frappe implementation meets all the business requirements of the original system.
+5.  **Update `AGENTS.md`:** The `AGENTS.md` file should be updated to reflect the correct architecture of the project, which includes both the `rokct/rokct` and `rokct/paas` directories.
