@@ -3,7 +3,7 @@ import unittest
 from unittest.mock import patch
 
 # Import the functions to be tested
-from rokct.rokct.api.paas.shop import create_shop, get_shops, get_shop_details
+from rokct.paas.api.shop.shop import create_shop, get_shops, get_shop_details
 
 class TestShopAPI(unittest.TestCase):
     def setUp(self):
