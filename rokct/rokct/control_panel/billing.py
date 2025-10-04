@@ -55,3 +55,59 @@ def retry_billing_for_subscription(subscription_name):
         user=frappe.session.user
     )
     return "Payment retry has been scheduled. You will be notified when it is complete."
+
+@frappe.whitelist()
+def charge_customer_for_addon(customer_email, amount, currency, addon_name):
+    """
+    Charges a customer for a one-time add-on purchase.
+    Called securely from a tenant site.
+    """
+    # Security check: This should only run on the control panel.
+    if frappe.conf.get("app_role") != "control_panel":
+        frappe.throw("This action can only be performed on the control panel.", title="Action Not Allowed")
+
+    # Security check: Tenant identity and secret from request
+    tenant_site = frappe.local.request.host
+    received_secret = frappe.local.request.headers.get("X-Rokct-Secret")
+
+    if not tenant_site or not received_secret:
+        frappe.throw("Authentication failed: Missing credentials.")
+
+    subscription_name = frappe.db.get_value("Company Subscription", {"site_name": tenant_site}, "name")
+    if not subscription_name:
+        frappe.throw(f"No subscription found for site {tenant_site}")
+
+    stored_secret = frappe.utils.get_password(doctype="Company Subscription", name=subscription_name, fieldname="api_secret")
+    if received_secret != stored_secret:
+        frappe.throw("Authentication failed: Invalid credentials.")
+
+    if not all([customer_email, amount, currency, addon_name]):
+        frappe.throw("Customer email, amount, currency, and add-on name are required.", title="Missing Information")
+
+    try:
+        amount = float(amount)
+        if amount <= 0:
+            frappe.throw("Amount must be a positive number.", title="Invalid Amount")
+    except ValueError:
+        frappe.throw("Invalid amount specified.", title="Invalid Amount")
+
+    try:
+        paystack_controller = PaystackController()
+        payment_result = paystack_controller.charge_customer(customer_email, amount, currency)
+
+        if payment_result.get("success"):
+            frappe.log_error(
+                message=f"Successfully charged {customer_email} {amount} {currency} for add-on '{addon_name}' from site {tenant_site}.",
+                title="Add-on Purchase Success"
+            )
+            return {"status": "success", "message": "Payment successful."}
+        else:
+            frappe.log_error(
+                message=f"Failed to charge {customer_email} for add-on '{addon_name}'. Reason: {payment_result.get('message')}",
+                title="Add-on Purchase Failed"
+            )
+            frappe.throw(f"Payment failed: {payment_result.get('message')}")
+
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), f"Add-on Charge Failed for {customer_email}")
+        frappe.throw(f"An unexpected error occurred during payment: {e}")

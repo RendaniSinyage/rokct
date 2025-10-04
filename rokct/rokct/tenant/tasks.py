@@ -13,7 +13,7 @@ def reset_monthly_token_usage():
         return
 
     frappe.log("Running Daily Token Usage Reset Job...", "Token Usage Job")
-    
+
     today = nowdate()
     thirty_days_ago = add_days(today, -30)
 
@@ -40,6 +40,7 @@ def reset_monthly_token_usage():
                 f"Failed to reset token tracker for {item.name}: {e}",
                 "Token Usage Job Failed"
             )
+
     
     frappe.db.commit()
     frappe.log("Token Usage Reset Job Complete.", "Token Usage Job")
