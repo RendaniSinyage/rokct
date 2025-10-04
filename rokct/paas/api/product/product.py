@@ -414,3 +414,41 @@ def add_product_review(uuid: str, rating: float, comment: str = None):
     })
     review.insert(ignore_permissions=True)
     return review.as_dict()
+
+
+@frappe.whitelist()
+def get_product_history(limit_start: int = 0, limit_page_length: int = 20):
+    """
+    Retrieves the viewing history for the current user, specific to products (Items).
+    """
+    user = frappe.session.user
+    if user == "Guest":
+        frappe.throw("You must be logged in to view your history.")
+
+    # Get the names of the items the user has viewed
+    viewed_item_names = frappe.get_all(
+        "View Log",
+        filters={
+            "user": user,
+            "doctype": "Item"
+        },
+        fields=["docname"],
+        order_by="creation desc",
+        limit_start=limit_start,
+        limit_page_length=limit_page_length,
+        distinct=True
+    )
+
+    item_names = [d.docname for d in viewed_item_names]
+
+    if not item_names:
+        return []
+
+    # Fetch the actual product details for the viewed items
+    products = frappe.get_list(
+        "Item",
+        fields=["name", "item_name", "description", "image", "standard_rate"],
+        filters={"name": ("in", item_names)},
+    )
+
+    return products

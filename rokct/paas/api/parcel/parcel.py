@@ -1,0 +1,36 @@
+import frappe
+import json
+
+@frappe.whitelist()
+def create_parcel_order(order_data):
+    """
+    Creates a new parcel order.
+    """
+    if isinstance(order_data, str):
+        order_data = json.loads(order_data)
+
+    user = frappe.session.user
+    if user == "Guest":
+        frappe.throw("You must be logged in to create a parcel order.", frappe.AuthenticationError)
+
+    parcel_order = frappe.get_doc({
+        "doctype": "Parcel Order",
+        "user": user,
+        "total_price": order_data.get("total_price"),
+        "currency": order_data.get("currency"),
+        "type": order_data.get("type"),
+        "note": order_data.get("note"),
+        "tax": order_data.get("tax"),
+        "status": "New",
+        "address_from": json.dumps(order_data.get("address_from")),
+        "phone_from": order_data.get("phone_from"),
+        "username_from": order_data.get("username_from"),
+        "address_to": json.dumps(order_data.get("address_to")),
+        "phone_to": order_data.get("phone_to"),
+        "username_to": order_data.get("username_to"),
+        "delivery_fee": order_data.get("delivery_fee"),
+        "delivery_date": order_data.get("delivery_date"),
+        "delivery_time": order_data.get("delivery_time"),
+    })
+    parcel_order.insert(ignore_permissions=True)
+    return parcel_order.as_dict()
