@@ -34,6 +34,43 @@ def update_task_status_from_pr():
 
 
 @frappe.whitelist()
+def get_roadmap_statuses(roadmap_names):
+    """
+    For a given list of roadmap names, checks their status for GitHub linking and AI readiness.
+    """
+    roadmap_names = json.loads(roadmap_names)
+    statuses = {}
+
+    # Check AI readiness once for the whole site
+    ai_ready = _get_api_key() is not None
+    github_pat = frappe.conf.get("github_personal_access_token")
+
+    for name in roadmap_names:
+        doc = frappe.get_doc("Roadmap", name)
+        is_linked = False
+        if doc.source_repository and github_pat:
+            try:
+                parts = doc.source_repository.strip('/').split('/')
+                owner, repo = parts[-2], parts[-1].replace('.git', '')
+                workflow_path = ".github/workflows/rokct_pr_merged.yml"
+                api_url = f"https://api.github.com/repos/{owner}/{repo}/contents/{workflow_path}"
+                headers = {"Authorization": f"token {github_pat}", "Accept": "application/vnd.github.v3+json"}
+                response = requests.get(api_url, headers=headers, timeout=10)
+                if response.status_code == 200:
+                    is_linked = True
+            except Exception:
+                # If any error occurs (parsing, request), assume not linked for status purposes
+                pass
+
+        statuses[name] = {
+            "is_linked": is_linked,
+            "ai_ready": ai_ready
+        }
+
+    return statuses
+
+
+@frappe.whitelist()
 def setup_github_workflow(roadmap_name):
     """
     Checks if the GitHub workflow file exists in the repository. If not,
