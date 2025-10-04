@@ -126,18 +126,26 @@ def get_subscription_status():
     plan = frappe.get_doc("Subscription Plan", subscription.plan)
     settings = frappe.get_doc("Subscription Settings")
 
-    return {
+    response_data = {
         "status": subscription.status,
         "plan": subscription.plan,
         "trial_ends_on": subscription.trial_ends_on,
         "next_billing_date": subscription.next_billing_date,
         "modules": [p.module for p in plan.get("modules", [])],
-        "max_companies": getattr(plan, 'max_companies', 1), # Get override from plan, default to 1
+        "max_companies": getattr(plan, 'max_companies', 1),
         "storage_quota_gb": getattr(plan, "storage_quota_gb", 0),
         "monthly_token_limit": getattr(plan, "monthly_token_limit", 0),
         "is_per_seat_plan": getattr(plan, "is_per_seat_plan", 0),
-        "subscription_cache_duration": settings.subscription_cache_duration or 86400
+        "subscription_cache_duration": settings.subscription_cache_duration or 86400,
+        "enable_ai_developer_features": subscription.enable_ai_developer_features
     }
+
+    # If AI features are enabled for this tenant, include the platform's API key
+    if subscription.enable_ai_developer_features:
+        response_data["jules_api_key"] = frappe.conf.get("jules_api_key")
+        response_data["jules_source_repo"] = frappe.conf.get("jules_source_repo")
+
+    return response_data
 
 
 @frappe.whitelist()
