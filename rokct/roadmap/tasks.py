@@ -43,15 +43,15 @@ def populate_roadmap_with_ai_ideas():
     prompts = [
         {
             "title": "Suggest New Features",
-            "prompt": "Analyze the entire codebase. Based on the existing features, suggest 3 new, complementary features that would add significant value. For each, provide a title and a brief explanation. Do not write any code. Respond in JSON format: {\"ideas\": [{\"title\": \"...", \"explanation\": \"...\"}]}"
+            "prompt": 'Analyze the entire codebase. Based on the existing features, suggest 3 new, complementary features that would add significant value. For each, provide a title and a brief explanation. Do not write any code. Respond in JSON format: {"ideas": [{"title": "...", "explanation": "..."}]}'
         },
         {
             "title": "Suggest Improvements",
-            "prompt": "Review the existing code. Identify 3 areas that could be improved for performance, user experience, or maintainability. For each, provide a title for the improvement and a brief explanation of what to do. Do not write any code. Respond in JSON format: {\"ideas\": [{\"title\": \"...", \"explanation\": \"...\"}]}"
+            "prompt": 'Review the existing code. Identify 3 areas that could be improved for performance, user experience, or maintainability. For each, provide a title for the improvement and a brief explanation of what to do. Do not write any code. Respond in JSON format: {"ideas": [{"title": "...", "explanation": "..."}]}'
         },
         {
             "title": "Identify Potential Bugs",
-            "prompt": "Perform a static analysis of the code to identify 3 potential bugs or edge cases that may not be handled correctly. For each, provide a title and a brief explanation of the potential bug. Do not write any code. Respond in JSON format: {\"ideas\": [{\"title\": \"...", \"explanation\": \"...\"}]}"
+            "prompt": 'Perform a static analysis of the code to identify 3 potential bugs or edge cases that may not be handled correctly. For each, provide a title and a brief explanation of the potential bug. Do not write any code. Respond in JSON format: {"ideas": [{"title": "...", "explanation": "..."}]}'
         }
     ]
 
@@ -103,8 +103,16 @@ def _get_latest_agent_message(activities):
 
 def _create_roadmap_features_from_response(response_text, task_type):
     try:
+        # First, ensure the target Roadmap document exists.
+        roadmap_name = "Backend Roadmap"
+        if not frappe.db.exists("Roadmap", roadmap_name):
+            roadmap_doc = frappe.new_doc("Roadmap")
+            roadmap_doc.title = roadmap_name
+            roadmap_doc.save(ignore_permissions=True)
+            frappe.log_info(f"Created missing Roadmap document: {roadmap_name}", "Jules Idea Generation")
+
         data = json.loads(response_text)
-        roadmap_doc = frappe.get_doc("Roadmap", "Backend Roadmap") # Assuming a single Roadmap doc
+        roadmap_doc = frappe.get_doc("Roadmap", roadmap_name)
 
         for idea in data.get("ideas", []):
             feature_doc = frappe.new_doc("Roadmap Feature")
