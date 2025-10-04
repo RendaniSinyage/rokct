@@ -21,6 +21,7 @@
 import frappe
 import random
 from rokct.rokct.utils.subscription_checker import check_subscription_feature
+from rokct.rokct.tenant.api import get_subscription_details
 from frappe.model.document import Document
 import json
 import uuid
@@ -4498,16 +4499,64 @@ def get_seller_shop_ads_packages(limit_start: int = 0, limit_page_length: int = 
 @frappe.whitelist()
 def purchase_shop_ads_package(package_name):
     """
-    Purchases an ads package for the current seller's shop.
+    Purchases an ads package for the current seller's shop, including
+    subscription validation and payment processing.
     """
     user = frappe.session.user
-    shop = _get_seller_shop(user)
+    if user == "Guest":
+        frappe.throw("You must be logged in to purchase an add-on.")
 
+    shop = _get_seller_shop(user)
     ads_package = frappe.get_doc("Ads Package", package_name)
 
-    # In a real application, you would have a payment flow here.
-    # For now, we will just create the Shop Ads Package directly.
+    # 1. Check subscription eligibility
+    subscription_details = get_subscription_details()
+    current_plan = subscription_details.get("plan")
 
+    eligible_plans = [plan.subscription_plan for plan in ads_package.get("eligible_plans", [])]
+
+    # If the eligible_plans list is not empty, we must enforce it.
+    if eligible_plans and current_plan not in eligible_plans:
+        frappe.throw(
+            "Your current subscription plan is not eligible to purchase this add-on.",
+            title="Upgrade Required"
+        )
+
+    # 2. Initiate payment via the control panel
+    control_plane_url = frappe.conf.get("control_plane_url")
+    api_secret = frappe.conf.get("api_secret")
+
+    if not control_plane_url or not api_secret:
+        frappe.log_error("Tenant site is not configured to communicate with the control panel.", "Add-on Purchase Error")
+        frappe.throw("Platform communication is not configured. Cannot process payment.", title="Configuration Error")
+
+    customer_email = frappe.get_value("User", user, "email")
+
+    scheme = frappe.conf.get("control_plane_scheme", "https")
+    api_url = f"{scheme}://{control_plane_url}/api/method/rokct.rokct.control_panel.billing.charge_customer_for_addon"
+
+    headers = {
+        "X-Rokct-Secret": api_secret,
+        "Content-Type": "application/json"
+    }
+
+    payment_data = {
+        "customer_email": customer_email,
+        "amount": ads_package.price,
+        "currency": "USD",
+        "addon_name": ads_package.name
+    }
+
+    try:
+        response = frappe.make_post_request(api_url, headers=headers, data=json.dumps(payment_data))
+        if response.get("status") != "success":
+            frappe.throw(response.get("message", "Payment failed."), title="Payment Error")
+
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), "Add-on Payment Failed")
+        frappe.throw(f"An error occurred while processing the payment: {e}")
+
+    # 3. If payment is successful, create the Shop Ads Package
     from frappe.utils import nowdate, add_days
 
     start_date = nowdate()
@@ -4521,6 +4570,7 @@ def purchase_shop_ads_package(package_name):
         "end_date": end_date
     })
     new_shop_ads_package.insert(ignore_permissions=True)
+    frappe.db.commit()
 
     return new_shop_ads_package.as_dict()
 

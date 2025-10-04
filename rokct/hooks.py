@@ -196,7 +196,7 @@ whitelisted_methods = {
     "rokct.rokct.control_panel.provisioning.provision_new_tenant": "rokct.rokct.control_panel.provisioning.provision_new_tenant",
     "rokct.rokct.control_panel.billing.save_payment_method": "rokct.rokct.control_panel.billing.save_payment_method",
     "rokct.rokct.control_panel.billing.reinstate_subscription": "rokct.rokct.control_panel.billing.reinstate_subscription",
-    "rokct.rokct.control_panel.billing.purchase_add_on": "rokct.rokct.control_panel.billing.purchase_add_on",
+    "rokct.rokct.control_panel.billing.charge_customer_for_addon": "rokct.rokct.control_panel.billing.charge_customer_for_addon",
     "rokct.rokct.control_panel.support.grant_support_access": "rokct.rokct.control_panel.support.grant_support_access",
     "rokct.rokct.control_panel.support.revoke_support_access": "rokct.rokct.control_panel.support.revoke_support_access",
 

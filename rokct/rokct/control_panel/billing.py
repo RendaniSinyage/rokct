@@ -95,12 +95,12 @@ def purchase_add_on(add_on_name: str, customer_email: str):
         for purchased in subscription.get("purchased_add_ons", []):
             if purchased.add_on == add_on_name and add_on.billing_type == "Recurring":
                 frappe.throw(f"You have already subscribed to the '{add_on_name}' recurring add-on.", title="Already Subscribed")
-
+        
         subscription.append("purchased_add_ons", {
             "add_on": add_on_name,
             "purchase_date": frappe.utils.nowdate()
         })
-
+        
         subscription.save(ignore_permissions=True)
         frappe.db.commit()
 
