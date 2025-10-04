@@ -256,22 +256,7 @@ from rokct.paas.api.admin.admin import (
     delete_booking,
     get_admin_report,
 )
-from rokct.paas.api.seller.seller import (
-    get_seller_statistics,
-    get_seller_sales_report,
-    get_seller_products,
-    create_seller_product,
-    update_seller_product,
-    delete_seller_product,
-    get_seller_categories,
-    create_seller_category,
-    update_seller_category,
-    delete_seller_category,
-    get_seller_brands,
-    create_seller_brand,
-    update_seller_brand,
-    delete_seller_brand,
-    get_seller_orders,
+from rokct.paas.api.seller_shop_settings.seller_shop_settings import (
     get_seller_shop_working_days,
     update_seller_shop_working_days,
     get_seller_shop_closed_days,
@@ -280,11 +265,14 @@ from rokct.paas.api.seller.seller import (
     get_shop_users,
     add_shop_user,
     remove_shop_user,
-    get_seller_invites,
-    get_seller_kitchens,
-    create_seller_kitchen,
-    update_seller_kitchen,
-    delete_seller_kitchen,
+    get_seller_branches,
+    create_seller_branch,
+    update_seller_branch,
+    delete_seller_branch,
+    get_seller_deliveryman_settings,
+    update_seller_deliveryman_settings,
+)
+from rokct.paas.api.seller_marketing.seller_marketing import (
     get_seller_coupons,
     create_seller_coupon,
     update_seller_coupon,
@@ -297,6 +285,55 @@ from rokct.paas.api.seller.seller import (
     create_seller_banner,
     update_seller_banner,
     delete_seller_banner,
+    get_ads_packages,
+    get_seller_shop_ads_packages,
+    purchase_shop_ads_package,
+)
+from rokct.paas.api.seller_operations.seller_operations import (
+    get_seller_kitchens,
+    create_seller_kitchen,
+    update_seller_kitchen,
+    delete_seller_kitchen,
+    get_seller_inventory_items,
+    adjust_seller_inventory,
+    get_seller_menus,
+    get_seller_menu,
+    create_seller_menu,
+    update_seller_menu,
+    delete_seller_menu,
+    get_seller_receipts,
+    create_seller_receipt,
+    update_seller_receipt,
+    delete_seller_receipt,
+    get_seller_combos,
+    get_seller_combo,
+    create_seller_combo,
+    update_seller_combo,
+    delete_seller_combo,
+)
+from rokct.paas.api.seller_reports.seller_reports import (
+    get_seller_statistics,
+    get_seller_sales_report,
+)
+from rokct.paas.api.seller_order.seller_order import (
+    get_seller_orders,
+    get_seller_order_refunds,
+    update_seller_order_refund,
+    get_seller_reviews,
+)
+from rokct.paas.api.seller_product.seller_product import (
+    get_seller_products,
+    create_seller_product,
+    update_seller_product,
+    delete_seller_product,
+    get_seller_categories,
+    create_seller_category,
+    update_seller_category,
+    delete_seller_category,
+    get_seller_brands,
+    create_seller_brand,
+    update_seller_brand,
+    delete_seller_brand,
     get_seller_extra_groups,
     create_seller_extra_group,
     update_seller_extra_group,
@@ -313,52 +350,44 @@ from rokct.paas.api.seller.seller import (
     create_seller_tag,
     update_seller_tag,
     delete_seller_tag,
-    get_seller_transactions,
-    get_seller_shop_payments,
+)
+from rokct.paas.api.seller_payout.seller_payout import (
     get_seller_payouts,
+)
+from rokct.paas.api.seller_bonus.seller_bonus import (
     get_seller_bonuses,
+)
+from rokct.paas.api.seller_story.seller_story import (
     get_seller_stories,
     create_seller_story,
     update_seller_story,
     delete_seller_story,
-    get_seller_shop_galleries,
-    create_seller_shop_gallery,
-    delete_seller_shop_gallery,
-    get_seller_menus,
-    get_seller_menu,
-    create_seller_menu,
-    update_seller_menu,
-    delete_seller_menu,
-    get_seller_order_refunds,
-    update_seller_order_refund,
-    get_seller_reviews,
+)
+from rokct.paas.api.seller_delivery_zone.seller_delivery_zone import (
     get_seller_delivery_zones,
     get_seller_delivery_zone,
     create_seller_delivery_zone,
     update_seller_delivery_zone,
     delete_seller_delivery_zone,
-    get_seller_branches,
-    create_seller_branch,
-    update_seller_branch,
-    delete_seller_branch,
-    get_seller_deliveryman_settings,
-    update_seller_deliveryman_settings,
-    get_seller_inventory_items,
-    get_ads_packages,
-    get_seller_shop_ads_packages,
-    purchase_shop_ads_package,
-    get_seller_receipts,
-    create_seller_receipt,
-    update_seller_receipt,
-    delete_seller_receipt,
-    get_seller_combos,
-    get_seller_combo,
-    create_seller_combo,
-    update_seller_combo,
-    delete_seller_combo,
+)
+from rokct.paas.api.seller_invites.seller_invites import (
+    get_seller_invites,
+)
+from rokct.paas.api.seller_transactions.seller_transactions import (
+    get_seller_transactions,
+    get_seller_shop_payments,
+    get_seller_payment_to_partners,
+)
+from rokct.paas.api.seller_shop_gallery.seller_shop_gallery import (
+    get_seller_shop_galleries,
+    create_seller_shop_gallery,
+    delete_seller_shop_gallery,
+)
+from rokct.paas.api.seller_customer_management.seller_customer_management import (
     get_seller_request_models,
     get_seller_customer_addresses,
-    get_seller_payment_to_partners,
+)
+from rokct.paas.api.seller_logistics.seller_logistics import (
     get_seller_delivery_man_delivery_zones,
     adjust_seller_inventory,
 )
