@@ -1,6 +1,6 @@
 import frappe
 import json
-from ..seller.utils import _get_seller_shop
+from ..utils import _get_seller_shop
 
 @frappe.whitelist()
 def get_seller_stories(limit_start: int = 0, limit_page_length: int = 20):

@@ -1,7 +1,7 @@
 import frappe
 import json
 import uuid
-from ..seller.utils import _get_seller_shop
+from ..utils import _get_seller_shop
 
 @frappe.whitelist()
 def get_seller_products(limit_start: int = 0, limit_page_length: int = 20):
