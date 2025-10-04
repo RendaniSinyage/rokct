@@ -1,0 +1,129 @@
+{
+    "name": "Shop",
+    "engine": "InnoDB",
+    "autoname": "field:shop_name",
+    "creation": "2025-10-03 20:37:00.000000",
+    "doctype": "DocType",
+    "fields": [
+        {
+            "fieldname": "shop_name",
+            "fieldtype": "Data",
+            "label": "Shop Name",
+            "reqd": 1,
+            "unique": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "user",
+            "fieldtype": "Link",
+            "label": "User",
+            "options": "User",
+            "reqd": 1
+        },
+        {
+            "fieldname": "logo",
+            "fieldtype": "Attach Image",
+            "label": "Logo"
+        },
+        {
+            "fieldname": "cover_photo",
+            "fieldtype": "Attach Image",
+            "label": "Cover Photo"
+        },
+        {
+            "fieldname": "phone",
+            "fieldtype": "Phone",
+            "label": "Phone"
+        },
+        {
+            "fieldname": "address",
+            "fieldtype": "Small Text",
+            "label": "Address"
+        },
+        {
+            "fieldname": "location",
+            "fieldtype": "Geolocation",
+            "label": "Location"
+        },
+        {
+            "fieldname": "status",
+            "fieldtype": "Select",
+            "label": "Status",
+            "options": "new\nedited\napproved\nrejected\ninactive",
+            "default": "new",
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "type",
+            "fieldtype": "Select",
+            "label": "Type",
+            "options": "retail\nagri\nall",
+            "default": "retail"
+        },
+        {
+            "fieldname": "min_amount",
+            "fieldtype": "Currency",
+            "label": "Minimum Amount"
+        },
+        {
+            "fieldname": "tax",
+            "fieldtype": "Percent",
+            "label": "Tax"
+        },
+        {
+            "fieldname": "delivery_time_type",
+            "fieldtype": "Select",
+            "label": "Delivery Time Type",
+            "options": "minute\nhour\nday\nmonth"
+        },
+        {
+            "fieldname": "delivery_time_from",
+            "fieldtype": "Data",
+            "label": "Delivery Time From"
+        },
+        {
+            "fieldname": "delivery_time_to",
+            "fieldtype": "Data",
+            "label": "Delivery Time To"
+        },
+        {
+            "fieldname": "open",
+            "fieldtype": "Check",
+            "label": "Open",
+            "default": "1"
+        },
+        {
+            "fieldname": "visibility",
+            "fieldtype": "Check",
+            "label": "Visible",
+            "default": "1"
+        },
+        {
+            "fieldname": "verify",
+            "fieldtype": "Check",
+            "label": "Verified",
+            "default": "0"
+        }
+    ],
+    "modified": "2025-10-03 20:37:00.000000",
+    "modified_by": "Administrator",
+    "module": "rokct",
+    "owner": "Administrator",
+    "permissions": [
+        {
+            "role": "System Manager",
+            "read": 1,
+            "write": 1,
+            "create": 1,
+            "delete": 1
+        },
+        {
+            "role": "Seller",
+            "read": 1,
+            "write": 1
+        }
+    ],
+    "sort_field": "modified",
+    "sort_order": "DESC",
+    "track_changes": 1
+}
