@@ -16,13 +16,42 @@ def jules_task_monitor():
     if is_control_panel:
         jules_api_key = frappe.conf.get("jules_api_key")
     else:
-        # On a tenant site, use the key from the local Jules Settings.
-        if frappe.db.exists("DocType", "Jules Settings"):
-            jules_settings = frappe.get_doc("Jules Settings")
-            jules_api_key = jules_settings.get_password("jules_api_key")
+        # On a tenant site, make a secure external HTTP request to the control panel
+        control_plane_url = frappe.conf.get("control_plane_url")
+        api_secret = frappe.conf.get("api_secret")
+
+        if not control_plane_url or not api_secret:
+            # If tenant isn't configured for control panel communication, only check for local key.
+            if frappe.db.exists("DocType", "Jules Settings"):
+                jules_settings = frappe.get_doc("Jules Settings")
+                jules_api_key = jules_settings.get_password("jules_api_key")
+        else:
+            try:
+                scheme = frappe.conf.get("control_plane_scheme", "https")
+                api_url = f"{scheme}://{control_plane_url}/api/method/rokct.rokct.control_panel.api.get_subscription_status"
+                headers = {"X-Rokct-Secret": api_secret}
+
+                response = requests.post(api_url, headers=headers, timeout=15)
+                response.raise_for_status()
+                subscription_details = response.json().get("message", {})
+
+                if subscription_details and subscription_details.get('enable_ai_developer_features'):
+                    jules_api_key = subscription_details.get("jules_api_key")
+                else:
+                    # Fallback to local settings if feature not enabled
+                    if frappe.db.exists("DocType", "Jules Settings"):
+                        jules_settings = frappe.get_doc("Jules Settings")
+                        jules_api_key = jules_settings.get_password("jules_api_key")
+
+            except Exception as e:
+                 frappe.log_error(f"Could not fetch subscription details from control panel during task monitoring: {e}", "Jules Monitor Error")
+                 # Fallback to local settings if the API call fails
+                 if frappe.db.exists("DocType", "Jules Settings"):
+                    jules_settings = frappe.get_doc("Jules Settings")
+                    jules_api_key = jules_settings.get_password("jules_api_key")
 
     if not jules_api_key:
-        # No key is configured on this site, so the monitor cannot proceed.
+        # No key configured for this site, so the monitor cannot proceed.
         return
 
     # Step 2: Get all features assigned to Jules on this site.
@@ -34,7 +63,7 @@ def jules_task_monitor():
     if not assigned_features:
         return
 
-    # Step 3: Loop through each task and check for updates.
+    # Step 3: Loop through each task and check for updates using the key we found.
     for item in assigned_features:
         session_id = item.get("jules_session_id")
         if not session_id:
@@ -43,10 +72,10 @@ def jules_task_monitor():
         doc = frappe.get_doc("Roadmap Feature", item.get("name"))
 
         try:
-            api_url = f"https://jules.googleapis.com/v1alpha/{session_id}/activities"
+            jules_api_url = f"https://jules.googleapis.com/v1alpha/{session_id}/activities"
             headers = {"X-Goog-Api-Key": jules_api_key}
 
-            response = requests.get(api_url, headers=headers, timeout=15)
+            response = requests.get(jules_api_url, headers=headers, timeout=15)
             response.raise_for_status()
 
             activities_data = response.json()
