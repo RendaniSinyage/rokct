@@ -72,4 +72,3 @@ The following DocTypes need to be created in the Frappe application to match the
 2.  **Implement Major Modules:** The development team should then prioritize the conversion of the **Booking/Reservations** and **Parcel Delivery** modules, as these represent the largest missing pieces of functionality.
 3.  **Create Missing DocTypes:** The other DocTypes listed in the section above should be created to provide the necessary data models for the missing features.
 4.  **Conduct Deeper Dive on Partial Gaps:** A more detailed analysis is needed for Payment Gateways and Payouts to ensure the Frappe implementation meets all the business requirements of the original system.
-5.  **Update `AGENTS.md`:** The `AGENTS.md` file should be updated to reflect the correct architecture of the project, which includes both the `rokct/rokct` and `rokct/paas` directories.

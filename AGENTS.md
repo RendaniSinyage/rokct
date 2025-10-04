@@ -8,16 +8,14 @@ This document provides instructions and guidelines for AI agents working on this
 
 \## Project Overview and Goals
 
-This project involves a custom Frappe application named `rokct`. This app is responsible for various business functionalities, including customizations, system setups, and tenant provisioning.
-
-A key part of this project is the **PaaS (Platform as a Service) module**, which is being converted from a legacy Laravel application. Your main task is to continue this conversion effort by implementing features from the Laravel backend into the `rokct` Frappe app.
+This project is an AI-first ERP that runs on Frappe. The core application is `rokct`. Within this app, there is a side-project module called `paas` (Platform as a Service), which is being converted from a legacy Laravel application. Your main task is to continue this conversion effort by implementing features from the Laravel backend into the `rokct` Frappe app.
 
 \## Application Structure
 
 The key components of the application are located in the following directories:
 
-*   **Frappe App (Target for Conversion):** `rokct/rokct` - This is the main Frappe application where all new development and conversion work for the PaaS module should take place.
-*   **Original Laravel Backend (Source of Truth):** `rokct/paas/juvo/backend` - This serves as the reference for the features and logic you will be converting.
+*   **Primary Frappe App:** `rokct/rokct` - This is the main application where all business logic, customizations, and the PaaS module are implemented.
+*   **PaaS Module (Source of Truth):** `rokct/paas/juvo/backend` - The original Laravel backend. This serves as the reference for the features and logic you will be converting for the PaaS module.
 *   **Flutter Frontend Apps:** `rokct/paas/juvo/customer` and `rokct/paas/juvo/pos` - These are the customer-facing and Point-of-Sale (POS) applications that will connect to the new Frappe backend.
 
 
@@ -52,21 +50,15 @@ To ensure a smooth and consistent development process, please follow these steps
 
 \## Repository Rules
 
-
-
 Please adhere to the following rules when working on this repository:
 
+*   **Copyright:** All files in this repository are subject to the license defined in the root `license.txt` file. Before committing any changes, please ensure that any file you create or modify contains the correct copyright notice at the top of the file. The correct copyright notice can be found in the `license.txt` file.
 
+*   **Dependencies:** Do **not** install any new dependencies or packages without first asking for and receiving permission from the user.
 
-\*   \*\*Copyright:\*\* All files in this repository are subject to the license defined in the root `license.txt` file. Before committing any changes, please ensure that any file you create or modify contains the correct copyright notice at the top of the file. The correct copyright notice can be found in the `license.txt` file.
+*   **Resetting the Environment:** Do **not** use the `reset_all` tool without explicit permission from the user. This is a destructive action that will revert all changes.
 
-
-
-\*   \*\*Dependencies:\*\* Do \*\*not\*\* install any new dependencies or packages without first asking for and receiving permission from the user.
-
-
-
-\*   \*\*Frontend Changes:\*\* Do not make any changes to the frontend Flutter applications (`rokct/paas/juvo/customer` and `rokct/paas/juvo/pos`) beyond what is necessary for API compatibility, without explicit permission from the user.
+*   **Frontend Changes:** Do not make any changes to the frontend Flutter applications (`rokct/paas/juvo/customer` and `rokct/paas/juvo/pos`) beyond what is necessary for API compatibility, without explicit permission from the user.
 
 
 
