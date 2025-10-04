@@ -24,6 +24,7 @@ import frappe
 import random
 from rokct.rokct.utils.subscription_checker import check_subscription_feature
 from rokct.rokct.tenant.api import get_subscription_details
+from rokct.rokct.api.paas.shop import get_shops, get_shop_details
 from frappe.model.document import Document
 import json
 import uuid
@@ -4373,6 +4374,16 @@ def delete_seller_branch(branch_name):
 
     frappe.delete_doc("Branch", branch_name, ignore_permissions=True)
     return {"status": "success", "message": "Branch deleted successfully."}
+
+
+@frappe.whitelist(allow_guest=True)
+def shops(limit_start: int = 0, limit_page_length: int = 20, order_by: str = "name", order: str = "desc", **kwargs):
+	return get_shops(limit_start, limit_page_length, order_by, order, **kwargs)
+
+
+@frappe.whitelist(allow_guest=True)
+def shop_details(uuid: str):
+	return get_shop_details(uuid)
 
 
 @frappe.whitelist()

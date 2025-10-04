@@ -103,11 +103,48 @@
             "fieldtype": "Check",
             "label": "Verified",
             "default": "0"
+        },
+        {
+            "fieldname": "uuid",
+            "fieldtype": "Data",
+            "label": "UUID",
+            "reqd": 1,
+            "unique": 1,
+            "no_copy": 1,
+            "read_only": 1
+        },
+        {
+            "fieldname": "slug",
+            "fieldtype": "Data",
+            "label": "Slug",
+            "unique": 1
+        },
+        {
+            "fieldname": "service_fee",
+            "fieldtype": "Currency",
+            "label": "Service Fee"
+        },
+        {
+            "fieldname": "percentage",
+            "fieldtype": "Percent",
+            "label": "Percentage"
+        },
+        {
+            "fieldname": "delivery",
+            "fieldtype": "Check",
+            "label": "Delivery",
+            "default": "0"
+        },
+        {
+            "fieldname": "pickup",
+            "fieldtype": "Check",
+            "label": "Pickup",
+            "default": "0"
         }
     ],
     "modified": "2025-10-03 20:37:00.000000",
     "modified_by": "Administrator",
-    "module": "rokct",
+    "module": "paas",
     "owner": "Administrator",
     "permissions": [
         {
