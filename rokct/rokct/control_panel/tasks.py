@@ -1,3 +1,5 @@
+# Copyright (c) 2025 ROKCT Holdings
+# For license information, please see license.txt
 import frappe
 import os
 import json
@@ -457,18 +459,13 @@ def _handle_paid_plan_renewals(today):
         try:
             subscription = frappe.get_doc("Company Subscription", sub_info.name)
             plan = frappe.get_doc("Subscription Plan", sub_info.plan)
+            if plan.cost == 0: continue
 
-            # Start with the base plan cost
-            final_cost = plan.cost or 0
-
-            # Add costs for recurring add-ons that match the plan's billing cycle
-            for purchased_add_on in subscription.get("purchased_add_ons", []):
-                add_on_doc = frappe.get_doc("Add-on", purchased_add_on.add_on)
-                if add_on_doc.billing_type == "Recurring" and add_on_doc.billing_cycle == plan.billing_cycle:
-                    final_cost += add_on_doc.cost
-
-            if final_cost == 0:
-                continue
+            # Calculate final cost based on plan type
+            final_cost = plan.cost
+            if getattr(plan, 'is_per_seat_plan', 0):
+                user_quantity = max(subscription.user_quantity, getattr(plan, 'base_user_count', 1))
+                final_cost = plan.cost * user_quantity
 
             customer = frappe.get_doc("Customer", sub_info.customer)
             payment_result = paystack_controller.charge_customer(customer.customer_primary_email, final_cost, plan.currency)
@@ -514,29 +511,21 @@ def _handle_grace_period_retries(today):
                 subscription.payment_retry_attempt = 0
                 _send_subscription_notification(subscription, "Subscription Changed", {"old_plan": original_plan_name, "new_plan": "Free-Monthly"})
             else:
-                # Start with the base plan cost
-                final_cost = plan.cost or 0
+                # Calculate final cost based on plan type
+                final_cost = plan.cost
+                if getattr(plan, 'is_per_seat_plan', 0):
+                    user_quantity = max(subscription.user_quantity, getattr(plan, 'base_user_count', 1))
+                    final_cost = plan.cost * user_quantity
 
-                # Add costs for recurring add-ons that match the plan's billing cycle
-                for purchased_add_on in subscription.get("purchased_add_ons", []):
-                    add_on_doc = frappe.get_doc("Add-on", purchased_add_on.add_on)
-                    if add_on_doc.billing_type == "Recurring" and add_on_doc.billing_cycle == plan.billing_cycle:
-                        final_cost += add_on_doc.cost
-
-                if final_cost > 0:
-                    payment_result = paystack_controller.charge_customer(customer.customer_primary_email, final_cost, plan.currency)
-                    if payment_result.get("success"):
-                        subscription.status = "Active"
-                        subscription.payment_retry_attempt = 0
-                        subscription.next_billing_date = add_months(today, 1) if plan.billing_cycle == 'Month' else add_years(today, 1)
-                        _send_subscription_notification(subscription, "Payment Successful", {"amount_paid": f"{final_cost} {plan.currency}", "payment_date": today, "next_renewal_date": subscription.next_billing_date})
-                    else:
-                        subscription.payment_retry_attempt += 1
-                        _send_subscription_notification(subscription, "Payment Failed", {"failure_reason": payment_result.get('message', 'Unknown')})
-                else: # if final_cost is 0, just reactivate
+                payment_result = paystack_controller.charge_customer(customer.customer_primary_email, final_cost, plan.currency)
+                if payment_result.get("success"):
                     subscription.status = "Active"
                     subscription.payment_retry_attempt = 0
                     subscription.next_billing_date = add_months(today, 1) if plan.billing_cycle == 'Month' else add_years(today, 1)
+                    _send_subscription_notification(subscription, "Payment Successful", {"amount_paid": f"{final_cost} {plan.currency}", "payment_date": today, "next_renewal_date": subscription.next_billing_date})
+                else:
+                    subscription.payment_retry_attempt += 1
+                    _send_subscription_notification(subscription, "Payment Failed", {"failure_reason": payment_result.get('message', 'Unknown')})
 
             subscription.save(ignore_permissions=True)
             frappe.db.commit()
@@ -559,23 +548,17 @@ def retry_payment_for_subscription_job(subscription_name, user):
 
         paystack_controller = PaystackController()
 
-        # Start with the base plan cost
-        final_cost = plan.cost or 0
+        # Calculate final cost based on plan type
+        final_cost = plan.cost
+        if getattr(plan, 'is_per_seat_plan', 0):
+            user_quantity = max(subscription.user_quantity, getattr(plan, 'base_user_count', 1))
+            final_cost = plan.cost * user_quantity
 
-        # Add costs for recurring add-ons that match the plan's billing cycle
-        for purchased_add_on in subscription.get("purchased_add_ons", []):
-            add_on_doc = frappe.get_doc("Add-on", purchased_add_on.add_on)
-            if add_on_doc.billing_type == "Recurring" and add_on_doc.billing_cycle == plan.billing_cycle:
-                final_cost += add_on_doc.cost
-
-        if final_cost > 0:
-            payment_result = paystack_controller.charge_customer(
-                customer_email=customer.customer_primary_email,
-                amount_in_base_unit=final_cost,
-                currency=plan.currency
-            )
-        else: # if final_cost is 0, just reactivate
-            payment_result = {"success": True}
+        payment_result = paystack_controller.charge_customer(
+            customer_email=customer.customer_primary_email,
+            amount_in_base_unit=final_cost,
+            currency=plan.currency
+        )
 
         if payment_result.get("success"):
             subscription.status = "Active"
