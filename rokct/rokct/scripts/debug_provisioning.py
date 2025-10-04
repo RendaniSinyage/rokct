@@ -1,3 +1,5 @@
+# Copyright (c) 2025 ROKCT Holdings
+# For license information, please see license.txt
 import frappe
 import json
 from rokct.rokct.control_panel.tasks import create_tenant_site_job, complete_tenant_setup

@@ -1,3 +1,5 @@
+# Copyright (c) 2025 ROKCT Holdings
+# For license information, please see license.txt
 import frappe
 from functools import wraps
 from rokct.rokct.tenant.api import get_subscription_details
