@@ -7,6 +7,7 @@
  "field_order": [
   "status",
   "type",
+  "is_ai_generated",
   "feature",
   "explanation",
   "jules_ai_assistant_section",
@@ -34,6 +35,13 @@
    "options": "Feature\nBug",
    "default": "Feature",
    "reqd": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "is_ai_generated",
+   "fieldtype": "Check",
+   "label": "AI Generated",
+   "read_only": 1
   },
   {
    "fieldname": "feature",

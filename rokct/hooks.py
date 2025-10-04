@@ -159,10 +159,11 @@ def get_safe_scheduler_events():
 
 	app_role = frappe.conf.get("app_role", "tenant")
 	events = {
-		"hourly": ["rokct.roadmap.tasks.jules_task_monitor"]
+		"hourly": ["rokct.roadmap.tasks.jules_task_monitor"],
+		"daily": ["rokct.roadmap.tasks.populate_roadmap_with_ai_ideas"]
 	}
 	if app_role == "control_panel":
-		events["daily"] = [
+		events["daily"].extend([
 			"rokct.rokct.control_panel.tasks.manage_daily_subscriptions",
 			"rokct.rokct.control_panel.tasks.cleanup_unverified_tenants",
 			"rokct.rokct.tasks.manage_daily_tenders",
@@ -171,13 +172,13 @@ def get_safe_scheduler_events():
 		events["weekly"] = ["rokct.rokct.control_panel.tasks.run_weekly_maintenance"]
 		events["monthly"] = ["rokct.rokct.control_panel.tasks.generate_subscription_invoices"]
 	else:  # tenant
-		events["daily"] = [
+		events["daily"].extend([
 			"rokct.rokct.tasks.manage_daily_tenders",
 			"rokct.rokct.tenant.tasks.disable_expired_support_users",
 			"rokct.rokct.tenant.tasks.update_storage_usage",
 			"rokct.rokct.tenant.tasks.reset_monthly_token_usage",
 			"rokct.paas.tasks.remove_expired_stories"
-		]
+		])
 	return events
 
 scheduler_events = get_safe_scheduler_events()
