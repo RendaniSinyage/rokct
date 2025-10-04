@@ -9,7 +9,7 @@ While the core subscription management and basic e-commerce functionalities have
 **Key Findings:**
 
 *   **Major Missing Modules:** The **Booking/Reservations** system and the **Parcel Delivery** system are completely absent from the Frappe implementation. These represent the most significant gaps.
-*   **Missing Core DocTypes:** Several key data models from the Laravel application do not have corresponding DocTypes in Frappe, including `Delivery Zone`, `Product Extras` (Add-ons), `FAQ`, and `Ads Package`.
+*   **Missing Core DocTypes:** Several key data models from the Laravel application do not have corresponding DocTypes in Frappe, including **`Shop`**, `Delivery Zone`, `Product Extras` (Add-ons), `FAQ`, and `Ads Package`.
 *   **Partially Converted Features:** Payment gateway support in Frappe appears less extensive than in the original Laravel application. The payout process for sellers/drivers also needs to be clearly mapped to a Frappe workflow.
 *   **Successfully Converted Features:** Core functionalities such as user management, product catalog (Items), categories, brands, and sales orders are well-covered by standard Frappe features and have been correctly leveraged. The custom subscription management system is also fully converted.
 
@@ -25,6 +25,7 @@ The following is a feature-by-feature breakdown based on the Laravel Admin contr
 
 | Feature | Laravel Controller(s) | Frappe Status | Analysis |
 | :--- | :--- | :--- | :--- |
+| **Shops/Restaurants** | `ShopController.php` | **Missing** | This is a critical missing feature. There is no `Shop` or `Restaurant` DocType in the Frappe implementation, which is fundamental for the entire platform. |
 | **Booking & Reservations** | `Booking/` | **Missing** | The entire booking module, including tables, sections, and reservations, is absent in the Frappe app. This is a major feature gap. |
 | **Parcel Delivery** | `ParcelOrderController.php` | **Missing** | The functionality for managing parcel deliveries is completely missing. This requires a new DocType and associated logic. |
 | **Delivery Zones** | `DeliveryZoneController.php` | **Missing** | There is no `Delivery Zone` DocType in Frappe. This is essential for managing delivery logistics and fees. |
@@ -52,6 +53,7 @@ The following is a feature-by-feature breakdown based on the Laravel Admin contr
 
 The following DocTypes need to be created in the Frappe application to match the functionality of the Laravel backend:
 
+*   `Shop` (or `Restaurant`)
 *   `Booking` (and related DocTypes like `Table`, `Shop Section`, `Reservation`)
 *   `Parcel Order` (and related settings)
 *   `Delivery Zone`
