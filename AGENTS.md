@@ -60,6 +60,8 @@ Please adhere to the following rules when working on this repository:
 
 *   **Frontend Changes:** Do not make any changes to the frontend Flutter applications (`rokct/paas/juvo/customer` and `rokct/paas/juvo/pos`) beyond what is necessary for API compatibility, without explicit permission from the user.
 
+*   **Pull Requests:** All pull requests must follow the checklist provided in the `.github/pull_request_template.md` file. This template will be automatically applied when you create a pull request on GitHub.
+
 
 
 \## Agent Setup Instructions
