@@ -1,0 +1,15 @@
+name: 'Jules PR Closer'
+description: 'Notifies a ROKCT instance when a Jules-generated PR is merged.'
+inputs:
+  repo-token:
+    description: 'The GITHUB_TOKEN secret.'
+    required: true
+  rokct-api-endpoint:
+    description: 'The API endpoint of the ROKCT instance to notify.'
+    required: true
+  rokct-action-token:
+    description: 'A secret token to authenticate with the ROKCT API.'
+    required: true
+runs:
+  using: 'node20'
+  main: 'index.js'
