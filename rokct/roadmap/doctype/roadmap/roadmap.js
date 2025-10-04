@@ -1,5 +1,33 @@
-
 frappe.ui.form.on('Roadmap', {
+    refresh: function(frm) {
+        // Add the "Setup Workflow" button to the main form header
+        if (frm.doc.source_repository && !frm.is_new()) {
+            frm.add_custom_button(__('Setup GitHub Workflow'), function() {
+                frappe.confirm(
+                    'This will check your repository for the workflow file. If it doesn\'t exist, a task will be assigned to Jules to create it as a pull request. Proceed?',
+                    () => {
+                        frappe.call({
+                            method: 'rokct.roadmap.api.setup_github_workflow',
+                            args: {
+                                roadmap_name: frm.doc.name
+                            },
+                            callback: function(r) {
+                                if (r.message) {
+                                    // Handle the two success cases: file already exists, or a session was created.
+                                    if (r.message.status === 'exists' || r.message.status === 'session_created') {
+                                        frappe.msgprint(r.message.message);
+                                    }
+                                    // On failure, Frappe's default error handling will show a dialog for any frappe.throw
+                                }
+                            },
+                            freeze: true,
+                            freeze_message: "Checking repository and setting up workflow..."
+                        });
+                    }
+                ).addClass('btn-primary');
+            });
+        }
+    },
     features_on_form_rendered: function(frm) {
         // This function runs on initial load to set the button visibility for all rows.
         frm.fields_dict['features'].grid.grid_rows.forEach(function(row) {
@@ -16,7 +44,6 @@ frappe.ui.form.on('Roadmap', {
 frappe.ui.form.on('Roadmap Feature', {
     status: function(frm, cdt, cdn) {
         // This function runs when the status of a single row is changed.
-        // It's more efficient as it targets only the row that was modified.
         let row_doc = locals[cdt][cdn];
         let grid_row = frm.fields_dict['features'].grid.grid_rows_by_docname[cdn];
 

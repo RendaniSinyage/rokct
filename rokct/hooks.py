@@ -159,6 +159,7 @@ def get_safe_scheduler_events():
 
 	app_role = frappe.conf.get("app_role", "tenant")
 	events = {
+		"all": ["rokct.roadmap.tasks.process_pending_ai_sessions"],
 		"hourly": ["rokct.roadmap.tasks.jules_task_monitor"],
 		"daily": ["rokct.roadmap.tasks.populate_roadmap_with_ai_ideas"]
 	}

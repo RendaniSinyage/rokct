@@ -7,6 +7,9 @@
  "engine": "InnoDB",
  "field_order": [
   "title",
+  "source_repository",
+  "github_status",
+  "ai_status",
   "status",
   "features"
  ],
@@ -17,6 +20,31 @@
    "in_list_view": 1,
    "label": "Title",
    "reqd": 1
+  },
+  {
+   "fieldname": "source_repository",
+   "fieldtype": "Data",
+   "label": "Source Repository URL",
+   "in_list_view": 1,
+   "reqd": 1
+  },
+  {
+   "default": "Unlinked",
+   "fieldname": "github_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "GitHub Status",
+   "options": "Unlinked\nLinked",
+   "read_only": 1
+  },
+  {
+   "default": "Not Configured",
+   "fieldname": "ai_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "AI Status",
+   "options": "Not Configured\nReady",
+   "read_only": 1
   },
   {
    "fieldname": "status",
@@ -59,4 +87,3 @@
  "sort_order": "DESC",
  "track_changes": 1
 }
-
