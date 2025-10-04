@@ -7,7 +7,11 @@
  "field_order": [
   "jules_api_url",
   "github_action_yaml",
-  "prompts"
+  "prompts",
+  "section_break_4",
+  "github_action_secret",
+  "column_break_6",
+  "github_setup_instructions"
  ],
  "fields": [
   {
@@ -27,6 +31,25 @@
    "fieldtype": "Table",
    "label": "AI Prompts",
    "options": "AI Prompt"
+  },
+  {
+   "fieldname": "section_break_4",
+   "fieldtype": "Section Break",
+   "label": "GitHub Integration"
+  },
+  {
+   "fieldname": "github_action_secret",
+   "fieldtype": "Password",
+   "label": "GitHub Action Secret"
+  },
+  {
+   "fieldname": "column_break_6",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "github_setup_instructions",
+   "fieldtype": "HTML",
+   "label": "GitHub Setup Instructions"
   }
  ],
  "issingle": 1,

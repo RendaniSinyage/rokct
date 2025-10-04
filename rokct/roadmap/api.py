@@ -14,9 +14,10 @@ def update_task_status_from_pr():
     It verifies the request using the HMAC signature from GitHub.
     """
     # 1. Authenticate the request using HMAC signature
-    secret = frappe.conf.get("github_action_secret")
+    settings = frappe.get_doc("Roadmap Settings")
+    secret = settings.get_password("github_action_secret")
     if not secret:
-        frappe.log_error("Webhook secret 'github_action_secret' is not configured in site_config.json.", "Webhook Security Error")
+        frappe.log_error("GitHub Action Secret is not configured in Roadmap Settings.", "Webhook Security Error")
         frappe.throw("Authentication failed.", frappe.PermissionError)
 
     signature_header = frappe.request.headers.get('X-Hub-Signature-256')
