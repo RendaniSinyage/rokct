@@ -1,5 +1,5 @@
 import frappe
-from ..seller.utils import _get_seller_shop
+from ..utils import _get_seller_shop
 
 @frappe.whitelist()
 def get_seller_invites():
