@@ -1,29 +1,33 @@
-### Description
+<!--
 
-Please provide a brief description of your addition or change. Explain the "what" and "why" of the change.
+Some key notes before you open a PR:
 
-### Related Issue
+ 1. Select which branch should this PR be merged in?
+ 2. PR name follows [convention](http://karma-runner.github.io/4.0/dev/git-commit-msg.html)
+ 3. All tests pass locally, UI and Unit tests
+ 4. All business logic and validations must be on the server-side
+ 5. Update necessary Documentation
+ 6. Put `closes #XXXX` in your comment to auto-close the issue that your PR fixes
 
-Please link to the related issue if applicable.
 
-### Type of Change
+Also, if you're new here
 
-- [ ] Bug fix (non-breaking change which fixes an issue)
-- [ ] New feature (non-breaking change which adds functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] This change requires a documentation update
-- [ ] This change is part of the PaaS module conversion from Laravel.
+- Documentation Guidelines => https://github.com/frappe/erpnext/wiki/Updating-Documentation
 
-### Checklist
+- Contribution Guide => https://github.com/frappe/frappe/blob/develop/.github/CONTRIBUTING.md
 
-- [ ] I have read the **AGENTS.md** file and followed its instructions.
-- [ ] My code follows the style guidelines of this project.
-- [ ] I have performed a self-review of my own code.
-- [ ] I have commented my code, particularly in hard-to-understand areas.
-- [ ] I have made corresponding changes to the documentation.
-- [ ] My changes generate no new warnings.
-- [ ] I have added tests that prove my fix is effective or that my feature works.
-- [ ] New and existing unit tests pass locally with my changes.
-- [ ] Any dependent changes have been merged and published in downstream modules.
-- [ ] I have checked that the frontend Flutter apps (`customer` and `pos`) are still compatible with my changes.
-- [ ] I have updated `rokct/paas/roadmap_progress.txt` if my changes are related to the PaaS module.
+- Pull Request Checklist => https://github.com/frappe/erpnext/wiki/Pull-Request-Checklist
+
+-->
+
+> Please provide enough information so that others can review your pull request:
+
+<!-- You can skip this if you're fixing a typo or updating existing documentation -->
+
+> Explain the **details** for making this change. What existing problem does the pull request solve?
+
+<!-- Example: When "Adding a function to do X", explain why it is necessary to have a way to do X. -->
+
+> Screenshots/GIFs
+
+<!-- Add images/recordings to better visualize the change: expected/current behavior -->
