@@ -57,6 +57,11 @@ def setup_github_workflow(roadmap_name):
         frappe.throw("Invalid GitHub repository URL format. Expected: https://github.com/owner/repo")
 
     # 4. Define workflow file content
+    # Construct the site URL from the database name for robustness, as suggested.
+    db_name = frappe.conf.get("db_name")
+    site_hostname = db_name.replace('_', '.')
+    api_endpoint_url = f"https://{site_hostname}/api/method/rokct.roadmap.api.update_task_status_from_pr"
+
     workflow_content = f"""
 name: 'Update ROKCT Task on PR Merged'
 on:
@@ -72,7 +77,7 @@ jobs:
         uses: rokct/jules-pr-closer-action@v1
         with:
           repo-token: ${{{{ secrets.GITHUB_TOKEN }}}}
-          rokct-api-endpoint: '{frappe.utils.get_url("/api/method/rokct.roadmap.api.update_task_status_from_pr")}'
+          rokct-api-endpoint: '{api_endpoint_url}'
           rokct-action-token: ${{{{ secrets.ROKCT_ACTION_TOKEN }}}}
 """
     # 5. Use GitHub API to create/update the file
