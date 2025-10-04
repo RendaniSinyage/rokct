@@ -1,13 +1,14 @@
 import frappe
 import json
 import requests
-import base64
+from rokct.roadmap.tasks import _get_api_key, _create_jules_session
 
 @frappe.whitelist(allow_guest=True)
 def update_task_status_from_pr():
     """
     Receives a secure call from our custom GitHub Action to update a task's status.
     """
+    # ... (existing implementation) ...
     # 1. Authenticate the request
     auth_token = frappe.request.headers.get('X-ROKCT-ACTION-TOKEN')
     expected_token = frappe.conf.get("github_action_secret")
@@ -31,24 +32,23 @@ def update_task_status_from_pr():
     else:
         return {"status": "not_found", "message": "No matching task found."}
 
+
 @frappe.whitelist()
 def setup_github_workflow(roadmap_name):
     """
-    Creates the .github/workflows/rokct_pr_merged.yml file in the repository
-    associated with the given roadmap.
+    Checks if the GitHub workflow file exists in the repository. If not,
+    it delegates the task of creating the file to Jules via a new session.
     """
-    # 1. Get roadmap details
+    # 1. Get roadmap and GitHub details
     roadmap_doc = frappe.get_doc("Roadmap", roadmap_name)
     repo_url = roadmap_doc.source_repository
     if not repo_url:
         frappe.throw("Roadmap does not have a source repository defined.")
 
-    # 2. Get GitHub token from a secure setting
     github_pat = frappe.conf.get("github_personal_access_token")
     if not github_pat:
         frappe.throw("GitHub Personal Access Token is not configured in site_config.json.")
 
-    # 3. Parse owner and repo from URL
     try:
         parts = repo_url.strip('/').split('/')
         owner = parts[-2]
@@ -56,13 +56,29 @@ def setup_github_workflow(roadmap_name):
     except IndexError:
         frappe.throw("Invalid GitHub repository URL format. Expected: https://github.com/owner/repo")
 
-    # 4. Define workflow file content
-    # Construct the site URL based on the app's role for robustness.
+    # 2. Check if the workflow file already exists
+    workflow_path = ".github/workflows/rokct_pr_merged.yml"
+    api_url = f"https://api.github.com/repos/{owner}/{repo}/contents/{workflow_path}"
+    headers = {"Authorization": f"token {github_pat}", "Accept": "application/vnd.github.v3+json"}
+
+    try:
+        response = requests.get(api_url, headers=headers)
+        if response.status_code == 200:
+            return {"status": "exists", "message": "The GitHub workflow file already exists in your repository."}
+        elif response.status_code != 404:
+            frappe.throw(f"Failed to check for workflow file. GitHub API responded with status {response.status_code}: {response.text}")
+    except requests.exceptions.RequestException as e:
+        frappe.throw(f"Could not connect to GitHub API: {e}")
+
+    # 3. If file does not exist (404), delegate to Jules
+    jules_api_key = _get_api_key()
+    if not jules_api_key:
+        frappe.throw("Jules API key is not configured.")
+
+    # 4. Construct the prompt for Jules
     if frappe.conf.get("app_role") == "control_panel":
-        # The control plane URL should be used as is.
         site_url = frappe.conf.get("control_plane_url")
     else:
-        # For tenants, construct the URL from the db_name and scheme.
         db_name = frappe.conf.get("db_name")
         scheme = frappe.conf.get("tenant_site_scheme", "https")
         hostname = db_name.replace('_', '.')
@@ -70,12 +86,10 @@ def setup_github_workflow(roadmap_name):
 
     api_endpoint_url = f"{site_url}/api/method/rokct.roadmap.api.update_task_status_from_pr"
 
-    workflow_content = f"""
-name: 'Update ROKCT Task on PR Merged'
+    workflow_content = f"""name: 'Update ROKCT Task on PR Merged'
 on:
   pull_request:
     types: [closed]
-
 jobs:
   update_rokct_task:
     if: github.event.pull_request.merged == true
@@ -86,37 +100,25 @@ jobs:
         with:
           repo-token: ${{{{ secrets.GITHUB_TOKEN }}}}
           rokct-api-endpoint: '{api_endpoint_url}'
-          rokct-action-token: ${{{{ secrets.ROKCT_ACTION_TOKEN }}}}
-"""
-    # 5. Use GitHub API to create/update the file
-    api_url = f"https://api.github.com/repos/{owner}/{repo}/contents/.github/workflows/rokct_pr_merged.yml"
-    headers = {
-        "Authorization": f"token {github_pat}",
-        "Accept": "application/vnd.github.v3+json"
-    }
+          rokct-action-token: ${{{{ secrets.ROKCT_ACTION_TOKEN }}}}"""
 
-    encoded_content = base64.b64encode(workflow_content.encode('utf-8')).decode('utf-8')
+    prompt = f"""Please create a new file in the repository.
+File path: `{workflow_path}`
+File content:
+```yaml
+{workflow_content}
+```
+Then, create a pull request for this change with the title "feat: Add ROKCT PR-to-task workflow" and a suitable description.
+Do not ask for a plan. Do not write any other code. Just create the file and the pull request."""
 
-    data = {
-        "message": "feat: Add ROKCT PR-to-task workflow",
-        "content": encoded_content,
-        "committer": {
-            "name": "ROKCT Automation",
-            "email": "automation@rokct.ai"
+    # 5. Create the Jules session
+    session_id = _create_jules_session(jules_api_key, repo_url, "Setup ROKCT Workflow", prompt)
+
+    if session_id:
+        return {
+            "status": "session_created",
+            "session_id": session_id,
+            "message": "Jules has been tasked with creating a pull request for the workflow file. Please check your repository shortly."
         }
-    }
-
-    # Check if file exists to get its SHA (required for update)
-    try:
-        get_response = requests.get(api_url, headers=headers)
-        if get_response.status_code == 200:
-            data['sha'] = get_response.json()['sha']
-    except requests.exceptions.RequestException as e:
-        frappe.log_error(f"Could not check for existing workflow file: {e}")
-
-    put_response = requests.put(api_url, headers=headers, data=json.dumps(data))
-
-    if put_response.status_code in [200, 201]:
-        return {"status": "success", "message": "GitHub workflow file created/updated successfully."}
     else:
-        frappe.throw(f"Failed to create GitHub workflow file. Status: {put_response.status_code}, Response: {put_response.text}")
+        frappe.throw("Failed to create a Jules session.")

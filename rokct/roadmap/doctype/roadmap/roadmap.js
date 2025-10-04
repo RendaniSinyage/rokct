@@ -4,7 +4,7 @@ frappe.ui.form.on('Roadmap', {
         if (frm.doc.source_repository && !frm.is_new()) {
             frm.add_custom_button(__('Setup GitHub Workflow'), function() {
                 frappe.confirm(
-                    'This will create a commit in your repository to add the GitHub workflow file. Are you sure you want to proceed?',
+                    'This will check your repository for the workflow file. If it doesn\'t exist, a task will be assigned to Jules to create it as a pull request. Proceed?',
                     () => {
                         frappe.call({
                             method: 'rokct.roadmap.api.setup_github_workflow',
@@ -12,13 +12,16 @@ frappe.ui.form.on('Roadmap', {
                                 roadmap_name: frm.doc.name
                             },
                             callback: function(r) {
-                                if (r.message && r.message.status === 'success') {
-                                    frappe.msgprint(r.message.message);
+                                if (r.message) {
+                                    // Handle the two success cases: file already exists, or a session was created.
+                                    if (r.message.status === 'exists' || r.message.status === 'session_created') {
+                                        frappe.msgprint(r.message.message);
+                                    }
+                                    // On failure, Frappe's default error handling will show a dialog for any frappe.throw
                                 }
-                                // On failure, Frappe's default error handling will show a dialog
                             },
                             freeze: true,
-                            freeze_message: "Setting up GitHub workflow in your repository..."
+                            freeze_message: "Checking repository and setting up workflow..."
                         });
                     }
                 ).addClass('btn-primary');
