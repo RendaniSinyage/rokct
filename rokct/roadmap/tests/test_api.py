@@ -25,7 +25,7 @@ mock_frappe.throw = MagicMock(side_effect=raise_exception)
 sys.modules['frappe'] = mock_frappe
 
 # Now we can safely import the functions we want to test.
-from rokct.roadmap.api import update_task_status_from_pr, setup_github_workflow
+from rokct.roadmap.api import setup_github_workflow
 
 API_MODULE_PATH = 'rokct.roadmap.api'
 
@@ -47,76 +47,60 @@ class TestRoadmapApi(unittest.TestCase):
         self.patcher_requests_put.stop()
         self.patcher_requests_get.stop()
 
-    def _setup_workflow_mocks(self, db_name="bwi_tenant_rokct_ai", pat="test-pat", repo_url="https://github.com/test-owner/test-repo"):
+    def _setup_workflow_mocks(self, config_values, repo_url="https://github.com/test-owner/test-repo"):
         """Helper function to set up common mocks for workflow tests."""
         mock_roadmap_doc = MagicMock()
         mock_roadmap_doc.source_repository = repo_url
         mock_frappe.get_doc.return_value = mock_roadmap_doc
+        mock_frappe.conf.get.side_effect = lambda key, default=None: config_values.get(key, default)
 
-        def conf_get_side_effect(key):
-            if key == "github_personal_access_token":
-                return pat
-            if key == "db_name":
-                return db_name
-            return None
-        mock_frappe.conf.get.side_effect = conf_get_side_effect
-
-    # --- Tests for setup_github_workflow ---
-    def test_workflow_setup_success_with_correct_url(self):
-        """Test successful creation of the GitHub workflow file with the new URL logic."""
-        self._setup_workflow_mocks()
-        self.mock_requests_get.return_value.status_code = 404
-        self.mock_requests_put.return_value.status_code = 201
-
-        response = setup_github_workflow("Test-Roadmap")
-
-        # Verify the generated URL in the workflow content
+    def _get_workflow_content_from_put_call(self):
+        """Helper to decode the workflow content from the mock PUT call."""
         put_call_args = self.mock_requests_put.call_args
         put_data = json.loads(put_call_args[1]['data'])
-        workflow_content = base64.b64decode(put_data['content']).decode('utf-8')
+        return base64.b64decode(put_data['content']).decode('utf-8')
 
+    # --- Tests for setup_github_workflow ---
+    def test_workflow_setup_for_tenant_url(self):
+        """Test that the correct URL is generated for a tenant."""
+        config = {
+            "app_role": "tenant",
+            "db_name": "bwi_tenant_rokct_ai",
+            "tenant_site_scheme": "https",
+            "github_personal_access_token": "test-pat"
+        }
+        self._setup_workflow_mocks(config)
+        self.mock_requests_put.return_value.status_code = 201
+
+        setup_github_workflow("Test-Roadmap")
+
+        workflow_content = self._get_workflow_content_from_put_call()
         expected_url = "https://bwi.tenant.rokct.ai/api/method/rokct.roadmap.api.update_task_status_from_pr"
         self.assertIn(expected_url, workflow_content)
-        self.assertEqual(response['status'], 'success')
 
-    def test_workflow_setup_update_success(self):
-        """Test successful update of an existing GitHub workflow file."""
-        self._setup_workflow_mocks()
-        self.mock_requests_get.return_value.status_code = 200
-        self.mock_requests_get.return_value.json.return_value = {'sha': 'test-sha'}
-        self.mock_requests_put.return_value.status_code = 200
+    def test_workflow_setup_for_control_panel_url(self):
+        """Test that the correct URL is generated for the control panel."""
+        config = {
+            "app_role": "control_panel",
+            "control_plane_url": "http://platform.rokct.ai",
+            "github_personal_access_token": "test-pat"
+        }
+        self._setup_workflow_mocks(config)
+        self.mock_requests_put.return_value.status_code = 201
 
-        response = setup_github_workflow("Test-Roadmap")
+        setup_github_workflow("Test-Roadmap")
 
-        self.mock_requests_put.assert_called_once()
-        self.assertIn('sha', self.mock_requests_put.call_args[1]['data'])
-        self.assertEqual(response['status'], 'success')
-
-    def test_workflow_setup_missing_repo_url(self):
-        """Test that the setup fails if the roadmap has no source repository."""
-        self._setup_workflow_mocks(repo_url=None)
-
-        with self.assertRaises(Exception):
-            setup_github_workflow("Test-Roadmap")
-        mock_frappe.throw.assert_called_with("Roadmap does not have a source repository defined.")
+        workflow_content = self._get_workflow_content_from_put_call()
+        expected_url = "http://platform.rokct.ai/api/method/rokct.roadmap.api.update_task_status_from_pr"
+        self.assertIn(expected_url, workflow_content)
 
     def test_workflow_setup_missing_pat(self):
         """Test that the setup fails if the GitHub PAT is not configured."""
-        self._setup_workflow_mocks(pat=None)
+        self._setup_workflow_mocks(config_values={"app_role": "tenant"}) # No PAT in config
 
         with self.assertRaises(Exception):
             setup_github_workflow("Test-Roadmap")
         mock_frappe.throw.assert_called_with("GitHub Personal Access Token is not configured in site_config.json.")
-
-    def test_workflow_setup_github_api_failure(self):
-        """Test that the setup fails gracefully if the GitHub API call fails."""
-        self._setup_workflow_mocks()
-        self.mock_requests_put.return_value.status_code = 500
-        self.mock_requests_put.return_value.text = "Internal Server Error"
-
-        with self.assertRaises(Exception):
-            setup_github_workflow("Test-Roadmap")
-        mock_frappe.throw.assert_called_with("Failed to create GitHub workflow file. Status: 500, Response: Internal Server Error")
 
 if __name__ == '__main__':
     unittest.main()

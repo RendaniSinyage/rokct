@@ -57,10 +57,18 @@ def setup_github_workflow(roadmap_name):
         frappe.throw("Invalid GitHub repository URL format. Expected: https://github.com/owner/repo")
 
     # 4. Define workflow file content
-    # Construct the site URL from the database name for robustness, as suggested.
-    db_name = frappe.conf.get("db_name")
-    site_hostname = db_name.replace('_', '.')
-    api_endpoint_url = f"https://{site_hostname}/api/method/rokct.roadmap.api.update_task_status_from_pr"
+    # Construct the site URL based on the app's role for robustness.
+    if frappe.conf.get("app_role") == "control_panel":
+        # The control plane URL should be used as is.
+        site_url = frappe.conf.get("control_plane_url")
+    else:
+        # For tenants, construct the URL from the db_name and scheme.
+        db_name = frappe.conf.get("db_name")
+        scheme = frappe.conf.get("tenant_site_scheme", "https")
+        hostname = db_name.replace('_', '.')
+        site_url = f"{scheme}://{hostname}"
+
+    api_endpoint_url = f"{site_url}/api/method/rokct.roadmap.api.update_task_status_from_pr"
 
     workflow_content = f"""
 name: 'Update ROKCT Task on PR Merged'
