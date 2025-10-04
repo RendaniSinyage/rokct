@@ -18,24 +18,37 @@ def jules_task_monitor():
     if not assigned_features:
         return
 
-    jules_api_key = frappe.conf.get("jules_api_key")
-    if not jules_api_key:
-        frappe.log_error("Jules API key is not configured.", "Jules Monitor Error")
-        return
-
     for item in assigned_features:
         session_id = item.get("jules_session_id")
         if not session_id:
             continue
 
         doc = frappe.get_doc("Roadmap Feature", item.get("name"))
+        jules_api_key = None
 
         try:
-            # Prepare the API call to get activities
+            # Step 1: Determine which API key to use (mirroring the assignment logic)
+            is_control_panel = frappe.conf.get("app_role") == "control_panel"
+
+            if is_control_panel:
+                jules_api_key = frappe.conf.get("jules_api_key")
+            else:
+                subscription = frappe.call('rokct.rokct.tenant.api.get_subscription_details')
+                if subscription and subscription.get('enable_ai_developer_features'):
+                    jules_api_key = subscription.get("jules_api_key")
+                else:
+                    jules_settings = frappe.get_doc("Jules Settings")
+                    jules_api_key = jules_settings.get_password("jules_api_key")
+
+            if not jules_api_key:
+                # Log an error but continue to the next item, as other tasks might have valid keys
+                frappe.log_error(f"Jules API key not found for task {item.get('name')}", "Jules Monitor Error")
+                continue
+
+            # Step 2: Prepare and call the Jules API to get activities
             api_url = f"https://jules.googleapis.com/v1alpha/{session_id}/activities"
             headers = {"X-Goog-Api-Key": jules_api_key}
 
-            # Call the Jules API
             response = requests.get(api_url, headers=headers, timeout=15)
             response.raise_for_status()
 
@@ -45,38 +58,24 @@ def jules_task_monitor():
             if not activities:
                 continue
 
-            # Get the latest agent activity
-            latest_agent_activity = None
-            for activity in reversed(activities):
-                if activity.get("agentActivity"):
-                    latest_agent_activity = activity.get("agentActivity")
-                    break
+            # Step 3: Parse the latest activity and update the document
+            latest_agent_activity = next((act.get("agentActivity") for act in reversed(activities) if act.get("agentActivity")), None)
 
             if not latest_agent_activity:
                 continue
 
-            # Update AI Work Log
             latest_message = latest_agent_activity.get("message", "No recent updates.")
             doc.db_set("ai_work_log", latest_message)
 
-            # Check for PR URL
             if "pull request" in latest_message.lower():
-                # A more robust solution would parse the URL properly
-                # For now, we'll just flag it as PR Ready
                 doc.db_set("ai_status", "PR Ready")
-                # In a real scenario, you'd parse the URL from the message and set it
-                # doc.db_set("pull_request_url", parsed_url)
-
-            # Update status to In Progress if it's still just "Assigned"
+                # In a real implementation, we would parse the URL from the message.
+                # For now, we'll just update the status.
             elif doc.ai_status == "Assigned":
                  doc.db_set("ai_status", "In Progress")
 
-
-        except requests.exceptions.RequestException as e:
-            frappe.log_error(f"Jules API request failed for session {session_id}: {e}", "Jules Monitor Error")
-            doc.db_set("ai_status", "Error")
-            doc.db_set("ai_work_log", f"API Error: {e}")
         except Exception as e:
-            frappe.log_error(frappe.get_traceback(), f"Jules Monitor Error for session {session_id}")
+            # If any error occurs for one task, log it and move to the next
+            frappe.log_error(f"Jules monitor failed for session {session_id}: {frappe.get_traceback()}", "Jules Monitor Error")
             doc.db_set("ai_status", "Error")
-            doc.db_set("ai_work_log", f"An unexpected error occurred: {e}")
+            doc.db_set("ai_work_log", f"An error occurred during monitoring: {e}")
