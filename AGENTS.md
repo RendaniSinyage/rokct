@@ -8,30 +8,17 @@ This document provides instructions and guidelines for AI agents working on this
 
 \## Project Overview and Goals
 
+This project involves a custom Frappe application named `rokct`. This app is responsible for various business functionalities, including customizations, system setups, and tenant provisioning.
 
-
-The primary goal of this project is to convert an existing Laravel backend to the Frappe framework. This is a work in progress, and your main task is to continue this conversion effort.
-
-
-
-The project is focused on converting the Laravel backend to Frappe. This involves two main directories:
-
-*   `rokct/paas`: The original Laravel application and related assets. This serves as the source of truth for features.
-*   `rokct/rokct`: The new Frappe application where the conversion is being implemented.
-
-Your work will primarily involve implementing new features and DocTypes within the `rokct/rokct` app, based on the logic found in the `rokct/paas` directory.
-
-
+A key part of this project is the **PaaS (Platform as a Service) module**, which is being converted from a legacy Laravel application. Your main task is to continue this conversion effort by implementing features from the Laravel backend into the `rokct` Frappe app.
 
 \## Application Structure
 
-
-
 The key components of the application are located in the following directories:
 
-*   **Frappe App:** `rokct/rokct` - This is the main Frappe application where all new development and conversion work should take place.
-*   **Original Laravel Backend:** `rokct/paas/juvo/backend` - This serves as the source of truth for the features and logic you will be converting.
-*   **Flutter Frontend Apps:** `rokct/paas/juvo/customer` and `rokct/paas/juvo/pos` - These are the customer-facing and Point-of-Sale (POS) applications.
+*   **Frappe App (Target for Conversion):** `rokct/rokct` - This is the main Frappe application where all new development and conversion work for the PaaS module should take place.
+*   **Original Laravel Backend (Source of Truth):** `rokct/paas/juvo/backend` - This serves as the reference for the features and logic you will be converting.
+*   **Flutter Frontend Apps:** `rokct/paas/juvo/customer` and `rokct/paas/juvo/pos` - These are the customer-facing and Point-of-Sale (POS) applications that will connect to the new Frappe backend.
 
 
 
