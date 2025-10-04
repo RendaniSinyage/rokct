@@ -14,7 +14,12 @@ The primary goal of this project is to convert an existing Laravel backend to th
 
 
 
-The project is focused on the `paas` (Platform as a Service) module. All your work should be within this directory.
+The project is focused on converting the Laravel backend to Frappe. This involves two main directories:
+
+*   `rokct/paas`: The original Laravel application and related assets. This serves as the source of truth for features.
+*   `rokct/rokct`: The new Frappe application where the conversion is being implemented.
+
+Your work will primarily involve implementing new features and DocTypes within the `rokct/rokct` app, based on the logic found in the `rokct/paas` directory.
 
 
 
@@ -24,13 +29,9 @@ The project is focused on the `paas` (Platform as a Service) module. All your wo
 
 The key components of the application are located in the following directories:
 
-
-
-\*   `rokct/paas/juvo/backend`: The original Laravel backend. This serves as the source of truth for the features and logic you will be converting.
-
-\*   `rokct/paas/juvo/customer`: The customer-facing Flutter application.
-
-\*   `rokct/paas/juvo/pos`: The Point-of-Sale (POS) Flutter application.
+*   **Frappe App:** `rokct/rokct` - This is the main Frappe application where all new development and conversion work should take place.
+*   **Original Laravel Backend:** `rokct/paas/juvo/backend` - This serves as the source of truth for the features and logic you will be converting.
+*   **Flutter Frontend Apps:** `rokct/paas/juvo/customer` and `rokct/paas/juvo/pos` - These are the customer-facing and Point-of-Sale (POS) applications.
 
 
 
