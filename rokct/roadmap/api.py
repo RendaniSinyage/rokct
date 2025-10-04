@@ -1,19 +1,42 @@
 import frappe
 import json
 import requests
+import base64
+import hmac
+import hashlib
+import re
 from rokct.roadmap.tasks import _get_api_key, _create_jules_session
 
 @frappe.whitelist(allow_guest=True)
 def update_task_status_from_pr():
     """
     Receives a secure call from our custom GitHub Action to update a task's status.
+    It verifies the request using the HMAC signature from GitHub.
     """
-    # ... (existing implementation) ...
-    # 1. Authenticate the request
-    auth_token = frappe.request.headers.get('X-ROKCT-ACTION-TOKEN')
-    expected_token = frappe.conf.get("github_action_secret")
-    if not auth_token or auth_token != expected_token:
+    # 1. Authenticate the request using HMAC signature
+    secret = frappe.conf.get("github_action_secret")
+    if not secret:
+        frappe.log_error("Webhook secret 'github_action_secret' is not configured in site_config.json.", "Webhook Security Error")
         frappe.throw("Authentication failed.", frappe.PermissionError)
+
+    signature_header = frappe.request.headers.get('X-Hub-Signature-256')
+    if not signature_header:
+        frappe.throw("Authentication failed: Missing X-Hub-Signature-256 header.", frappe.PermissionError)
+
+    try:
+        signature_type, signature = signature_header.split('=', 1)
+    except ValueError:
+        frappe.throw("Authentication failed: Invalid signature format.", frappe.PermissionError)
+
+    if signature_type != 'sha256':
+        frappe.throw("Authentication failed: Unsupported signature type.", frappe.PermissionError)
+
+    # Calculate the expected signature
+    mac = hmac.new(secret.encode('utf-8'), msg=frappe.request.data, digestmod=hashlib.sha256)
+    expected_signature = mac.hexdigest()
+
+    if not hmac.compare_digest(signature, expected_signature):
+        frappe.throw("Authentication failed: Signature mismatch.", frappe.PermissionError)
 
     # 2. Get the session ID from the request body
     data = json.loads(frappe.request.data)
@@ -49,12 +72,12 @@ def setup_github_workflow(roadmap_name):
     if not github_pat:
         frappe.throw("GitHub Personal Access Token is not configured in site_config.json.")
 
-    try:
-        parts = repo_url.strip('/').split('/')
-        owner = parts[-2]
-        repo = parts[-1].replace('.git', '')
-    except IndexError:
-        frappe.throw("Invalid GitHub repository URL format. Expected: https://github.com/owner/repo")
+    # 3. Parse owner and repo from URL using a robust regex
+    match = re.search(r'(?:https?://|git@)github\.com[/:](?P<owner>[^/]+)/(?P<repo>[^/]+?)(?:\.git)?$', repo_url)
+    if not match:
+        frappe.throw("Invalid or unsupported GitHub repository URL format.")
+
+    owner, repo = match.group('owner'), match.group('repo')
 
     # 2. Check if the workflow file already exists
     workflow_path = ".github/workflows/rokct_pr_merged.yml"
@@ -89,21 +112,15 @@ def setup_github_workflow(roadmap_name):
 
     api_endpoint_url = f"{site_url}/api/method/rokct.roadmap.api.update_task_status_from_pr"
 
-    workflow_content = f"""name: 'Update ROKCT Task on PR Merged'
-on:
-  pull_request:
-    types: [closed]
-jobs:
-  update_rokct_task:
-    if: github.event.pull_request.merged == true
-    runs-on: ubuntu-latest
-    steps:
-      - name: 'Jules PR Closer'
-        uses: rokct/jules-pr-closer-action@v1
-        with:
-          repo-token: ${{{{ secrets.GITHUB_TOKEN }}}}
-          rokct-api-endpoint: '{api_endpoint_url}'
-          rokct-action-token: ${{{{ secrets.ROKCT_ACTION_TOKEN }}}}"""
+    settings = frappe.get_doc("Roadmap Settings")
+    workflow_template = settings.github_action_yaml
+    if not workflow_template:
+        frappe.throw("GitHub Action YAML is not configured in Roadmap Settings.")
+
+    # Populate the template with the dynamic URL
+    workflow_content = workflow_template.format(
+        api_endpoint_url=api_endpoint_url
+    )
 
     prompt = f"""Please create a new file in the repository.
 File path: `{workflow_path}`
