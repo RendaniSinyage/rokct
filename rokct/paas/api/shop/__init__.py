@@ -1,0 +1,1 @@
+# This file makes the 'shop' directory a Python package.
