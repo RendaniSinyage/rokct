@@ -1,6 +1,4 @@
 # Copyright (c) 2025 ROKCT Holdings
-# For license information, please see license.txt
-# Copyright (c) 2025 ROKCT Holdings
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal

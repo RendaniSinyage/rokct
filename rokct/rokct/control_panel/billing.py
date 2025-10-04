@@ -57,57 +57,59 @@ def retry_billing_for_subscription(subscription_name):
     return "Payment retry has been scheduled. You will be notified when it is complete."
 
 @frappe.whitelist()
-def charge_customer_for_addon(customer_email, amount, currency, addon_name):
+def purchase_add_on(add_on_name: str, customer_email: str):
     """
-    Charges a customer for a one-time add-on purchase.
-    Called securely from a tenant site.
+    Handles the purchase of a single add-on, including eligibility checks and payment.
+    Called by a tenant site on behalf of a user.
     """
     # Security check: This should only run on the control panel.
     if frappe.conf.get("app_role") != "control_panel":
         frappe.throw("This action can only be performed on the control panel.", title="Action Not Allowed")
 
-    # Security check: Tenant identity and secret from request
-    tenant_site = frappe.local.request.host
-    received_secret = frappe.local.request.headers.get("X-Rokct-Secret")
-
-    if not tenant_site or not received_secret:
-        frappe.throw("Authentication failed: Missing credentials.")
-
-    subscription_name = frappe.db.get_value("Company Subscription", {"site_name": tenant_site}, "name")
-    if not subscription_name:
-        frappe.throw(f"No subscription found for site {tenant_site}")
-
-    stored_secret = frappe.utils.get_password(doctype="Company Subscription", name=subscription_name, fieldname="api_secret")
-    if received_secret != stored_secret:
-        frappe.throw("Authentication failed: Invalid credentials.")
-
-    if not all([customer_email, amount, currency, addon_name]):
-        frappe.throw("Customer email, amount, currency, and add-on name are required.", title="Missing Information")
+    if not all([add_on_name, customer_email]):
+        frappe.throw("Add-on Name and Customer Email are required.", title="Missing Information")
 
     try:
-        amount = float(amount)
-        if amount <= 0:
-            frappe.throw("Amount must be a positive number.", title="Invalid Amount")
-    except ValueError:
-        frappe.throw("Invalid amount specified.", title="Invalid Amount")
+        # 1. Get the relevant documents
+        add_on = frappe.get_doc("Add-on", add_on_name)
+        customer = frappe.get_doc("Customer", {"customer_primary_email": customer_email})
+        subscription = frappe.get_doc("Company Subscription", {"customer": customer.name})
 
-    try:
-        paystack_controller = PaystackController()
-        payment_result = paystack_controller.charge_customer(customer_email, amount, currency)
-
-        if payment_result.get("success"):
-            frappe.log_error(
-                message=f"Successfully charged {customer_email} {amount} {currency} for add-on '{addon_name}' from site {tenant_site}.",
-                title="Add-on Purchase Success"
+        # 2. Check eligibility
+        eligible_plans = [plan.subscription_plan for plan in add_on.get("eligible_plans", [])]
+        if eligible_plans and subscription.plan not in eligible_plans:
+            frappe.throw(
+                f"Your current plan '{subscription.plan}' is not eligible to purchase the '{add_on.add_on_name}' add-on.",
+                title="Upgrade Required"
             )
-            return {"status": "success", "message": "Payment successful."}
-        else:
-            frappe.log_error(
-                message=f"Failed to charge {customer_email} for add-on '{addon_name}'. Reason: {payment_result.get('message')}",
-                title="Add-on Purchase Failed"
-            )
-            frappe.throw(f"Payment failed: {payment_result.get('message')}")
 
+        # 3. Process payment for one-time add-ons
+        if add_on.billing_type == "One-time":
+            paystack_controller = PaystackController()
+            payment_result = paystack_controller.charge_customer(customer_email, add_on.cost, "USD")
+
+            if not payment_result.get("success"):
+                raise frappe.ValidationError(f"Payment failed: {payment_result.get('message')}")
+
+        # 4. Add the add-on to the subscription
+        for purchased in subscription.get("purchased_add_ons", []):
+            if purchased.add_on == add_on_name and add_on.billing_type == "Recurring":
+                frappe.throw(f"You have already subscribed to the '{add_on_name}' recurring add-on.", title="Already Subscribed")
+        
+        subscription.append("purchased_add_ons", {
+            "add_on": add_on_name,
+            "purchase_date": frappe.utils.nowdate()
+        })
+        
+        subscription.save(ignore_permissions=True)
+        frappe.db.commit()
+
+        return {"status": "success", "message": f"Successfully purchased the '{add_on.add_on_name}' add-on."}
+
+    except frappe.DoesNotExistError:
+        frappe.log_error(frappe.get_traceback(), "Add-on Purchase Failed")
+        frappe.throw("Could not find one of the required records (Customer, Subscription, or Add-on).", title="Not Found")
     except Exception as e:
-        frappe.log_error(frappe.get_traceback(), f"Add-on Charge Failed for {customer_email}")
-        frappe.throw(f"An unexpected error occurred during payment: {e}")
+        frappe.db.rollback()
+        frappe.log_error(frappe.get_traceback(), f"Add-on Purchase Failed for {customer_email}")
+        frappe.throw(f"An unexpected error occurred during the purchase: {e}")
