@@ -1,5 +1,3 @@
-# Copyright (c) 2025 ROKCT Holdings
-# For license information, please see license.txt
 import frappe
 
 def sync_user_roles_on_login(login_manager):

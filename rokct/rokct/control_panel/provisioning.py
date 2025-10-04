@@ -1,5 +1,3 @@
-# Copyright (c) 2025 ROKCT Holdings
-# For license information, please see license.txt
 # This file will contain APIs related to tenant provisioning.
 import frappe
 from frappe.utils import validate_email_address

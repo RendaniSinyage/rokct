@@ -1,82 +1,6 @@
-# Copyright (c) 2025 ROKCT Holdings
-# For license information, please see license.txt
 import frappe
-from frappe.utils import now_datetime, add_days, getdate, nowdate
+from frappe.utils import now_datetime
 from rokct.tenant.utils import send_tenant_email
-
-def reset_monthly_token_usage():
-    """
-    Checks all token usage trackers and resets the count if the 30-day
-    period has elapsed. Runs as a daily background job.
-    """
-    if frappe.conf.get("app_role") != "tenant":
-        return
-
-    frappe.log("Running Daily Token Usage Reset Job...", "Token Usage Job")
-
-    today = nowdate()
-    thirty_days_ago = add_days(today, -30)
-
-    trackers_to_reset = frappe.get_all(
-        "Token Usage Tracker",
-        filters={"period_start_date": ("<=", thirty_days_ago)},
-        fields=["name"]
-    )
-
-    if not trackers_to_reset:
-        frappe.log("No token trackers due for a reset.", "Token Usage Job")
-        return
-
-    frappe.log(f"Found {len(trackers_to_reset)} token trackers to reset.", "Token Usage Job")
-
-    for item in trackers_to_reset:
-        try:
-            tracker = frappe.get_doc("Token Usage Tracker", item.name)
-            tracker.current_period_usage = 0
-            tracker.period_start_date = today
-            tracker.save(ignore_permissions=True)
-        except Exception as e:
-            frappe.log_error(
-                f"Failed to reset token tracker for {item.name}: {e}",
-                "Token Usage Job Failed"
-            )
-
-    
-    frappe.db.commit()
-    frappe.log("Token Usage Reset Job Complete.", "Token Usage Job")
-
-
-def update_storage_usage():
-    """
-    Calculates the total storage usage for the site and updates the
-    Storage Settings singleton. Runs as a daily background job.
-    """
-    if frappe.conf.get("app_role") != "tenant":
-        return
-
-    frappe.log("Running Daily Storage Usage Calculation Job...", "Storage Usage Job")
-
-    try:
-        # Calculate total file size in bytes from the database
-        total_size_bytes = frappe.db.sql("SELECT SUM(file_size) FROM `tabFile`")[0][0] or 0
-
-        # Convert bytes to megabytes for storing
-        total_size_mb = total_size_bytes / (1024 * 1024)
-
-        # Update the singleton doctype
-        storage_settings = frappe.get_doc("Storage Settings")
-        storage_settings.current_storage_usage_mb = total_size_mb
-        storage_settings.save(ignore_permissions=True)
-        frappe.db.commit()
-
-        frappe.log(f"Successfully updated storage usage to {total_size_mb:.2f} MB.", "Storage Usage Job")
-
-    except Exception as e:
-        frappe.db.rollback()
-        frappe.log_error(
-            f"An unexpected error occurred during storage usage calculation: {e}\\n{frappe.get_traceback()}",
-            "Storage Usage Job Failed"
-        )
 
 def disable_expired_support_users():
     """
@@ -143,5 +67,4 @@ def disable_expired_support_users():
             frappe.log_error(frappe.get_traceback(), f"Failed to disable expired support user {user_info.email}")
 
     print("Expired Support User Cleanup Job Complete.")
-
 

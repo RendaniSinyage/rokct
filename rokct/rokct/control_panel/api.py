@@ -19,7 +19,6 @@ __all__ = [
     "mark_subscription_as_verified",
     "resend_welcome_email",
     "approve_migration",
-    "update_user_count",
 ]
 
 
@@ -133,58 +132,8 @@ def get_subscription_status():
         "next_billing_date": subscription.next_billing_date,
         "modules": [p.module for p in plan.get("modules", [])],
         "max_companies": getattr(plan, 'max_companies', 1), # Get override from plan, default to 1
-        "storage_quota_gb": getattr(plan, "storage_quota_gb", 0),
-        "monthly_token_limit": getattr(plan, "monthly_token_limit", 0),
-        "is_per_seat_plan": getattr(plan, "is_per_seat_plan", 0),
         "subscription_cache_duration": settings.subscription_cache_duration or 86400
     }
-
-
-@frappe.whitelist()
-def update_user_count(user_count: int):
-    """
-    Called by a tenant site to update its user count for per-seat billing.
-    Uses the request's origin (the site name) and a shared secret for auth.
-    """
-    # This API should only ever run on the control panel.
-    if frappe.conf.get("app_role") != "control_panel":
-        frappe.throw("This action can only be performed on the control panel.", title="Action Not Allowed")
-
-    # 1. Validate input
-    if not isinstance(user_count, int) or user_count < 0:
-        frappe.throw(f"Invalid user_count provided: {user_count}", title="Invalid Input")
-
-    # 2. Get tenant identity and secret from request
-    tenant_site = frappe.local.request.host
-    received_secret = frappe.local.request.headers.get("X-Rokct-Secret")
-
-    if not tenant_site:
-        frappe.throw("Could not identify tenant site from request.")
-    if not received_secret:
-        frappe.throw("Missing or invalid X-Rokct-Secret header.")
-
-    # 3. Find the subscription and get the stored secret
-    subscription_name = frappe.db.get_value("Company Subscription", {"site_name": tenant_site}, "name")
-    if not subscription_name:
-        frappe.throw(f"No subscription found for site {tenant_site}")
-
-    stored_secret = frappe.utils.get_password(doctype="Company Subscription", name=subscription_name, fieldname="api_secret")
-
-    # 4. Validate the secret
-    if not stored_secret or received_secret != stored_secret:
-        frappe.throw("Authentication failed.")
-
-    # 5. If authentication is successful, update the subscription
-    try:
-        subscription = frappe.get_doc("Company Subscription", subscription_name)
-        subscription.user_quantity = user_count
-        subscription.save(ignore_permissions=True)
-        frappe.db.commit()
-        return {"status": "success", "message": f"User count updated to {user_count} for {tenant_site}."}
-    except Exception as e:
-        frappe.db.rollback()
-        frappe.log_error(frappe.get_traceback(), f"User Count Update Failed for {tenant_site}")
-        frappe.throw(f"An error occurred while updating the user count: {e}")
 
 
 @frappe.whitelist()

@@ -1,5 +1,3 @@
-# Copyright (c) 2025 ROKCT Holdings
-# For license information, please see license.txt
 import frappe
 from frappe.utils import nowdate, add_days
 

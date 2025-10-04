@@ -1,7 +1,7 @@
 {
-    "name": "Eligible Plan",
+    "name": "Add-on Eligible Plan",
     "engine": "InnoDB",
-    "creation": "2025-10-03 17:42:00.000000",
+    "creation": "2025-10-03 18:05:00.000000",
     "doctype": "DocType",
     "editable_grid": 1,
     "fields": [
@@ -15,9 +15,9 @@
         }
     ],
     "istable": 1,
-    "modified": "2025-10-03 17:42:00.000000",
+    "modified": "2025-10-03 18:05:00.000000",
     "modified_by": "Administrator",
-    "module": "paas",
+    "module": "rokct",
     "owner": "Administrator",
     "permissions": [],
     "sort_field": "modified",
