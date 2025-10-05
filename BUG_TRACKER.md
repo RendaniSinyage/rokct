@@ -5,7 +5,7 @@ This document tracks the list of identified bugs in the `rokct` repository. Each
 ---
 
 ### Bug 1: Missing `reload()` Call in Provisioning
--   **Status:** Completed
+-   **Status:** Confirmed
 -   **Location:** `rokct/rokct/control_panel/provisioning.py`
 -   **Issue:** The function fails to call `.reload()` on the `subscription_plan` document before accessing the custom field `trial_period_days`.
 -   **Impact:** This causes a fatal `AttributeError` when provisioning any paid plan, preventing customers from signing up for non-free tiers.
