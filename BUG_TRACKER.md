@@ -4,11 +4,11 @@ This document tracks the list of identified bugs in the `rokct` repository. Each
 
 ---
 
-### Bug 1: Missing `reload()` Call in Provisioning
+### Bug 1: Missing `reload()` Call in Provisioning / "Unknown Column" Error
 -   **Status:** Completed
--   **Location:** `rokct/rokct/control_panel/provisioning.py`
--   **Issue:** The function fails to call `.reload()` on the `subscription_plan` document before accessing the custom field `trial_period_days`.
--   **Impact:** This causes a fatal `AttributeError` when provisioning any paid plan, preventing customers from signing up for non-free tiers.
+-   **Location:** `rokct/rokct/fixtures/Subscription Plan-trial_period_days.json`
+-   **Issue:** The root cause was an invalid `insert_after` value in the fixture file, which prevented the `trial_period_days` custom field from being created, leading to "Unknown column" and `AttributeError` exceptions.
+-   **Impact:** This caused a fatal error when provisioning any paid plan, preventing customers from signing up for non-free tiers.
 
 ---
 
@@ -16,7 +16,7 @@ This document tracks the list of identified bugs in the `rokct` repository. Each
 -   **Status:** Completed
 -   **Location:** `rokct/rokct/control_panel/provisioning.py` & `rokct/rokct/control_panel/tasks.py`
 -   **Issue:** Billing functions use incorrect values (`'Month'`, `'Year'`) when checking the billing cycle. The database stores `'Monthly'` and `'Yearly'`.
--   **Impact:** If Bug 1 is fixed, this will break the automated billing system, as the `next_billing_date` for subscriptions will not be calculated correctly.
+-   **Impact:** This would have broken the automated billing system for all paid plans. This was fixed in the same pass as Bug 1.
 
 ---
 

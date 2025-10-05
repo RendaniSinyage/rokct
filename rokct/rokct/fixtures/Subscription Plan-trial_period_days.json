@@ -4,5 +4,5 @@
  "fieldname": "trial_period_days",
  "fieldtype": "Int",
  "label": "Trial Period Days",
- "insert_after": "billing_interval_count"
+ "insert_after": "cost"
 }
