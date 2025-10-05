@@ -185,6 +185,7 @@ def create_subscription_record(plan, email, company_name, industry, site_name, c
 
     # 2. Create the subscription record
     subscription_plan = frappe.get_doc("Subscription Plan", plan)
+    subscription_plan.reload() # Ensure custom fields like 'trial_period_days' are loaded
 
     # Determine initial status and dates
     status = "Active"
