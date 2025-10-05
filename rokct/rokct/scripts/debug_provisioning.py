@@ -35,6 +35,7 @@ def trigger_provisioning_for_debug():
     try:
         subscription = create_subscription_record(
             plan=details["plan"],
+            email=details["email"],
             company_name=details["company_name"],
             industry=details["industry"],
             site_name=site_name,
