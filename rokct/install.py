@@ -37,6 +37,10 @@ def before_install():
 
 def after_install():
     print("\n--- Frappe Installation Process Finished ---")
+
+    # Create custom fields first to ensure they exist for seeders
+    create_subscription_plan_custom_fields()
+
     print("\n--- Manually Executing Data Seeders ---")
     try:
         from rokct.patches import seed_map_data, seed_subscription_plans_v4
@@ -51,6 +55,47 @@ def after_install():
     set_control_panel_configs()
     set_website_homepage()
     print("\n--- ROKCT App Installation Complete ---")
+
+def create_subscription_plan_custom_fields():
+    """Create custom fields for Subscription Plan to ensure they exist."""
+    print("--- Running Post-Install Step: Create Subscription Plan Custom Fields ---")
+    from frappe.custom.doctype.custom_field.custom_field import create_custom_field
+
+    # Field 1: Trial Period Days
+    if not frappe.db.exists("Custom Field", {"dt": "Subscription Plan", "fieldname": "trial_period_days"}):
+        print("Creating 'trial_period_days' custom field...")
+        create_custom_field(
+            "Subscription Plan",
+            {
+                "fieldname": "trial_period_days",
+                "label": "Trial Period Days",
+                "fieldtype": "Int",
+                "insert_after": "cost",
+                "default": "0",
+                "no_copy": 1,
+                "print_hide": 1,
+            },
+        )
+        print("SUCCESS: Created 'trial_period_days' custom field.")
+    else:
+        print("SKIPPED: 'trial_period_days' custom field already exists.")
+
+    # Field 2: Billing Cycle
+    if not frappe.db.exists("Custom Field", {"dt": "Subscription Plan", "fieldname": "billing_cycle"}):
+        print("Creating 'billing_cycle' custom field...")
+        create_custom_field(
+            "Subscription Plan",
+            {
+                "fieldname": "billing_cycle",
+                "label": "Billing Cycle",
+                "fieldtype": "Select",
+                "options": "Monthly\\nYearly",
+                "insert_after": "trial_period_days",
+            },
+        )
+        print("SUCCESS: Created 'billing_cycle' custom field.")
+    else:
+        print("SKIPPED: 'billing_cycle' custom field already exists.")
 
 def set_control_panel_configs():
     if frappe.local.site != "platform.rokct.ai":
