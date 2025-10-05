@@ -575,3 +575,27 @@ def retry_payment_for_subscription_job(subscription_name, user):
     except Exception as e:
         frappe.log_error(f"Failed to retry payment for subscription {subscription_name}: {e}", "Subscription Payment Retry Error")
         frappe.publish_realtime("show_alert", {"message": f"An unexpected error occurred while retrying payment for {subscription_name}. See the Error Log for details.", "indicator": "red"}, user=user)
+
+def cleanup_failed_provisions():
+	"""
+	Placeholder for cleaning up resources from failed tenant provisions.
+	This task is defined in hooks.py but was not implemented.
+	"""
+	frappe.log("Running placeholder for cleanup_failed_provisions. No action taken.", "Scheduled Task Warning")
+	pass
+
+def generate_subscription_invoices():
+	"""
+	Placeholder for generating monthly subscription invoices.
+	This task is defined in hooks.py but was not implemented.
+	"""
+	frappe.log("Running placeholder for generate_subscription_invoices. No action taken.", "Scheduled Task Warning")
+	pass
+
+def run_weekly_maintenance():
+	"""
+	Placeholder for running weekly maintenance tasks on the control panel.
+	This task is defined in hooks.py but was not implemented.
+	"""
+	frappe.log("Running placeholder for run_weekly_maintenance. No action taken.", "Scheduled Task Warning")
+	pass
