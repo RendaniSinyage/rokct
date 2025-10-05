@@ -185,18 +185,20 @@ def create_subscription_record(plan, email, company_name, industry, site_name, c
 
     # 2. Create the subscription record
     subscription_plan = frappe.get_doc("Subscription Plan", plan)
-    subscription_plan.reload() # Ensure custom fields are loaded
 
     # Determine initial status and dates
     status = "Active"
     trial_ends_on = None
     next_billing_date = None
 
+    # Defensively get trial_period_days, defaulting to 0 if it doesn't exist for any reason.
+    trial_period_days = getattr(subscription_plan, 'trial_period_days', 0)
+
     if subscription_plan.cost == 0:
         status = "Free"
-    elif subscription_plan.trial_period_days > 0:
+    elif trial_period_days > 0:
         status = "Trialing"
-        trial_ends_on = add_days(nowdate(), subscription_plan.trial_period_days)
+        trial_ends_on = add_days(nowdate(), trial_period_days)
         # Billing starts after the trial
         if subscription_plan.billing_cycle == 'Monthly':
             next_billing_date = add_months(trial_ends_on, 1)

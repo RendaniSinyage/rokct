@@ -4,10 +4,10 @@ This document tracks the list of identified bugs in the `rokct` repository. Each
 
 ---
 
-### Bug 1: Missing `reload()` Call in Provisioning / "Unknown Column" Error
+### Bug 1: `AttributeError` and "Unknown Column" in Provisioning
 -   **Status:** To Be Verified
--   **Location:** `rokct/rokct/fixtures/Subscription Plan-trial_period_days.json`
--   **Issue:** The root cause was an invalid `insert_after` value in the fixture file, which prevented the `trial_period_days` custom field from being created, leading to "Unknown column" and `AttributeError` exceptions.
+-   **Location:** `rokct/rokct/control_panel/provisioning.py`
+-   **Issue:** A combination of a missing database column and non-defensive code was causing paid plan provisioning to crash with an `AttributeError`.
 -   **Impact:** This caused a fatal error when provisioning any paid plan, preventing customers from signing up for non-free tiers.
 
 ---

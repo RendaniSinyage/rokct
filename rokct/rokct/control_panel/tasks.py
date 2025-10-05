@@ -170,9 +170,10 @@ def complete_tenant_setup(subscription_id, site_name, user_details):
                     log_and_print(f"NOTE: Tenant setup function returned a warning: {response_json.get('message')}. This is expected on retry.")
 
                 plan = frappe.get_doc("Subscription Plan", subscription.plan)
+                trial_period_days = getattr(plan, 'trial_period_days', 0)
                 if plan.cost == 0:
                     subscription.status = "Free"
-                elif getattr(plan, "trial_period_days", 0) > 0:
+                elif trial_period_days > 0:
                     subscription.status = "Trialing"
                 else:
                     subscription.status = "Active"
