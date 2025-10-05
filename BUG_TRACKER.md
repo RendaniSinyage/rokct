@@ -4,11 +4,11 @@ This document tracks the list of identified bugs in the `rokct` repository. Each
 
 ---
 
-### Bug 1: `AttributeError` in Provisioning
+### Bug 1: Fixture Installation and Logic Errors in Provisioning
 -   **Status:** To Be Verified
--   **Location:** `rokct/rokct/control_panel/provisioning.py` & `tasks.py`
--   **Issue:** Non-defensive code crashes with an `AttributeError` if custom fields like `trial_period_days` or `billing_cycle` are not present on the `Subscription Plan` doctype.
--   **Impact:** This causes a fatal error when provisioning any paid plan, preventing customers from signing up for non-free tiers.
+-   **Location:** Multiple (`fixtures`, `control_panel/provisioning.py`, `control_panel/tasks.py`)
+-   **Issue:** A combination of an incorrectly named fixture file with an invalid `insert_after` value prevented the `trial_period_days` custom field from being created. This led to `AttributeError` crashes in the provisioning and task scripts.
+-   **Impact:** This caused a fatal error when provisioning any paid plan, preventing customers from signing up for non-free tiers.
 
 ---
 
