@@ -12,17 +12,17 @@ def trigger_provisioning_for_debug():
     and see the output directly in the terminal.
     """
     details = {
-        "plan": "Free (Yearly)",
-        "email": "blackwealth@juvo.app",
+        "plan": "PaaS (Yearly)",
+        "email": "hello@juvo.app",
         "password": "Linkme78#@",
         "first_name": "Rendani",
         "last_name": "Sinyage",
-        "company_name": "Black Wealth Institute",
+        "company_name": "Juvo",
         "currency": "USD",
         "country": "South Africa",
         "industry": "Technology"
     }
-    site_name = "bwi.tenant.rokct.ai"
+    site_name = "juvo.tenant.rokct.ai"
 
     print(f"--- Starting FULLY SYNCHRONOUS Debug Provisioning for {site_name} ---")
 
