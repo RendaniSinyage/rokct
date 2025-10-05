@@ -60,7 +60,9 @@ def provision_new_tenant(plan, email, password, first_name, last_name, company_n
     if customer_id:
         # Check if the new plan is a trial plan
         new_plan = frappe.get_doc("Subscription Plan", plan)
-        if new_plan.trial_period_days > 0:
+        # Defensively get trial_period_days to prevent crash if field is missing
+        trial_period_days = getattr(new_plan, 'trial_period_days', 0)
+        if trial_period_days > 0:
             # Check if this customer has had a trial before using a direct SQL query for efficiency
             had_previous_trial = frappe.db.sql("""
                 SELECT cs.name
@@ -185,27 +187,30 @@ def create_subscription_record(plan, email, company_name, industry, site_name, c
 
     # 2. Create the subscription record
     subscription_plan = frappe.get_doc("Subscription Plan", plan)
-    subscription_plan.reload() # Ensure custom fields are loaded
 
     # Determine initial status and dates
     status = "Active"
     trial_ends_on = None
     next_billing_date = None
 
+    # Defensively get attributes, defaulting to safe values if they don't exist.
+    trial_period_days = getattr(subscription_plan, 'trial_period_days', 0)
+    billing_cycle = getattr(subscription_plan, 'billing_cycle', None)
+
     if subscription_plan.cost == 0:
         status = "Free"
-    elif subscription_plan.trial_period_days > 0:
+    elif trial_period_days > 0:
         status = "Trialing"
-        trial_ends_on = add_days(nowdate(), subscription_plan.trial_period_days)
+        trial_ends_on = add_days(nowdate(), trial_period_days)
         # Billing starts after the trial
-        if subscription_plan.billing_cycle == 'Monthly':
+        if billing_cycle == 'Monthly':
             next_billing_date = add_months(trial_ends_on, 1)
-        elif subscription_plan.billing_cycle == 'Yearly':
+        elif billing_cycle == 'Yearly':
             next_billing_date = add_years(trial_ends_on, 1)
     else: # Paid plan with no trial
-        if subscription_plan.billing_cycle == 'Monthly':
+        if billing_cycle == 'Monthly':
             next_billing_date = add_months(nowdate(), 1)
-        elif subscription_plan.billing_cycle == 'Yearly':
+        elif billing_cycle == 'Yearly':
             next_billing_date = add_years(nowdate(), 1)
 
     subscription = frappe.get_doc({
