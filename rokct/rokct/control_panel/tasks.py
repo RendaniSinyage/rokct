@@ -416,7 +416,7 @@ def _handle_trial_expirations(today):
             if has_payment_method:
                 subscription.status = "Active"
                 plan = frappe.get_doc("Subscription Plan", sub_info.plan)
-                subscription.next_billing_date = add_months(today, 1) if plan.billing_cycle == 'Month' else add_years(today, 1)
+                subscription.next_billing_date = add_months(today, 1) if plan.billing_cycle == 'Monthly' else add_years(today, 1)
                 subscription.trial_ends_on = None
             else:
                 original_plan_name = subscription.plan
@@ -442,7 +442,7 @@ def _handle_free_plan_renewals(today):
         try:
             subscription = frappe.get_doc("Company Subscription", sub_info.name)
             plan = frappe.get_doc("Subscription Plan", sub_info.plan)
-            subscription.next_billing_date = add_months(today, 1) if plan.billing_cycle == 'Month' else add_years(today, 1)
+            subscription.next_billing_date = add_months(today, 1) if plan.billing_cycle == 'Monthly' else add_years(today, 1)
             subscription.save(ignore_permissions=True)
             frappe.db.commit()
         except Exception as e:
@@ -471,7 +471,7 @@ def _handle_paid_plan_renewals(today):
             payment_result = paystack_controller.charge_customer(customer.customer_primary_email, final_cost, plan.currency)
 
             if payment_result.get("success"):
-                subscription.next_billing_date = add_months(today, 1) if plan.billing_cycle == 'Month' else add_years(today, 1)
+                subscription.next_billing_date = add_months(today, 1) if plan.billing_cycle == 'Monthly' else add_years(today, 1)
                 subscription.payment_retry_attempt = 0
                 _send_subscription_notification(subscription, "Payment Successful", {"amount_paid": f"{final_cost} {plan.currency}", "payment_date": today, "next_renewal_date": subscription.next_billing_date})
             else:
@@ -521,7 +521,7 @@ def _handle_grace_period_retries(today):
                 if payment_result.get("success"):
                     subscription.status = "Active"
                     subscription.payment_retry_attempt = 0
-                    subscription.next_billing_date = add_months(today, 1) if plan.billing_cycle == 'Month' else add_years(today, 1)
+                    subscription.next_billing_date = add_months(today, 1) if plan.billing_cycle == 'Monthly' else add_years(today, 1)
                     _send_subscription_notification(subscription, "Payment Successful", {"amount_paid": f"{final_cost} {plan.currency}", "payment_date": today, "next_renewal_date": subscription.next_billing_date})
                 else:
                     subscription.payment_retry_attempt += 1
@@ -562,9 +562,9 @@ def retry_payment_for_subscription_job(subscription_name, user):
 
         if payment_result.get("success"):
             subscription.status = "Active"
-            if plan.billing_cycle == 'Month':
+            if plan.billing_cycle == 'Monthly':
                 subscription.next_billing_date = add_months(getdate(nowdate()), 1)
-            elif plan.billing_cycle == 'Year':
+            elif plan.billing_cycle == 'Yearly':
                 subscription.next_billing_date = add_years(getdate(nowdate()), 1)
             subscription.save(ignore_permissions=True)
             frappe.db.commit()

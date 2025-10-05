@@ -14,7 +14,7 @@ This document tracks the list of identified bugs in the `rokct` repository. Each
 
 ### Bug 2: Critical Typo in Subscription Billing Logic
 -   **Status:** Completed
--   **Location:** `rokct/rokct/control_panel/provisioning.py`
+-   **Location:** `rokct/rokct/control_panel/provisioning.py` & `rokct/rokct/control_panel/tasks.py`
 -   **Issue:** Billing functions use incorrect values (`'Month'`, `'Year'`) when checking the billing cycle. The database stores `'Monthly'` and `'Yearly'`.
 -   **Impact:** If Bug 1 is fixed, this will break the automated billing system, as the `next_billing_date` for subscriptions will not be calculated correctly.
 
