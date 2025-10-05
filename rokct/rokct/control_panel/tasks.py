@@ -576,26 +576,110 @@ def retry_payment_for_subscription_job(subscription_name, user):
         frappe.log_error(f"Failed to retry payment for subscription {subscription_name}: {e}", "Subscription Payment Retry Error")
         frappe.publish_realtime("show_alert", {"message": f"An unexpected error occurred while retrying payment for {subscription_name}. See the Error Log for details.", "indicator": "red"}, user=user)
 
-def cleanup_failed_provisions():
-	"""
-	Placeholder for cleaning up resources from failed tenant provisions.
-	This task is defined in hooks.py but was not implemented.
-	"""
-	frappe.log("Running placeholder for cleanup_failed_provisions. No action taken.", "Scheduled Task Warning")
-	pass
-
 def generate_subscription_invoices():
-	"""
-	Placeholder for generating monthly subscription invoices.
-	This task is defined in hooks.py but was not implemented.
-	"""
-	frappe.log("Running placeholder for generate_subscription_invoices. No action taken.", "Scheduled Task Warning")
-	pass
+    """
+    Generates Sales Invoices for all active, non-free subscriptions that are due for billing.
+    This is intended to be run monthly.
+    """
+    frappe.log("--- Running Monthly Subscription Invoice Generation ---", "Subscription Invoicing")
+    today = getdate(nowdate())
+
+    subscriptions_to_invoice = frappe.get_all(
+        "Company Subscription",
+        filters={
+            "status": "Active",
+            "next_billing_date": ("<=", today),
+        },
+        fields=["name", "customer", "plan"]
+    )
+
+    if not subscriptions_to_invoice:
+        frappe.log("No subscriptions are due for invoicing today.", "Subscription Invoicing")
+        return
+
+    frappe.log(f"Found {len(subscriptions_to_invoice)} subscriptions to invoice.", "Subscription Invoicing")
+
+    for sub_info in subscriptions_to_invoice:
+        try:
+            subscription = frappe.get_doc("Company Subscription", sub_info.name)
+            plan = frappe.get_doc("Subscription Plan", sub_info.plan)
+
+            if not getattr(plan, "item", None):
+                frappe.log(f"Skipping invoice for subscription {subscription.name} because its plan '{plan.name}' has no linked billing item.", "Subscription Invoicing")
+                continue
+
+            # Create the Sales Invoice
+            invoice = frappe.new_doc("Sales Invoice")
+            invoice.customer = subscription.customer
+            invoice.due_date = add_days(today, 15) # Example: due in 15 days
+
+            invoice.append("items", {
+                "item_code": plan.item,
+                "qty": subscription.user_quantity if getattr(plan, 'is_per_seat_plan', 0) else 1,
+                "rate": plan.cost,
+            })
+
+            invoice.save(ignore_permissions=True)
+            invoice.submit()
+
+            frappe.log(f"Successfully created and submitted Sales Invoice {invoice.name} for subscription {subscription.name}.", "Subscription Invoicing")
+
+        except Exception as e:
+            frappe.log_error(f"Failed to create invoice for subscription {sub_info.name}: {e}", "Subscription Invoicing Error")
+
+    frappe.log("--- Monthly Subscription Invoice Generation Complete ---", "Subscription Invoicing")
+
+def cleanup_failed_provisions():
+    """
+    Finds and drops tenant sites for subscriptions that are in a 'Setup Failed' state.
+    """
+    frappe.log("--- Running Cleanup for Failed Provisions ---", "Provisioning Cleanup")
+
+    failed_subscriptions = frappe.get_all(
+        "Company Subscription",
+        filters={"status": "Setup Failed"},
+        fields=["name", "site_name"]
+    )
+
+    if not failed_subscriptions:
+        frappe.log("No failed provisions found to clean up.", "Provisioning Cleanup")
+        return
+
+    frappe.log(f"Found {len(failed_subscriptions)} failed provisions to clean up.", "Provisioning Cleanup")
+
+    for sub_info in failed_subscriptions:
+        if not sub_info.site_name:
+            frappe.log(f"Skipping subscription {sub_info.name} as it has no site_name.", "Provisioning Cleanup")
+            continue
+        try:
+            frappe.log(f"Attempting to drop site '{sub_info.site_name}' for failed subscription {sub_info.name}.")
+            drop_tenant_site(sub_info.site_name)
+        except Exception as e:
+            frappe.log_error(f"Failed to drop site for failed subscription {sub_info.name}: {e}", "Provisioning Cleanup Error")
+
+    frappe.log("--- Failed Provisions Cleanup Complete ---", "Provisioning Cleanup")
 
 def run_weekly_maintenance():
-	"""
-	Placeholder for running weekly maintenance tasks on the control panel.
-	This task is defined in hooks.py but was not implemented.
-	"""
-	frappe.log("Running placeholder for run_weekly_maintenance. No action taken.", "Scheduled Task Warning")
-	pass
+    """
+    Performs weekly maintenance tasks, such as cleaning up old logs.
+    """
+    frappe.log("--- Running Weekly Maintenance ---", "Weekly Maintenance")
+
+    days_to_keep = 30
+    cutoff_date = add_days(nowdate(), -days_to_keep)
+
+    try:
+        # Clean up old Error Log entries
+        frappe.db.delete("Error Log", {"creation": ("<", cutoff_date)})
+        frappe.log(f"Deleted Error Log entries older than {days_to_keep} days.", "Weekly Maintenance")
+
+        # Clean up old Activity Log entries
+        frappe.db.delete("Activity Log", {"creation": ("<", cutoff_date)})
+        frappe.log(f"Deleted Activity Log entries older than {days_to_keep} days.", "Weekly Maintenance")
+
+        frappe.db.commit()
+
+    except Exception as e:
+        frappe.log_error(f"An error occurred during weekly maintenance: {e}", "Weekly Maintenance Error")
+
+    frappe.log("--- Weekly Maintenance Complete ---", "Weekly Maintenance")
