@@ -4,11 +4,11 @@ This document tracks the list of identified bugs in the `rokct` repository. Each
 
 ---
 
-### Bug 1: `AttributeError` and "Unknown Column" in Provisioning
+### Bug 1: `AttributeError` in Provisioning
 -   **Status:** To Be Verified
--   **Location:** `rokct/rokct/control_panel/provisioning.py`
--   **Issue:** A combination of a missing database column and non-defensive code was causing paid plan provisioning to crash with an `AttributeError`.
--   **Impact:** This caused a fatal error when provisioning any paid plan, preventing customers from signing up for non-free tiers.
+-   **Location:** `rokct/rokct/control_panel/provisioning.py` & `tasks.py`
+-   **Issue:** Non-defensive code crashes with an `AttributeError` if custom fields like `trial_period_days` or `billing_cycle` are not present on the `Subscription Plan` doctype.
+-   **Impact:** This causes a fatal error when provisioning any paid plan, preventing customers from signing up for non-free tiers.
 
 ---
 
