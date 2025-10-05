@@ -169,7 +169,7 @@ def get_safe_scheduler_events():
 			"rokct.rokct.control_panel.tasks.cleanup_unverified_tenants",
 			"rokct.rokct.tasks.manage_daily_tenders",
 			"rokct.rokct.control_panel.tasks.cleanup_failed_provisions",
-		]
+		])
 		events["weekly"] = ["rokct.rokct.control_panel.tasks.run_weekly_maintenance"]
 		events["monthly"] = ["rokct.rokct.control_panel.tasks.generate_subscription_invoices"]
 	else:  # tenant
