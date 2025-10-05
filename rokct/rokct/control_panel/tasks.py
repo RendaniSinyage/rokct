@@ -583,7 +583,7 @@ def generate_subscription_invoices():
     """
     frappe.log("--- Running Monthly Subscription Invoice Generation ---", "Subscription Invoicing")
     today = getdate(nowdate())
-
+    
     subscriptions_to_invoice = frappe.get_all(
         "Company Subscription",
         filters={
@@ -612,16 +612,16 @@ def generate_subscription_invoices():
             invoice = frappe.new_doc("Sales Invoice")
             invoice.customer = subscription.customer
             invoice.due_date = add_days(today, 15) # Example: due in 15 days
-
+            
             invoice.append("items", {
                 "item_code": plan.item,
                 "qty": subscription.user_quantity if getattr(plan, 'is_per_seat_plan', 0) else 1,
                 "rate": plan.cost,
             })
-
+            
             invoice.save(ignore_permissions=True)
             invoice.submit()
-
+            
             frappe.log(f"Successfully created and submitted Sales Invoice {invoice.name} for subscription {subscription.name}.", "Subscription Invoicing")
 
         except Exception as e:
@@ -656,7 +656,7 @@ def cleanup_failed_provisions():
             drop_tenant_site(sub_info.site_name)
         except Exception as e:
             frappe.log_error(f"Failed to drop site for failed subscription {sub_info.name}: {e}", "Provisioning Cleanup Error")
-
+            
     frappe.log("--- Failed Provisions Cleanup Complete ---", "Provisioning Cleanup")
 
 def run_weekly_maintenance():
@@ -664,7 +664,7 @@ def run_weekly_maintenance():
     Performs weekly maintenance tasks, such as cleaning up old logs.
     """
     frappe.log("--- Running Weekly Maintenance ---", "Weekly Maintenance")
-
+    
     days_to_keep = 30
     cutoff_date = add_days(nowdate(), -days_to_keep)
 
@@ -676,7 +676,7 @@ def run_weekly_maintenance():
         # Clean up old Activity Log entries
         frappe.db.delete("Activity Log", {"creation": ("<", cutoff_date)})
         frappe.log(f"Deleted Activity Log entries older than {days_to_keep} days.", "Weekly Maintenance")
-
+        
         frappe.db.commit()
 
     except Exception as e:
