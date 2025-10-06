@@ -89,7 +89,7 @@ def create_subscription_plan_custom_fields():
                 "fieldname": "billing_cycle",
                 "label": "Billing Cycle",
                 "fieldtype": "Select",
-                "options": "Monthly\\nYearly",
+                "options": "Monthly\nYearly",
                 "insert_after": "trial_period_days",
             },
         )

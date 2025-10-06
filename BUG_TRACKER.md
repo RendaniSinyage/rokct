@@ -7,8 +7,8 @@ This document tracks the list of identified bugs in the `rokct` repository. Each
 ### Bug 1: Provisioning Failures due to Missing Custom Fields
 -   **Status:** To Be Verified
 -   **Location:** `rokct/install.py`, `rokct/control_panel/provisioning.py`
--   **Issue:** The root cause of all provisioning failures was that custom fields (`trial_period_days`, `billing_cycle`) were not being created, leading to `AttributeError` exceptions. This has been fixed by programmatically creating the fields in the `install.py` script.
--   **Impact:** This caused a fatal error when provisioning any paid plan, preventing customers from signing up.
+-   **Issue:** The root cause of all provisioning failures was that custom fields (`trial_period_days`, `billing_cycle`) were not being created reliably. This has been fixed by programmatically creating the fields in the `install.py` script.
+-   **Impact:** This caused fatal `AttributeError` crashes when provisioning any paid plan, preventing customers from signing up.
 
 ---
 
@@ -16,7 +16,7 @@ This document tracks the list of identified bugs in the `rokct` repository. Each
 -   **Status:** To Be Verified
 -   **Location:** `rokct/rokct/control_panel/tasks.py`
 -   **Issue:** Billing functions use incorrect values (`'Month'`, `'Year'`) when checking the billing cycle.
--   **Impact:** This would have broken the automated billing system. This was fixed in the same pass as Bug 1.
+-   **Impact:** This would have broken the automated billing system for all paid plans. This was fixed in the same pass as Bug 1.
 
 ---
 
