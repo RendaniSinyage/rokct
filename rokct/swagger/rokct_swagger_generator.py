@@ -323,7 +323,7 @@ def get_child_table_schema(child_doctype, example_data=None):
     return schema
 
 @frappe.whitelist(allow_guest=True)
-def generate_swagger_json():
+def generate_rokct_swagger_json():
     """Generate Swagger JSON documentation for all API methods.
 
     This function processes all Python files in the `api` directories of installed apps
