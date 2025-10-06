@@ -11,7 +11,7 @@
  "item": "Team Plan",
  "plan_name": "Team (Monthly)",
  "price_determination": "Fixed Rate",
- "trial_period_days": 0,
+ "trial_period_days": 14,
  "subscription_plan_module": [
   {
    "module": "rokct"

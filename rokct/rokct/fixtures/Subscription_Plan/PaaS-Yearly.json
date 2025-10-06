@@ -8,7 +8,7 @@
  "item": "PaaS Plan",
  "plan_name": "PaaS (Yearly)",
  "price_determination": "Fixed Rate",
- "trial_period_days": 0,
+ "trial_period_days": 14,
  "is_ai": 0,
  "subscription_plan_module": [
   {

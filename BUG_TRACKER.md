@@ -5,9 +5,9 @@ This document tracks the list of identified bugs in the `rokct` repository. Each
 ---
 
 ### Bug 1: Provisioning Failures due to Missing Custom Fields
--   **Status:** Partially Solved
--   **Location:** `rokct/install.py`, `rokct/control_panel/provisioning.py`
--   **Issue:** The root cause of all provisioning failures was that custom fields (`trial_period_days`, `billing_cycle`) were not being created reliably. The code no longer crashes, but the trial period is not applied because the data for trial days is missing on the plan. A patch is being added to fix this data issue.
+-   **Status:** To Be Verified
+-   **Location:** `rokct/install.py`
+-   **Issue:** The root cause of all provisioning failures was that custom fields (`trial_period_days`, `billing_cycle`) were not being created reliably. This has been fixed by programmatically creating them in the `install.py` script.
 -   **Impact:** This caused fatal `AttributeError` crashes when provisioning any paid plan, preventing customers from signing up.
 
 ---
@@ -100,8 +100,8 @@ This document tracks the list of identified bugs in the `rokct` repository. Each
 
 ---
 
-### Bug 13: Invalid Keyword Argument in Email Sending
--   **Status:** To Be Verified
+### Bug 13: Missing Email Template File
+-   **Status:** To Be Discussed
 -   **Location:** `rokct/rokct/control_panel/tasks.py`
--   **Issue:** The `frappe.sendmail` function is called with an invalid keyword argument `template_name`. The correct argument is `template`.
--   **Impact:** This causes a fatal `TypeError` and prevents the welcome email from being sent to new users after provisioning.
+-   **Issue:** The `frappe.sendmail` function fails because the specified email template, "New User Welcome," does not exist.
+-   **Impact:** This prevents the welcome email from being sent to new users after provisioning.

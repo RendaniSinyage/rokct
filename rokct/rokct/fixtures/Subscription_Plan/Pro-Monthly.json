@@ -9,7 +9,7 @@
  "item": "Pro Plan",
  "plan_name": "Pro (Monthly)",
  "price_determination": "Fixed Rate",
- "trial_period_days": 0,
+ "trial_period_days": 14,
  "subscription_plan_module": [
   {
    "module": "rokct"
