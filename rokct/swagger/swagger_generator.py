@@ -318,8 +318,8 @@ def generate_swagger_json():
     This function processes all Python files in the `api` directories of installed apps
     to generate a Swagger JSON file that describes the API methods.
     """
-    # Define the output directory for the generated JSON files, pointing to the original swagger app's www directory
-    output_dir = os.path.join(frappe.get_app_path('swagger'), 'swagger', 'www')
+    # Define the output directory for the generated JSON files, ensuring it's in our custom app
+    output_dir = os.path.join(frappe.get_app_path('rokct'), 'swagger', 'www')
     os.makedirs(output_dir, exist_ok=True)
 
     swagger_settings = frappe.get_single("Swagger Settings")
