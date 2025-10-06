@@ -461,8 +461,9 @@ def generate_swagger_json():
             if app_name not in app_doctypes:
                 app_doctypes[app_name] = []
             app_doctypes[app_name].append(doctype)
-        except Exception as e:
-            frappe.log_error(f"Failed to process DocType '{doctype}': {str(e)}")
+        except Exception:
+            # This can happen if a DocType is from an uninstalled app.
+            # We'll just skip it and continue.
             continue
 
 
@@ -566,8 +567,9 @@ def generate_swagger_json():
 
                 doctype_schema = get_doctype_schema(doctype, example_doc)
                 processed_doctypes_count += 1
-            except Exception as e:
-                frappe.log_error(f"Failed to generate schema for DocType '{doctype}': {str(e)}")
+            except Exception:
+                # This can happen if a DocType is from an uninstalled app.
+                # We'll just skip it and continue.
                 continue
 
             # Correctly prefix with /api/v1/
