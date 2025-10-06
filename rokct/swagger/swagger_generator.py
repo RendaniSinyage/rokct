@@ -318,6 +318,10 @@ def generate_swagger_json():
     This function processes all Python files in the `api` directories of installed apps
     to generate a Swagger JSON file that describes the API methods.
     """
+    # Define the output directory for the generated JSON files, pointing to the original swagger app's www directory
+    output_dir = os.path.join(frappe.get_app_path('swagger'), 'swagger', 'www')
+    os.makedirs(output_dir, exist_ok=True)
+
     swagger_settings = frappe.get_single("Swagger Settings")
 
     # Initialize the Swagger specification
@@ -504,7 +508,7 @@ def generate_swagger_json():
 
                 # Save the module-specific JSON
                 safe_module_name = re.sub(r'[^a-zA-Z0-9\-_]', '', f"{app}-{module_name}")
-                module_file_path = os.path.join(frappe_bench_dir, "apps", "swagger", "swagger", "www", f"module-{safe_module_name}.json")
+                module_file_path = os.path.join(output_dir, f"module-{safe_module_name}.json")
                 with open(module_file_path, "w") as module_file:
                     json.dump(module_spec, module_file, indent=4)
 
@@ -738,7 +742,7 @@ def generate_swagger_json():
 
     # Save the module-specific DocType JSON
     safe_module_name = re.sub(r'[^a-zA-Z0-9\-_]', '', f"{app_name}-doctypes")
-    module_file_path = os.path.join(frappe_bench_dir, "apps", "swagger", "swagger", "www", f"module-{safe_module_name}.json")
+    module_file_path = os.path.join(output_dir, f"module-{safe_module_name}.json")
     with open(module_file_path, "w") as module_file:
         json.dump(module_spec, module_file, indent=4)
 
@@ -750,12 +754,12 @@ full_swagger["x-total-doctypes"] = total_doctypes
 full_swagger["x-processed-doctypes"] = processed_doctypes_count
 
 # Save the full swagger JSON
-full_file_path = os.path.join(frappe_bench_dir, "apps", "swagger", "swagger", "www", "swagger-full.json")
+full_file_path = os.path.join(output_dir, "swagger-full.json")
 with open(full_file_path, "w") as full_file:
     json.dump(full_swagger, full_file, indent=4)
 
 # Save the modules list
-modules_file_path = os.path.join(frappe_bench_dir, "apps", "swagger", "swagger", "www", "modules.json")
+modules_file_path = os.path.join(output_dir, "modules.json")
 with open(modules_file_path, "w") as modules_file:
     json.dump({"modules": modules_list}, modules_file, indent=4)
 

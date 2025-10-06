@@ -194,6 +194,7 @@ scheduler_events = get_safe_scheduler_events()
 # ------------------------------
 #
 override_whitelisted_methods = {
+    "swagger.swagger.doctype.swagger_settings.swagger_settings.generate_swagger_json": "rokct.swagger.swagger_generator.generate_swagger_json",
     "rokct.rokct.tenant.api.get_subscription_details": "rokct.rokct.tenant.api.get_subscription_details",
     "rokct.rokct.scripts.debug_provisioning.trigger_provisioning_for_debug": "rokct.rokct.scripts.debug_provisioning.trigger_provisioning_for_debug"
 }
