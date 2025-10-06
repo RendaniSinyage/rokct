@@ -8,6 +8,7 @@ import os
 import re
 
 import frappe
+from frappe.exceptions import DoesNotExistError, PermissionError
 from pydantic import BaseModel
 from datetime import datetime, date
 
@@ -184,58 +185,63 @@ def get_doctype_schema(doctype, example_doc=None):
     read_only_fields = ["name", "creation", "modified", "owner"]
 
     for field in meta.fields:
-        field_schema = {}
+        try:
+            field_schema = {}
 
-        # Add field descriptions
-        if field.description:
-            field_schema["description"] = field.description
+            # Add field descriptions
+            if field.description:
+                field_schema["description"] = field.description
 
-        # Add required constraint
-        if frappe.db.get_value("DocField", {"parent": doctype, "fieldname": field.fieldname}, "reqd"):
-            required_fields.append(field.fieldname)
+            # Add required constraint
+            if frappe.db.get_value("DocField", {"parent": doctype, "fieldname": field.fieldname}, "reqd"):
+                required_fields.append(field.fieldname)
 
-        # Add read-only flag for system fields
-        if field.fieldname in read_only_fields:
-            field_schema["readOnly"] = True
+            # Add read-only flag for system fields
+            if field.fieldname in read_only_fields:
+                field_schema["readOnly"] = True
 
-        # Get the value from the example doc, if it exists
-        example_val = example_doc.get(field.fieldname) if example_doc else None
+            # Get the value from the example doc, if it exists
+            example_val = example_doc.get(field.fieldname) if example_doc else None
 
-        if field.fieldtype == "Table":
-            child_doctype = field.options
-            if child_doctype:
-                child_example_data = example_doc.get(field.fieldname, []) if example_doc else None
-                child_schema = get_child_table_schema(child_doctype, child_example_data)
-                field_schema.update({
-                    "type": "array",
-                    "items": child_schema
-                })
-                example_values[field.fieldname] = [child_schema.get("example", {})] if child_schema.get("example") else []
-        elif field.fieldtype in ["Data", "Text", "Read Only", "Link", "HTML Editor"]:
-            field_schema["type"] = "string"
-            if field.fieldtype == "Link" and field.options:
-                # Add enum if the field is a Link to a small, fixed-value DocType
-                if frappe.get_meta(field.options).issingle:
-                     # For simplicity, we'll assume it's a fixed list
-                     field_schema["enum"] = frappe.db.get_list(field.options, pluck="name")
-            example_values[field.fieldname] = example_val.isoformat() if isinstance(example_val, (date, datetime)) else (example_val if example_val is not None else f"Example {field.label}")
-        elif field.fieldtype in ["Int", "Check"]:
-            field_schema["type"] = "integer"
-            example_values[field.fieldname] = example_val if example_val is not None else 0
-        elif field.fieldtype in ["Float", "Currency", "Percent"]:
-            field_schema["type"] = "number"
-            example_values[field.fieldname] = example_val if example_val is not None else 0.0
-        elif field.fieldtype == "Date":
-            field_schema["type"] = "string"
-            field_schema["format"] = "date"
-            example_values[field.fieldname] = example_val.isoformat() if isinstance(example_val, (date, datetime)) else "2025-09-04"
-        elif field.fieldtype == "Datetime":
-            field_schema["type"] = "string"
-            field_schema["format"] = "date-time"
-            example_values[field.fieldname] = example_val.isoformat() if isinstance(example_val, (date, datetime)) else "2025-09-04T00:00:00Z"
-        # Add other field types as needed
+            if field.fieldtype == "Table":
+                child_doctype = field.options
+                if child_doctype:
+                    child_example_data = example_doc.get(field.fieldname, []) if example_doc else None
+                    child_schema = get_child_table_schema(child_doctype, child_example_data)
+                    field_schema.update({
+                        "type": "array",
+                        "items": child_schema
+                    })
+                    example_values[field.fieldname] = [child_schema.get("example", {})] if child_schema.get("example") else []
+            elif field.fieldtype in ["Data", "Text", "Read Only", "Link", "HTML Editor"]:
+                field_schema["type"] = "string"
+                if field.fieldtype == "Link" and field.options:
+                    # Add enum if the field is a Link to a small, fixed-value DocType
+                    if frappe.get_meta(field.options).issingle:
+                         # For simplicity, we'll assume it's a fixed list
+                         field_schema["enum"] = frappe.db.get_list(field.options, pluck="name")
+                example_values[field.fieldname] = example_val.isoformat() if isinstance(example_val, (date, datetime)) else (example_val if example_val is not None else f"Example {field.label}")
+            elif field.fieldtype in ["Int", "Check"]:
+                field_schema["type"] = "integer"
+                example_values[field.fieldname] = example_val if example_val is not None else 0
+            elif field.fieldtype in ["Float", "Currency", "Percent"]:
+                field_schema["type"] = "number"
+                example_values[field.fieldname] = example_val if example_val is not None else 0.0
+            elif field.fieldtype == "Date":
+                field_schema["type"] = "string"
+                field_schema["format"] = "date"
+                example_values[field.fieldname] = example_val.isoformat() if isinstance(example_val, (date, datetime)) else "2025-09-04"
+            elif field.fieldtype == "Datetime":
+                field_schema["type"] = "string"
+                field_schema["format"] = "date-time"
+                example_values[field.fieldname] = example_val.isoformat() if isinstance(example_val, (date, datetime)) else "2025-09-04T00:00:00Z"
+            # Add other field types as needed
 
-        schema_properties[field.fieldname] = field_schema
+            schema_properties[field.fieldname] = field_schema
+        except (DoesNotExistError, PermissionError):
+            # This can happen if a linked DocType no longer exists.
+            # We'll just skip this field and continue.
+            continue
 
     schema = {
         "type": "object",
@@ -259,46 +265,51 @@ def get_child_table_schema(child_doctype, example_data=None):
     read_only_fields = ["name", "creation", "modified", "owner"]
 
     for field in child_meta.fields:
-        field_schema = {}
+        try:
+            field_schema = {}
 
-        # Add field descriptions
-        if field.description:
-            field_schema["description"] = field.description
+            # Add field descriptions
+            if field.description:
+                field_schema["description"] = field.description
 
-        # Add required constraint
-        if frappe.db.get_value("DocField", {"parent": child_doctype, "fieldname": field.fieldname}, "reqd"):
-            required_fields.append(field.fieldname)
+            # Add required constraint
+            if frappe.db.get_value("DocField", {"parent": child_doctype, "fieldname": field.fieldname}, "reqd"):
+                required_fields.append(field.fieldname)
 
-        # Add read-only flag for system fields
-        if field.fieldname in read_only_fields:
-            field_schema["readOnly"] = True
+            # Add read-only flag for system fields
+            if field.fieldname in read_only_fields:
+                field_schema["readOnly"] = True
 
-        # Get the value from the example data, if it exists
-        example_val = example_data.get(field.fieldname) if example_data and isinstance(example_data, dict) else None
+            # Get the value from the example data, if it exists
+            example_val = example_data.get(field.fieldname) if example_data and isinstance(example_data, dict) else None
 
-        if field.fieldtype in ["Data", "Text", "Read Only", "Link", "HTML Editor"]:
-            field_schema["type"] = "string"
-            if field.fieldtype == "Link" and field.options:
-                if frappe.get_meta(field.options).issingle:
-                     field_schema["enum"] = frappe.db.get_list(field.options, pluck="name")
-            example_values[field.fieldname] = example_val.isoformat() if isinstance(example_val, (date, datetime)) else (example_val if example_val is not None else f"Example {field.label}")
-        elif field.fieldtype in ["Int", "Check"]:
-            field_schema["type"] = "integer"
-            example_values[field.fieldname] = example_val if example_val is not None else 0
-        elif field.fieldtype in ["Float", "Currency", "Percent"]:
-            field_schema["type"] = "number"
-            example_values[field.fieldname] = example_val if example_val is not None else 0.0
-        elif field.fieldtype == "Date":
-            field_schema["type"] = "string"
-            field_schema["format"] = "date"
-            example_values[field.fieldname] = example_val.isoformat() if isinstance(example_val, (date, datetime)) else "2025-09-04"
-        elif field.fieldtype == "Datetime":
-            field_schema["type"] = "string"
-            field_schema["format"] = "date-time"
-            example_values[field.fieldname] = example_val.isoformat() if isinstance(example_val, (date, datetime)) else "2025-09-04T00:00:00Z"
-        # Add other field types as needed
+            if field.fieldtype in ["Data", "Text", "Read Only", "Link", "HTML Editor"]:
+                field_schema["type"] = "string"
+                if field.fieldtype == "Link" and field.options:
+                    if frappe.get_meta(field.options).issingle:
+                         field_schema["enum"] = frappe.db.get_list(field.options, pluck="name")
+                example_values[field.fieldname] = example_val.isoformat() if isinstance(example_val, (date, datetime)) else (example_val if example_val is not None else f"Example {field.label}")
+            elif field.fieldtype in ["Int", "Check"]:
+                field_schema["type"] = "integer"
+                example_values[field.fieldname] = example_val if example_val is not None else 0
+            elif field.fieldtype in ["Float", "Currency", "Percent"]:
+                field_schema["type"] = "number"
+                example_values[field.fieldname] = example_val if example_val is not None else 0.0
+            elif field.fieldtype == "Date":
+                field_schema["type"] = "string"
+                field_schema["format"] = "date"
+                example_values[field.fieldname] = example_val.isoformat() if isinstance(example_val, (date, datetime)) else "2025-09-04"
+            elif field.fieldtype == "Datetime":
+                field_schema["type"] = "string"
+                field_schema["format"] = "date-time"
+                example_values[field.fieldname] = example_val.isoformat() if isinstance(example_val, (date, datetime)) else "2025-09-04T00:00:00Z"
+            # Add other field types as needed
 
-        schema_properties[field.fieldname] = field_schema
+            schema_properties[field.fieldname] = field_schema
+        except (DoesNotExistError, PermissionError):
+            # This can happen if a linked DocType no longer exists.
+            # We'll just skip this field and continue.
+            continue
 
     schema = {
         "type": "object",
