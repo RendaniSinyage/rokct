@@ -437,6 +437,12 @@ def generate_swagger_json():
     frappe_bench_dir = frappe.utils.get_bench_path()
     file_paths = []
 
+    # Clean up old module files before generating new ones
+    output_dir = os.path.join(frappe_bench_dir, "apps", "swagger", "swagger", "www")
+    for filename in os.listdir(output_dir):
+        if filename.startswith("module-") and filename.endswith(".json"):
+            os.remove(os.path.join(output_dir, filename))
+
     # Store DocTypes grouped by app/module for a better HTML display
     app_doctypes = {}
 
