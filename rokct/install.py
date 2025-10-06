@@ -97,6 +97,10 @@ def create_subscription_plan_custom_fields():
     else:
         print("SKIPPED: 'billing_cycle' custom field already exists.")
 
+    # Commit the changes to the database to ensure they are saved.
+    frappe.db.commit()
+    print("--- Custom field changes committed to database ---")
+
 def set_control_panel_configs():
     if frappe.local.site != "platform.rokct.ai":
         return

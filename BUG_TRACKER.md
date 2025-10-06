@@ -4,23 +4,31 @@ This document tracks the list of identified bugs in the `rokct` repository. Each
 
 ---
 
-### Bug 1: Fixture Installation and Logic Errors in Provisioning
+### Bug 1: Provisioning Failures due to Missing Custom Fields
 -   **Status:** To Be Verified
--   **Location:** `rokct/install.py`, `rokct/control_panel/provisioning.py`, `rokct/control_panel/tasks.py`
--   **Issue:** The root cause of the provisioning failures was that custom fields (`trial_period_days`, `billing_cycle`) were not being created reliably. This was fixed by programmatically creating them in the `install.py` script.
--   **Impact:** This caused fatal `AttributeError` crashes when provisioning any paid plan, preventing customers from signing up for non-free tiers.
+-   **Location:** `rokct/install.py`, `rokct/control_panel/provisioning.py`
+-   **Issue:** The root cause of all provisioning failures was that custom fields (`trial_period_days`, `billing_cycle`) were not being created, leading to `AttributeError` exceptions. This has been fixed by programmatically creating the fields in the `install.py` script.
+-   **Impact:** This caused a fatal error when provisioning any paid plan, preventing customers from signing up.
 
 ---
 
 ### Bug 2: Critical Typo in Subscription Billing Logic
 -   **Status:** To Be Verified
--   **Location:** `rokct/rokct/control_panel/provisioning.py` & `rokct/rokct/control_panel/tasks.py`
--   **Issue:** Billing functions use incorrect values (`'Month'`, `'Year'`) when checking the billing cycle. The database stores `'Monthly'` and `'Yearly'`.
--   **Impact:** This would have broken the automated billing system for all paid plans. This was fixed in the same pass as Bug 1.
+-   **Location:** `rokct/rokct/control_panel/tasks.py`
+-   **Issue:** Billing functions use incorrect values (`'Month'`, `'Year'`) when checking the billing cycle.
+-   **Impact:** This would have broken the automated billing system. This was fixed in the same pass as Bug 1.
 
 ---
 
-### Bug 3: Missing Transaction Record on Add-on Charge
+### Bug 3: Invalid "Dropped" Status
+-   **Status:** To Be Verified
+-   **Location:** `rokct/rokct/doctype/company_subscription/company_subscription.json`
+-   **Issue:** The `drop_tenant_site` function attempts to set a "Dropped" status that was not a valid option in the doctype, causing an error.
+-   **Impact:** This prevented the subscription status from being correctly updated after a site was deleted.
+
+---
+
+### Bug 4: Missing Transaction Record on Add-on Charge
 -   **Status:** To Be Discussed
 -   **Location:** `rokct/rokct/control_panel/billing.py`
 -   **Issue:** The `charge_customer_for_addon` function charges customers but creates no local record of the transaction.
@@ -28,7 +36,7 @@ This document tracks the list of identified bugs in the `rokct` repository. Each
 
 ---
 
-### Bug 4: Token Usage Not Resetting Monthly
+### Bug 5: Token Usage Not Resetting Monthly
 -   **Status:** To Be Discussed
 -   **Location:** `rokct/rokct/tenant/api.py`
 -   **Issue:** The `record_token_usage` function tracks AI token usage but never resets the counter monthly.
@@ -36,7 +44,7 @@ This document tracks the list of identified bugs in the `rokct` repository. Each
 
 ---
 
-### Bug 5: Fundamentally Broken Swagger Generator
+### Bug 6: Fundamentally Broken Swagger Generator
 -   **Status:** To Be Discussed
 -   **Location:** `rokct/swagger/swagger_generator.py`
 -   **Issue:** The script is non-functional due to a missing `os` import and fragile logic.
@@ -44,7 +52,7 @@ This document tracks the list of identified bugs in the `rokct` repository. Each
 
 ---
 
-### Bug 6: Temporary Support Users Are Not Automatically Disabled
+### Bug 7: Temporary Support Users Are Not Automatically Disabled
 -   **Status:** To Be Discussed
 -   **Location:** `rokct/rokct/tenant/api.py`
 -   **Issue:** The system creates temporary support users with an expiration date but has no automated process to disable them.
@@ -52,7 +60,7 @@ This document tracks the list of identified bugs in the `rokct` repository. Each
 
 ---
 
-### Bug 7: Insecure "Fail Open" Logic in Feature Check
+### Bug 8: Insecure "Fail Open" Logic in Feature Check
 -   **Status:** To Be Discussed
 -   **Location:** `rokct/rokct/utils/subscription_checker.py`
 -   **Issue:** The function that checks if a user's plan includes a feature grants access if it cannot contact the central server.
@@ -60,7 +68,7 @@ This document tracks the list of identified bugs in the `rokct` repository. Each
 
 ---
 
-### Bug 8: Hardcoded Default Customer Group
+### Bug 9: Hardcoded Default Customer Group
 -   **Status:** To Be Discussed
 -   **Location:** `rokct/rokct/utils/customer.py`
 -   **Issue:** The `get_or_create_customer` function hardcodes the Customer Group, which can be renamed or deleted by an admin.
@@ -68,7 +76,7 @@ This document tracks the list of identified bugs in the `rokct` repository. Each
 
 ---
 
-### Bug 9: Roadmap Settings UI Bug
+### Bug 10: Roadmap Settings UI Bug
 -   **Status:** To Be Discussed
 -   **Location:** `rokct/roadmap/doctype/roadmap_settings/`
 -   **Issue:** The `github_action_secret` field is a `Password` type, preventing the browser from rendering a "Copy to Clipboard" button.
@@ -76,7 +84,7 @@ This document tracks the list of identified bugs in the `rokct` repository. Each
 
 ---
 
-### Bug 10: Incorrect API Endpoint in Subscription Form
+### Bug 11: Incorrect API Endpoint in Subscription Form
 -   **Status:** To Be Discussed
 -   **Location:** `rokct/rokct/doctype/company_subscription/company_subscription.js`
 -   **Issue:** The "Resend Welcome Email" button calls a non-existent API endpoint.
@@ -84,7 +92,7 @@ This document tracks the list of identified bugs in the `rokct` repository. Each
 
 ---
 
-### Bug 11: Stale Subscription Details Due to Caching
+### Bug 12: Stale Subscription Details Due to Caching
 -   **Status:** To Be Discussed
 -   **Location:** `rokct/rokct/tenant/api.py`
 -   **Issue:** Subscription details are cached on the tenant site for up to 24 hours with no invalidation mechanism.
