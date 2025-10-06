@@ -190,7 +190,7 @@ def complete_tenant_setup(subscription_id, site_name, user_details):
 
                 try:
                     log_and_print(f"Attempting to send welcome email to {user_details['email']}...")
-                    frappe.sendmail(recipients=[user_details["email"]], template_name="New User Welcome", args=email_context, now=True)
+                    frappe.sendmail(recipients=[user_details["email"]], template="New User Welcome", args=email_context, now=True)
                     log_and_print("SUCCESS: Welcome email sent.")
                 except Exception as e:
                     log_and_print(f"WARNING: Could not send welcome email. Reason: {e}")
