@@ -429,8 +429,14 @@ def generate_swagger_json():
     # Store DocTypes grouped by app/module for a better HTML display
     app_doctypes = {}
 
-    # Get all DocTypes and group them by app
-    all_doctypes = frappe.db.get_list("DocType", pluck="name", ignore_permissions=True)
+    # Get all DocTypes from installed apps and group them by module
+    installed_apps = frappe.get_installed_apps()
+    # Get modules of installed apps
+    installed_modules = frappe.db.get_all("Module Def", filters={"app_name": ("in", installed_apps)}, pluck="name")
+
+    # Get all DocTypes that belong to the modules of installed apps
+    all_doctypes = frappe.db.get_list("DocType", filters={"module": ("in", installed_modules)}, pluck="name", ignore_permissions=True)
+
     for doctype in all_doctypes:
         try:
             doctype_meta = frappe.get_meta(doctype)
