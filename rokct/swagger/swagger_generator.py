@@ -431,15 +431,20 @@ def generate_swagger_json():
 
     # Get all DocTypes and group them by app
     all_doctypes = frappe.db.get_list("DocType", pluck="name", ignore_permissions=True)
+    failed_doctypes = []
     for doctype in all_doctypes:
         try:
             doctype_meta = frappe.get_meta(doctype)
+            # Skip child tables for the main grouping, as they will be handled within their parent's schema
+            if doctype_meta.istable:
+                continue
             app_name = doctype_meta.module
             if app_name not in app_doctypes:
                 app_doctypes[app_name] = []
             app_doctypes[app_name].append(doctype)
         except Exception as e:
-            frappe.log_error(f"Failed to process DocType '{doctype}': {str(e)}")
+            # Log the error silently and continue
+            failed_doctypes.append({"doctype": doctype, "error": str(e)})
             continue
 
 
@@ -544,7 +549,8 @@ def generate_swagger_json():
                 doctype_schema = get_doctype_schema(doctype, example_doc)
                 processed_doctypes_count += 1
             except Exception as e:
-                frappe.log_error(f"Failed to generate schema for DocType '{doctype}': {str(e)}")
+                # Silently log the error and add it to the failed list
+                failed_doctypes.append({"doctype": doctype, "error": str(e)})
                 continue
 
             # Correctly prefix with /api/v1/
@@ -753,12 +759,15 @@ modules_file_path = os.path.join(frappe_bench_dir, "apps", "swagger", "swagger",
 with open(modules_file_path, "w") as modules_file:
     json.dump({"modules": modules_list}, modules_file, indent=4)
 
+# Log the failed doctypes for debugging purposes
+if failed_doctypes:
+    frappe.log_error(message=f"Swagger Generation: Failed to process {len(failed_doctypes)} DocTypes.", context=str(failed_doctypes))
+
 # Print the final report
 frappe.msgprint(f"""
-    Swagger JSON generated successfully.
-
-    Total DocTypes found: {total_doctypes}
-    DocTypes included in Swagger: {processed_doctypes_count}
-
-    If the numbers do not match, please check the error logs for failed DocTypes.
+    <b>Swagger Generation Complete</b><br><br>
+    Successfully processed: {processed_doctypes_count}<br>
+    Failed: {len(failed_doctypes)}<br>
+    Total found: {total_doctypes}<br><br>
+    <i>Check the Error Log for details on failed DocTypes.</i>
 """)
