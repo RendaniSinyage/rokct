@@ -38,8 +38,8 @@ def before_install():
 def after_install():
     print("\n--- Frappe Installation Process Finished ---")
 
-    # Create custom fields first to ensure they exist for seeders
-    create_subscription_plan_custom_fields()
+    # Create or update custom fields first to ensure they exist and are correct for seeders
+    create_or_update_custom_fields()
 
     print("\n--- Manually Executing Data Seeders ---")
     try:
@@ -56,46 +56,60 @@ def after_install():
     set_website_homepage()
     print("\n--- ROKCT App Installation Complete ---")
 
-def create_subscription_plan_custom_fields():
-    """Create custom fields for Subscription Plan to ensure they exist."""
-    print("--- Running Post-Install Step: Create Subscription Plan Custom Fields ---")
+def create_or_update_custom_fields():
+    """
+    Creates or updates custom fields for Subscription Plan to ensure they exist and are correct.
+    This is a robust way to handle installation in different environments.
+    """
+    print("--- Running Post-Install Step: Create or Update Subscription Plan Custom Fields ---")
     from frappe.custom.doctype.custom_field.custom_field import create_custom_field
 
-    # Field 1: Trial Period Days
-    if not frappe.db.exists("Custom Field", {"dt": "Subscription Plan", "fieldname": "trial_period_days"}):
-        print("Creating 'trial_period_days' custom field...")
-        create_custom_field(
-            "Subscription Plan",
-            {
-                "fieldname": "trial_period_days",
-                "label": "Trial Period Days",
-                "fieldtype": "Int",
-                "insert_after": "cost",
-                "default": "0",
-                "no_copy": 1,
-                "print_hide": 1,
-            },
-        )
-        print("SUCCESS: Created 'trial_period_days' custom field.")
-    else:
-        print("SKIPPED: 'trial_period_days' custom field already exists.")
+    custom_fields = [
+        {
+            "fieldname": "trial_period_days",
+            "label": "Trial Period Days",
+            "fieldtype": "Int",
+            "insert_after": "cost",
+            "default": "0",
+            "no_copy": 1,
+            "print_hide": 1,
+        },
+        {
+            "fieldname": "billing_cycle",
+            "label": "Billing Cycle",
+            "fieldtype": "Select",
+            "options": "Monthly\nYearly",
+            "insert_after": "trial_period_days",
+        }
+    ]
 
-    # Field 2: Billing Cycle
-    if not frappe.db.exists("Custom Field", {"dt": "Subscription Plan", "fieldname": "billing_cycle"}):
-        print("Creating 'billing_cycle' custom field...")
-        create_custom_field(
-            "Subscription Plan",
-            {
-                "fieldname": "billing_cycle",
-                "label": "Billing Cycle",
-                "fieldtype": "Select",
-                "options": "Monthly\nYearly",
-                "insert_after": "trial_period_days",
-            },
-        )
-        print("SUCCESS: Created 'billing_cycle' custom field.")
-    else:
-        print("SKIPPED: 'billing_cycle' custom field already exists.")
+    for field_def in custom_fields:
+        field_name = field_def["fieldname"]
+        doctype_name = "Subscription Plan"
+        custom_field_name = f"{doctype_name}-{field_name}"
+
+        # Check if the field exists and is correct
+        field_exists = frappe.db.exists("Custom Field", custom_field_name)
+        is_correct = False
+        if field_exists:
+            existing_field = frappe.get_doc("Custom Field", custom_field_name)
+            # Check if critical properties match
+            if (existing_field.fieldtype == field_def["fieldtype"] and
+                existing_field.options == field_def.get("options")):
+                is_correct = True
+
+        if field_exists and not is_correct:
+            # If the field exists but is broken (e.g., wrong options), delete it to be recreated
+            print(f"Custom field '{field_name}' exists but is incorrect. Deleting to recreate.")
+            frappe.delete_doc("Custom Field", custom_field_name, force=True, ignore_permissions=True)
+            field_exists = False
+
+        if not field_exists:
+            print(f"Creating custom field '{field_name}'...")
+            create_custom_field(doctype_name, field_def)
+            print(f"SUCCESS: Created custom field '{field_name}'.")
+        else:
+            print(f"SKIPPED: Custom field '{field_name}' already exists and is correct.")
 
     # Commit the changes to the database to ensure they are saved.
     frappe.db.commit()
