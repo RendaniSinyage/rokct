@@ -97,3 +97,11 @@ This document tracks the list of identified bugs in the `rokct` repository. Each
 -   **Location:** `rokct/rokct/tenant/api.py`
 -   **Issue:** Subscription details are cached on the tenant site for up to 24 hours with no invalidation mechanism.
 -   **Impact:** When a user upgrades their plan, they may not see the changes for up to 24 hours.
+
+---
+
+### Bug 13: Invalid Keyword Argument in Email Sending
+-   **Status:** To Be Discussed
+-   **Location:** `rokct/rokct/control_panel/tasks.py`
+-   **Issue:** The `frappe.sendmail` function is called with an invalid keyword argument `template_name`. The correct argument is `template`.
+-   **Impact:** This causes a fatal `TypeError` and prevents the welcome email from being sent to new users after provisioning.

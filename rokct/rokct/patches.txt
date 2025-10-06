@@ -1,1 +1,1 @@
-rokct.rokct.patches.update_trial_days_for_paid_plans
+rokct.rokct.patches.set_trial_days_for_paid_plans
