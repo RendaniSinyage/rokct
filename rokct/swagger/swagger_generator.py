@@ -540,6 +540,36 @@ def generate_swagger_json():
             try:
                 doctype_meta = frappe.get_meta(doctype)
                 sanitized_doctype = doctype.replace(" ", "_")
+
+                # Default operation IDs
+                get_op_id = f"get_api_v1_resource_{sanitized_doctype}"
+                list_op_id = f"get_api_v1_resource_{sanitized_doctype}"
+                create_op_id = f"post_api_v1_resource_{sanitized_doctype}"
+                update_op_id = f"put_api_v1_resource_{sanitized_doctype}"
+                delete_op_id = f"delete_api_v1_resource_{sanitized_doctype}"
+
+                # Custom operation IDs for 'paas' module
+                if doctype_meta.module.lower() == 'paas':
+                    try:
+                        # Dynamically find the app name from the module definition
+                        module_def = frappe.get_doc("Module Def", doctype_meta.module)
+                        app_name_for_path = module_def.app_name
+
+                        # Construct the custom prefix for the operationId
+                        prefix = f"/api/v1/method/{app_name_for_path}.{doctype_meta.module.lower()}"
+
+                        # Set the custom operation IDs
+                        get_op_id = f"{prefix}.get_{sanitized_doctype}"
+                        list_op_id = f"{prefix}.list_{sanitized_doctype}"
+                        create_op_id = f"{prefix}.create_{sanitized_doctype}"
+                        update_op_id = f"{prefix}.update_{sanitized_doctype}"
+                        delete_op_id = f"{prefix}.delete_{sanitized_doctype}"
+
+                    except frappe.DoesNotExistError:
+                        # If Module Def is not found for some reason, log it and fall back to default operation IDs
+                        frappe.log_error(f"Swagger Generation: Module Def '{doctype_meta.module}' not found for DocType '{doctype}'.")
+                        pass
+
                 tag_name = f"{doctype} DocType"
                 tag_description = f"Endpoints for the **{doctype}** DocType in the **{app_name}** module."
                 module_spec["tags"].append({"name": tag_name, "description": tag_description})
@@ -555,7 +585,7 @@ def generate_swagger_json():
                     module_spec["paths"][endpoint] = {
                         "get": {
                             "summary": f"Get {doctype}",
-                            "operationId": f"get_{sanitized_doctype}",
+                            "operationId": get_op_id,
                             "security": [{"BasicAuth": []}, {"BearerAuth": []}],
                             "tags": [tag_name],
                             "responses": {
@@ -575,7 +605,7 @@ def generate_swagger_json():
                         },
                         "put": {
                             "summary": f"Update {doctype}",
-                            "operationId": f"update_{sanitized_doctype}",
+                            "operationId": update_op_id,
                             "security": [{"BasicAuth": []}, {"BearerAuth": []}],
                             "tags": [tag_name],
                             "requestBody": {
@@ -612,9 +642,8 @@ def generate_swagger_json():
                     module_spec["paths"][endpoint] = {
                         "get": {
                             "summary": f"List {doctype}",
-                            "operationId": f"list_{sanitized_doctype}",
+                            "operationId": list_op_id,
                             "security": [{"BasicAuth": []}, {"BearerAuth": []}],
-                    "tags": [tag_name],
                             "tags": [tag_name],
                             "parameters": [
                                 {
@@ -681,7 +710,7 @@ def generate_swagger_json():
                         },
                         "post": {
                             "summary": f"Create {doctype}",
-                            "operationId": f"create_{sanitized_doctype}",
+                            "operationId": create_op_id,
                             "security": [{"BasicAuth": []}, {"BearerAuth": []}],
                             "tags": [tag_name],
                             "requestBody": {
@@ -721,7 +750,7 @@ def generate_swagger_json():
                         ],
                         "get": {
                             "summary": f"Get {doctype} by name",
-                            "operationId": f"get_{sanitized_doctype}",
+                            "operationId": get_op_id,
                             "security": [{"BasicAuth": []}, {"BearerAuth": []}],
                             "tags": [tag_name],
                             "responses": {
@@ -744,7 +773,7 @@ def generate_swagger_json():
                         },
                         "put": {
                             "summary": f"Update {doctype}",
-                            "operationId": f"update_{sanitized_doctype}",
+                            "operationId": update_op_id,
                             "security": [{"BasicAuth": []}, {"BearerAuth": []}],
                             "tags": [tag_name],
                             "requestBody": {
@@ -772,7 +801,7 @@ def generate_swagger_json():
                         },
                         "delete": {
                             "summary": f"Delete {doctype}",
-                            "operationId": f"delete_{sanitized_doctype}",
+                            "operationId": delete_op_id,
                             "security": [{"BasicAuth": []}, {"BearerAuth": []}],
                             "tags": [tag_name],
                             "responses": {
@@ -788,10 +817,10 @@ def generate_swagger_json():
                                             }
                                         }
                                     }
-                                }
-                            },
-                            "401": {"$ref": "#/components/responses/UnauthorizedError"},
-                            "404": {"$ref": "#/components/responses/NotFoundError"}
+                                },
+                                "401": {"$ref": "#/components/responses/UnauthorizedError"},
+                                "404": {"$ref": "#/components/responses/NotFoundError"}
+                            }
                         }
                     }
                 processed_doctypes_count += 1
