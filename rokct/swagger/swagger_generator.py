@@ -539,6 +539,7 @@ def generate_swagger_json():
         for doctype in doctypes:
             try:
                 doctype_meta = frappe.get_meta(doctype)
+                sanitized_doctype = doctype.replace(" ", "_")
                 tag_name = f"{doctype} DocType"
                 tag_description = f"Endpoints for the **{doctype}** DocType in the **{app_name}** module."
                 module_spec["tags"].append({"name": tag_name, "description": tag_description})
@@ -554,6 +555,7 @@ def generate_swagger_json():
                     module_spec["paths"][endpoint] = {
                         "get": {
                             "summary": f"Get {doctype}",
+                            "operationId": f"get_{sanitized_doctype}",
                             "security": [{"BasicAuth": []}, {"BearerAuth": []}],
                             "tags": [tag_name],
                             "responses": {
@@ -573,6 +575,7 @@ def generate_swagger_json():
                         },
                         "put": {
                             "summary": f"Update {doctype}",
+                            "operationId": f"update_{sanitized_doctype}",
                             "security": [{"BasicAuth": []}, {"BearerAuth": []}],
                             "tags": [tag_name],
                             "requestBody": {
@@ -609,6 +612,7 @@ def generate_swagger_json():
                     module_spec["paths"][endpoint] = {
                         "get": {
                             "summary": f"List {doctype}",
+                            "operationId": f"list_{sanitized_doctype}",
                             "security": [{"BasicAuth": []}, {"BearerAuth": []}],
                     "tags": [tag_name],
                             "tags": [tag_name],
@@ -677,6 +681,7 @@ def generate_swagger_json():
                         },
                         "post": {
                             "summary": f"Create {doctype}",
+                            "operationId": f"create_{sanitized_doctype}",
                             "security": [{"BasicAuth": []}, {"BearerAuth": []}],
                             "tags": [tag_name],
                             "requestBody": {
@@ -716,6 +721,7 @@ def generate_swagger_json():
                         ],
                         "get": {
                             "summary": f"Get {doctype} by name",
+                            "operationId": f"get_{sanitized_doctype}",
                             "security": [{"BasicAuth": []}, {"BearerAuth": []}],
                             "tags": [tag_name],
                             "responses": {
@@ -738,6 +744,7 @@ def generate_swagger_json():
                         },
                         "put": {
                             "summary": f"Update {doctype}",
+                            "operationId": f"update_{sanitized_doctype}",
                             "security": [{"BasicAuth": []}, {"BearerAuth": []}],
                             "tags": [tag_name],
                             "requestBody": {
@@ -765,6 +772,7 @@ def generate_swagger_json():
                         },
                         "delete": {
                             "summary": f"Delete {doctype}",
+                            "operationId": f"delete_{sanitized_doctype}",
                             "security": [{"BasicAuth": []}, {"BearerAuth": []}],
                             "tags": [tag_name],
                             "responses": {
