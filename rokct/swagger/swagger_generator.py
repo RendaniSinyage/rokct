@@ -445,7 +445,7 @@ def generate_swagger_json():
             # Skip child tables for the main grouping, as they will be handled within their parent's schema
             if doctype_meta.istable:
                 continue
-            app_name = doctype_meta.module
+            app_name = doctype_meta.module.lower()
             if app_name not in app_doctypes:
                 app_doctypes[app_name] = []
             app_doctypes[app_name].append(doctype)
