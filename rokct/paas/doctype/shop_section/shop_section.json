@@ -1,6 +1,6 @@
 {
     "doctype": "DocType",
-    "name": "Booking",
+    "name": "Shop Section",
     "engine": "InnoDB",
     "istable": 0,
     "module": "PaaS",
@@ -14,25 +14,14 @@
             "in_list_view": 1
         },
         {
-            "fieldname": "max_time",
-            "fieldtype": "Int",
-            "label": "Max Time"
+            "fieldname": "area",
+            "fieldtype": "Data",
+            "label": "Area"
         },
         {
-            "fieldname": "start_time",
-            "fieldtype": "Time",
-            "label": "Start Time"
-        },
-        {
-            "fieldname": "end_time",
-            "fieldtype": "Time",
-            "label": "End Time"
-        },
-        {
-            "fieldname": "active",
-            "fieldtype": "Check",
-            "label": "Active",
-            "default": "0"
+            "fieldname": "image",
+            "fieldtype": "Attach Image",
+            "label": "Image"
         }
     ],
     "permissions": [

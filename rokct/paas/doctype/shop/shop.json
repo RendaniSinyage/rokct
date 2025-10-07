@@ -140,9 +140,21 @@
             "fieldtype": "Check",
             "label": "Pickup",
             "default": "0"
+        },
+        {
+            "fieldname": "booking_working_days",
+            "fieldtype": "Table",
+            "label": "Booking Working Days",
+            "options": "Shop Booking Working Day"
+        },
+        {
+            "fieldname": "booking_closed_dates",
+            "fieldtype": "Table",
+            "label": "Booking Closed Dates",
+            "options": "Shop Booking Closed Date"
         }
     ],
-    "modified": "2025-10-03 20:37:00.000000",
+    "modified": "2025-10-07 16:45:15.000000",
     "modified_by": "Administrator",
     "module": "paas",
     "owner": "Administrator",

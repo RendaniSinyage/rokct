@@ -169,6 +169,32 @@ from rokct.paas.api.branch.branch import (
 from rokct.paas.api.parcel.parcel import (
     create_parcel_order,
 )
+from rokct.paas.api.booking.booking import (
+    create_booking,
+    get_booking,
+    update_booking,
+    delete_booking,
+    create_shop_section,
+    get_shop_section,
+    update_shop_section,
+    delete_shop_section,
+    create_table,
+    get_table,
+    update_table,
+    delete_table,
+    get_user_bookings,
+    update_user_booking_status,
+    get_shop_bookings,
+    get_shop_sections_for_booking,
+    get_tables_for_section,
+    create_user_booking,
+    get_my_bookings,
+    cancel_my_booking,
+    get_shop_user_bookings,
+    update_shop_user_booking_status,
+    manage_shop_booking_working_days,
+    manage_shop_booking_closed_dates,
+)
 from rokct.paas.api.admin_reports.admin_reports import (
     get_admin_statistics,
     get_multi_company_sales_report,
