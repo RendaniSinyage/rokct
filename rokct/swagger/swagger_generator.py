@@ -537,200 +537,255 @@ def generate_swagger_json():
 
         for doctype in doctypes:
             try:
+                doctype_meta = frappe.get_meta(doctype)
                 tag_name = f"{doctype} DocType"
                 tag_description = f"Endpoints for the **{doctype}** DocType in the **{app_name}** module."
                 module_spec["tags"].append({"name": tag_name, "description": tag_description})
                 full_swagger["tags"].append({"name": tag_name, "description": tag_description})
 
-                example_doc = frappe.get_list(doctype, limit=1, as_list=False)
-                example_doc = example_doc[0] if example_doc else {}
+                if doctype_meta.issingle:
+                    # Handle single DocTypes
+                    example_doc = frappe.get_doc(doctype).as_dict()
+                    doctype_schema = get_doctype_schema(doctype, example_doc)
+                    endpoint = f"/api/v1/resource/{doctype}"
 
-                doctype_schema = get_doctype_schema(doctype, example_doc)
-                processed_doctypes_count += 1
-            except Exception as e:
-                failed_doctypes.append({"doctype": doctype, "error": str(e)})
-                continue
-
-            endpoint = f"/api/v1/resource/{doctype}"
-            module_spec["paths"][endpoint] = {
-                "get": {
-                    "summary": f"List {doctype}",
-                    "security": [{"BasicAuth": []}, {"BearerAuth": []}],
-                    "tags": [tag_name],
-                    "parameters": [
-                        {
-                            "name": "limit_start",
-                            "in": "query",
-                            "description": "Start fetching records from this index.",
-                            "required": False,
-                            "schema": {
-                                "type": "integer",
-                                "default": 0
+                    # Add GET operation for single DocType
+                    module_spec["paths"][endpoint] = {
+                        "get": {
+                            "summary": f"Get {doctype}",
+                            "security": [{"BasicAuth": []}, {"BearerAuth": []}],
+                            "tags": [tag_name],
+                            "responses": {
+                                "200": {
+                                    "description": f"Returns the {doctype} document.",
+                                    "content": {
+                                        "application/json": {
+                                            "schema": {
+                                                "type": "object",
+                                                "properties": {"data": doctype_schema}
+                                            }
+                                        }
+                                    }
+                                },
+                                "401": {"$ref": "#/components/responses/UnauthorizedError"}
                             }
                         },
-                        {
-                            "name": "limit_page_length",
-                            "in": "query",
-                            "description": "Number of records to return in this page.",
-                            "required": False,
-                            "schema": {
-                                "type": "integer",
-                                "default": 20
+                        "put": {
+                            "summary": f"Update {doctype}",
+                            "security": [{"BasicAuth": []}, {"BearerAuth": []}],
+                            "tags": [tag_name],
+                            "requestBody": {
+                                "description": f"The {doctype} document to be updated.",
+                                "required": True,
+                                "content": {
+                                    "application/json": {"schema": doctype_schema}
+                                }
+                            },
+                            "responses": {
+                                "200": {
+                                    "description": f"Successfully updated the {doctype} document.",
+                                    "content": {
+                                        "application/json": {
+                                            "schema": {"$ref": "#/components/schemas/Success"}
+                                        }
+                                    }
+                                },
+                                "400": {"$ref": "#/components/responses/BadRequestError"},
+                                "401": {"$ref": "#/components/responses/UnauthorizedError"}
                             }
-                        },
-                        {
-                            "name": "filters",
-                            "in": "query",
-                            "description": "Filters to apply to the list of documents. Example: [[\"status\",\"=\",\"Open\"]]",
-                            "required": False,
-                            "schema": { "type": "string" }
-                        },
-                        {
-                            "name": "fields",
-                            "in": "query",
-                            "description": "Fields to retrieve. Example: [\"name\", \"subject\"]",
-                            "required": False,
-                            "schema": { "type": "string" }
-                        },
-                        {
-                            "name": "order_by",
-                            "in": "query",
-                            "description": "Field to sort the results by. Example: 'creation desc'",
-                            "required": False,
-                            "schema": { "type": "string" }
                         }
-                    ],
-                    "responses": {
-                        "200": {
-                            "description": f"Returns a list of {doctype} documents.",
-                            "content": {
-                                "application/json": {
+                    }
+                else:
+                    # Handle regular DocTypes
+                    example_doc = frappe.get_list(doctype, limit=1, as_list=False)
+                    example_doc = example_doc[0] if example_doc else {}
+                    doctype_schema = get_doctype_schema(doctype, example_doc)
+
+                    endpoint = f"/api/v1/resource/{doctype}"
+                    module_spec["paths"][endpoint] = {
+                        "get": {
+                            "summary": f"List {doctype}",
+                            "security": [{"BasicAuth": []}, {"BearerAuth": []}],
+                    "tags": [tag_name],
+                            "tags": [tag_name],
+                            "parameters": [
+                                {
+                                    "name": "limit_start",
+                                    "in": "query",
+                                    "description": "Start fetching records from this index.",
+                                    "required": False,
                                     "schema": {
-                                        "type": "object",
-                                        "properties": {
-                                            "data": {
-                                                "type": "array",
-                                                "items": doctype_schema
+                                        "type": "integer",
+                                        "default": 0
+                                    }
+                                },
+                                {
+                                    "name": "limit_page_length",
+                                    "in": "query",
+                                    "description": "Number of records to return in this page.",
+                                    "required": False,
+                                    "schema": {
+                                        "type": "integer",
+                                        "default": 20
+                                    }
+                                },
+                                {
+                                    "name": "filters",
+                                    "in": "query",
+                                    "description": "Filters to apply to the list of documents. Example: [[\"status\",\"=\",\"Open\"]]",
+                                    "required": False,
+                                    "schema": { "type": "string" }
+                                },
+                                {
+                                    "name": "fields",
+                                    "in": "query",
+                                    "description": "Fields to retrieve. Example: [\"name\", \"subject\"]",
+                                    "required": False,
+                                    "schema": { "type": "string" }
+                                },
+                                {
+                                    "name": "order_by",
+                                    "in": "query",
+                                    "description": "Field to sort the results by. Example: 'creation desc'",
+                                    "required": False,
+                                    "schema": { "type": "string" }
+                                }
+                            ],
+                            "responses": {
+                                "200": {
+                                    "description": f"Returns a list of {doctype} documents.",
+                                    "content": {
+                                        "application/json": {
+                                            "schema": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "data": {
+                                                        "type": "array",
+                                                        "items": doctype_schema
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "401": {"$ref": "#/components/responses/UnauthorizedError"}
+                            }
+                        },
+                        "post": {
+                            "summary": f"Create {doctype}",
+                            "security": [{"BasicAuth": []}, {"BearerAuth": []}],
+                            "tags": [tag_name],
+                            "requestBody": {
+                                "description": f"The {doctype} document to be created.",
+                                "required": True,
+                                "content": {
+                                    "application/json": {
+                                        "schema": doctype_schema
+                                    }
+                                }
+                            },
+                            "responses": {
+                                "200": {
+                                    "description": f"Successfully created a new {doctype} document.",
+                                    "content": {
+                                        "application/json": {
+                                            "schema": {"$ref": "#/components/schemas/Success"}
+                                        }
+                                    }
+                                },
+                                "400": {"$ref": "#/components/responses/BadRequestError"},
+                                "401": {"$ref": "#/components/responses/UnauthorizedError"}
+                            }
+                        }
+                    }
+                    module_spec["paths"][f"{endpoint}/{{name}}"] = {
+                        "parameters": [
+                            {
+                                "name": "name",
+                                "in": "path",
+                                "required": True,
+                                "schema": {
+                                    "type": "string"
+                                },
+                                "description": f"The name of the {doctype} to retrieve, update, or delete."
+                            }
+                        ],
+                        "get": {
+                            "summary": f"Get {doctype} by name",
+                            "security": [{"BasicAuth": []}, {"BearerAuth": []}],
+                            "tags": [tag_name],
+                            "responses": {
+                                "200": {
+                                    "description": f"Returns a single {doctype} document.",
+                                    "content": {
+                                        "application/json": {
+                                            "schema": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "data": doctype_schema
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "401": {"$ref": "#/components/responses/UnauthorizedError"},
+                                "404": {"$ref": "#/components/responses/NotFoundError"}
+                            }
+                        },
+                        "put": {
+                            "summary": f"Update {doctype}",
+                            "security": [{"BasicAuth": []}, {"BearerAuth": []}],
+                            "tags": [tag_name],
+                            "requestBody": {
+                                "description": "The fields of the DocType to be updated. Only send the fields you want to change.",
+                                "required": True,
+                                "content": {
+                                    "application/json": {
+                                        "schema": doctype_schema
+                                    }
+                                }
+                            },
+                            "responses": {
+                                "200": {
+                                    "description": f"Successfully updated the {doctype} document.",
+                                    "content": {
+                                        "application/json": {
+                                            "schema": {"$ref": "#/components/schemas/Success"}
+                                        }
+                                    }
+                                },
+                                "400": {"$ref": "#/components/responses/BadRequestError"},
+                                "401": {"$ref": "#/components/responses/UnauthorizedError"},
+                                "404": {"$ref": "#/components/responses/NotFoundError"}
+                            }
+                        },
+                        "delete": {
+                            "summary": f"Delete {doctype}",
+                            "security": [{"BasicAuth": []}, {"BearerAuth": []}],
+                            "tags": [tag_name],
+                            "responses": {
+                                "200": {
+                                    "description": f"Successfully deleted the {doctype} document.",
+                                    "content": {
+                                        "application/json": {
+                                            "schema": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "message": {"type": "string", "example": "ok"}
+                                                }
                                             }
                                         }
                                     }
                                 }
-                            }
-                        },
-                        "401": {"$ref": "#/components/responses/UnauthorizedError"}
-                    }
-                },
-                "post": {
-                    "summary": f"Create {doctype}",
-                    "security": [{"BasicAuth": []}, {"BearerAuth": []}],
-                    "tags": [tag_name],
-                    "requestBody": {
-                        "description": f"The {doctype} document to be created.",
-                        "required": True,
-                        "content": {
-                            "application/json": {
-                                "schema": doctype_schema
-                            }
+                            },
+                            "401": {"$ref": "#/components/responses/UnauthorizedError"},
+                            "404": {"$ref": "#/components/responses/NotFoundError"}
                         }
-                    },
-                    "responses": {
-                        "200": {
-                            "description": f"Successfully created a new {doctype} document.",
-                            "content": {
-                                "application/json": {
-                                    "schema": {"$ref": "#/components/schemas/Success"}
-                                }
-                            }
-                        },
-                        "400": {"$ref": "#/components/responses/BadRequestError"},
-                        "401": {"$ref": "#/components/responses/UnauthorizedError"}
                     }
-                }
-            }
-            module_spec["paths"][f"{endpoint}/{{name}}"] = {
-                "parameters": [
-                    {
-                        "name": "name",
-                        "in": "path",
-                        "required": True,
-                        "schema": {
-                            "type": "string"
-                        },
-                        "description": f"The name of the {doctype} to retrieve, update, or delete."
-                    }
-                ],
-                "get": {
-                    "summary": f"Get {doctype} by name",
-                    "security": [{"BasicAuth": []}, {"BearerAuth": []}],
-                    "tags": [tag_name],
-                    "responses": {
-                        "200": {
-                            "description": f"Returns a single {doctype} document.",
-                            "content": {
-                                "application/json": {
-                                    "schema": {
-                                        "type": "object",
-                                        "properties": {
-                                            "data": doctype_schema
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        "401": {"$ref": "#/components/responses/UnauthorizedError"},
-                        "404": {"$ref": "#/components/responses/NotFoundError"}
-                    }
-                },
-                "put": {
-                    "summary": f"Update {doctype}",
-                    "security": [{"BasicAuth": []}, {"BearerAuth": []}],
-                    "tags": [tag_name],
-                    "requestBody": {
-                        "description": "The fields of the DocType to be updated. Only send the fields you want to change.",
-                        "required": True,
-                        "content": {
-                            "application/json": {
-                                "schema": doctype_schema
-                            }
-                        }
-                    },
-                    "responses": {
-                        "200": {
-                            "description": f"Successfully updated the {doctype} document.",
-                            "content": {
-                                "application/json": {
-                                    "schema": {"$ref": "#/components/schemas/Success"}
-                                }
-                            }
-                        },
-                        "400": {"$ref": "#/components/responses/BadRequestError"},
-                        "401": {"$ref": "#/components/responses/UnauthorizedError"},
-                        "404": {"$ref": "#/components/responses/NotFoundError"}
-                    }
-                },
-                "delete": {
-                    "summary": f"Delete {doctype}",
-                    "security": [{"BasicAuth": []}, {"BearerAuth": []}],
-                    "tags": [tag_name],
-                    "responses": {
-                        "200": {
-                            "description": f"Successfully deleted the {doctype} document.",
-                            "content": {
-                                "application/json": {
-                                    "schema": {
-                                        "type": "object",
-                                        "properties": {
-                                            "message": {"type": "string", "example": "ok"}
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "401": {"$ref": "#/components/responses/UnauthorizedError"},
-                    "404": {"$ref": "#/components/responses/NotFoundError"}
-                }
-            }
+                processed_doctypes_count += 1
+            except Exception as e:
+                failed_doctypes.append({"doctype": doctype, "error": str(e)})
+                continue
 
         safe_module_name = re.sub(r'[^a-zA-Z0-9\-_]', '', app_name)
         module_file_path = os.path.join(output_dir, f"module-{safe_module_name}.json")
