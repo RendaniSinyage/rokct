@@ -345,7 +345,7 @@
 
                     // Create safe filename
                     const safeModuleName = moduleName.replace(/[^a-zA-Z0-9\-_]/g, '');
-                    const response = await fetch(`/module-${safeModuleName}.json`);
+                    const response = await fetch(`/assets/rokct/api/module-${safeModuleName}.json`);
 
                     if (!response.ok) {
                         throw new Error(`Failed to load module ${moduleName}: ${response.status}`);
@@ -368,7 +368,7 @@
                     updateLoadingStatus('Loading modules list...');
 
                     // First, load the modules list
-                    const modulesResponse = await fetch("/modules.json");
+                    const modulesResponse = await fetch("/assets/rokct/api/modules.json");
                     if (!modulesResponse.ok) {
                         throw new Error(`Failed to load modules: ${modulesResponse.status}`);
                     }
@@ -438,7 +438,7 @@
                     downloadFullBtn.textContent = 'Downloading...';
 
                     // FIXED: Changed the fetch URL to the correct filename
-                    const response = await fetch('/swagger-full.json');
+                    const response = await fetch('/assets/rokct/api/swagger-full.json');
                     if (!response.ok) {
                         throw new Error(`Failed to load full swagger: ${response.status}`);
                     }
