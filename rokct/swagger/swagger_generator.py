@@ -6,6 +6,7 @@ import inspect
 import json
 import os
 import re
+import urllib.parse
 
 import frappe
 from pydantic import BaseModel
@@ -547,7 +548,7 @@ def generate_swagger_json():
                     # Handle single DocTypes
                     example_doc = frappe.get_doc(doctype).as_dict()
                     doctype_schema = get_doctype_schema(doctype, example_doc)
-                    endpoint = f"/api/v1/resource/{doctype}"
+                    endpoint = f"/api/v1/resource/{urllib.parse.quote(doctype)}"
 
                     # Add GET operation for single DocType
                     module_spec["paths"][endpoint] = {
@@ -604,7 +605,7 @@ def generate_swagger_json():
                         example_doc = {}
                     doctype_schema = get_doctype_schema(doctype, example_doc)
 
-                    endpoint = f"/api/v1/resource/{doctype}"
+                    endpoint = f"/api/v1/resource/{urllib.parse.quote(doctype)}"
                     module_spec["paths"][endpoint] = {
                         "get": {
                             "summary": f"List {doctype}",
