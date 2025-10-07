@@ -194,7 +194,6 @@ scheduler_events = get_safe_scheduler_events()
 # ------------------------------
 #
 override_whitelisted_methods = {
-    "swagger.swagger.doctype.swagger_settings.swagger_settings.generate_swagger_json": "rokct.swagger.swagger_generator.generate_swagger_json",
     "rokct.rokct.tenant.api.get_subscription_details": "rokct.rokct.tenant.api.get_subscription_details",
     "rokct.rokct.scripts.debug_provisioning.trigger_provisioning_for_debug": "rokct.rokct.scripts.debug_provisioning.trigger_provisioning_for_debug"
 }
@@ -306,7 +305,6 @@ on_login = "rokct.rokct.permissions.sync_user_roles_on_login"
 
 # Add API v1 routes for DocType resources
 website_route_rules = [
-    {"from_route": "/swagger", "to_route": "rokct.rokct.www.swagger"},
     {"from_route": "/api/v1/resource/<doctype>", "to_route": "frappe.api.handle_api_request"},
     {"from_route": "/api/v1/resource/<doctype>/<name>", "to_route": "frappe.api.handle_api_request"},
 ]

@@ -3,6 +3,6 @@
 
 frappe.ui.form.on("Swagger Settings", "generate_swagger_json", function(frm) {
     frappe.call({
-      method: "swagger.swagger_generator.generate_swagger_json",
+      method: "rokct.swagger.swagger_generator.generate_swagger_json",
     });
   });
