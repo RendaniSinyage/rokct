@@ -764,7 +764,10 @@ def generate_swagger_json():
 
     # Log the failed doctypes for debugging purposes
     if failed_doctypes:
-        frappe.log_error(message=f"Swagger Generation: Failed to process {len(failed_doctypes)} DocTypes.", context=str(failed_doctypes))
+        frappe.log_error(
+            title=f"Swagger Generation: Failed to process {len(failed_doctypes)} DocTypes.",
+            message=str(failed_doctypes)
+        )
 
     # Print the final report
     frappe.msgprint(f"""
