@@ -12,7 +12,9 @@
   "auth_settings_section",
   "token_based_basicauth",
   "column_break_lxux",
-  "bearerauth"
+  "bearerauth",
+  "exclusions_section",
+  "excluded_modules"
  ],
  "fields": [
   {
@@ -55,6 +57,17 @@
    "fieldname": "bearerauth",
    "fieldtype": "Check",
    "label": "BearerAuth"
+  },
+  {
+   "fieldname": "exclusions_section",
+   "fieldtype": "Section Break",
+   "label": "Exclusions"
+  },
+  {
+   "fieldname": "excluded_modules",
+   "fieldtype": "Table",
+   "label": "Excluded Modules",
+   "options": "Excluded Swagger Module"
   }
  ],
  "index_web_pages_for_search": 1,

@@ -319,6 +319,13 @@ def generate_swagger_json():
     This function processes all Python files in the `api` directories of installed apps
     to generate a Swagger JSON file that describes the API methods.
     """
+    # Get the list of excluded modules from Swagger Settings
+    try:
+        swagger_settings = frappe.get_single("Swagger Settings")
+        excluded_modules = {d.module.lower() for d in swagger_settings.get("excluded_modules", [])}
+    except frappe.DoesNotExistError:
+        excluded_modules = set()
+
     # Define the output directory and ensure it exists
     output_dir = os.path.join(frappe.get_app_path('rokct'), 'public', 'api')
     os.makedirs(output_dir, exist_ok=True)
@@ -489,6 +496,10 @@ def generate_swagger_json():
                 module = load_module_from_file(file_path)
                 module_name = os.path.basename(file_path).replace(".py", "")
 
+                # Skip excluded modules
+                if module_name.lower() in excluded_modules:
+                    continue
+
                 module_spec = {
                     "openapi": "3.0.0",
                     "info": {
@@ -522,6 +533,10 @@ def generate_swagger_json():
 
     # Add DocType endpoints to the full swagger spec and create module-specific DocType JSONs
     for app_name, doctypes in app_doctypes.items():
+        # Skip excluded modules
+        if app_name.lower() in excluded_modules:
+            continue
+
         module_spec = {
             "openapi": "3.0.0",
             "info": {
