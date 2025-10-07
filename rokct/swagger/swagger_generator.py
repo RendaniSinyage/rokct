@@ -331,7 +331,7 @@ def generate_swagger_json():
     base_swagger = {
         "openapi": "3.0.0",
         "info": {
-            "title": "Platform API",
+            "title": "PLATFORM API",
             "version": "v1.0.0",
         },
         "paths": {},
