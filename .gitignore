@@ -1,2 +1,20 @@
-# Ignore the frappe-bench directory to avoid tracking generated files
-frappe-bench/
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Environment
+.env
+.venv
+env/
+venv/
+
+# IDE settings
+.vscode/
+.idea/

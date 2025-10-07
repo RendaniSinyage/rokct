@@ -738,16 +738,15 @@ def generate_swagger_json():
                     "404": {"$ref": "#/components/responses/NotFoundError"}
                 }
             }
-        }
 
-    # Save the module-specific DocType JSON
-    safe_module_name = re.sub(r'[^a-zA-Z0-9\-_]', '', f"{app_name}-doctypes")
-    module_file_path = os.path.join(output_dir, f"module-{safe_module_name}.json")
-    with open(module_file_path, "w") as module_file:
-        json.dump(module_spec, module_file, indent=4)
+        # Save the module-specific DocType JSON
+        safe_module_name = re.sub(r'[^a-zA-Z0-9\-_]', '', f"{app_name}-doctypes")
+        module_file_path = os.path.join(output_dir, f"module-{safe_module_name}.json")
+        with open(module_file_path, "w") as module_file:
+            json.dump(module_spec, module_file, indent=4)
 
-    # Merge doctype paths into the full spec
-    full_swagger["paths"].update(module_spec["paths"])
+        # Merge doctype paths into the full spec
+        full_swagger["paths"].update(module_spec["paths"])
 
 full_swagger["info"]["title"] = f"{swagger_settings.app_name} Full API"
 full_swagger["x-total-doctypes"] = total_doctypes
