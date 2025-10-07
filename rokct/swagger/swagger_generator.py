@@ -491,7 +491,7 @@ def generate_swagger_json():
                 module_spec = {
                     "openapi": "3.0.0",
                     "info": {
-                        "title": "Platform API",
+                        "title": "PLATFORM API",
                         "version": "v1.0.0"
                     },
                     "paths": {},
@@ -524,7 +524,7 @@ def generate_swagger_json():
         module_spec = {
             "openapi": "3.0.0",
             "info": {
-                "title": "Platform API",
+                "title": "PLATFORM API",
                 "version": "v1.0.0"
             },
             "paths": {},
@@ -739,7 +739,7 @@ def generate_swagger_json():
 
         full_swagger["paths"].update(module_spec["paths"])
 
-    full_swagger["info"]["title"] = "Platform API"
+    full_swagger["info"]["title"] = "PLATFORM API"
     full_swagger["x-total-doctypes"] = total_doctypes
     full_swagger["x-processed-doctypes"] = processed_doctypes_count
 
