@@ -3,8 +3,27 @@
 
 frappe.ui.form.on("Swagger Settings", {
     refresh: function(frm) {
-        // Clear previous messages to avoid duplicates
+        // Clear previous messages and indicators
         frm.dashboard.clear_messages();
+        frm.dashboard.clear_indicators();
+
+        // Show the generation status
+        if (frm.doc.generation_status) {
+            let color = {
+                "Success": "green",
+                "Failed": "red",
+                "In Progress": "blue"
+            }[frm.doc.generation_status];
+
+            frm.dashboard.add_indicator(
+                __('Generation Status: {0}', [frm.doc.generation_status]) +
+                (frm.doc.last_generation_time ? ` (${frappe.datetime.comment_when(frm.doc.last_generation_time)})` : ''),
+                color
+            );
+        } else {
+            frm.dashboard.add_indicator(__('Status not available. Generate documentation to see the status.'), 'gray');
+        }
+
 
         frappe.call({
             method: "rokct.rokct.doctype.swagger_settings.swagger_settings.get_app_role",
@@ -26,9 +45,10 @@ frappe.ui.form.on("Swagger Settings", {
                     frm.disable_save();
                 } else {
                     // If it is the control site, ensure fields are writable
+                    // Keep status fields read-only
+                    const read_only_fields = ['last_generation_time', 'generation_status'];
                     frm.fields.forEach(function(field) {
-                        // We don't want to make the button writable
-                        if (field.df.fieldname !== 'generate_swagger_json') {
+                        if (field.df.fieldname !== 'generate_swagger_json' && !read_only_fields.includes(field.df.fieldname)) {
                            frm.set_df_property(field.df.fieldname, 'read_only', 0);
                         }
                     });
@@ -39,11 +59,11 @@ frappe.ui.form.on("Swagger Settings", {
     },
 
     generate_swagger_json: function(frm) {
-        frappe.call({
-            method: "rokct.swagger.swagger_generator.generate_swagger_json",
-            callback: function() {
-                frappe.msgprint(__('Swagger generation job has been enqueued.'));
+        frm.call('enqueue_swagger_generation').then(r => {
+            if (r.message) {
+                frappe.msgprint(r.message);
+                frm.refresh(); // Refresh to show the "In Progress" status
             }
-        });
+        })
     }
 });

@@ -1,4 +1,4 @@
-# Copyright (c) 2024, Omkar Darves and contributors
+# Copyright (c) 2024, ROKCT and contributors
 # For license information, please see license.txt
 
 import frappe
@@ -11,15 +11,32 @@ class SwaggerSettings(Document):
 def run_swagger_generation_on_control_site():
 	"""
 	This function is called by hooks. It checks if the site is a control panel
-	and then runs the swagger generation.
+	and then enqueues the swagger generation job.
 	"""
 	if frappe.get_conf().get("app_role") == "control_panel":
-		try:
-			generate_swagger_json()
-			frappe.db.commit()
-			frappe.log_error("Swagger Generation Triggered", "Swagger generation was successfully triggered by a hook on the control site.")
-		except Exception as e:
-			frappe.log_error("Swagger Generation Failed", f"An error occurred during swagger generation triggered by a hook: {str(e)}")
+		frappe.enqueue(
+			"rokct.swagger.swagger_generator.generate_swagger_json",
+			queue="long",
+			job_name="swagger_generation"
+		)
+		frappe.log_info("Swagger Generation Enqueued", "Swagger generation job was enqueued by a hook on the control site.")
+
+@frappe.whitelist()
+def enqueue_swagger_generation():
+	"""
+	Enqueues the swagger generation job. This is called by the button in the UI.
+	"""
+	# Check for control panel role again as a security measure
+	if frappe.get_conf().get("app_role") != "control_panel":
+		frappe.throw(__("Swagger generation can only be triggered from the control site."), title="Not Permitted")
+
+	frappe.enqueue(
+		"rokct.swagger.swagger_generator.generate_swagger_json",
+		queue="long",
+		job_name="swagger_generation"
+	)
+	return __("Swagger generation has been successfully enqueued. It will be processed in the background.")
+
 
 @frappe.whitelist()
 def get_app_role():

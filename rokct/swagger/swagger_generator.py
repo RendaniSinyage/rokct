@@ -319,559 +319,580 @@ def generate_swagger_json():
     This function processes all Python files in the `api` directories of installed apps
     to generate a Swagger JSON file that describes the API methods.
     """
-    # Get the list of excluded modules from Swagger Settings
+    swagger_settings = frappe.get_single("Swagger Settings")
+    swagger_settings.generation_status = "In Progress"
+    swagger_settings.last_generation_time = frappe.utils.now_datetime()
+    swagger_settings.save(ignore_permissions=True)
+    frappe.db.commit()
+
     try:
-        swagger_settings = frappe.get_single("Swagger Settings")
+        # Get the list of excluded modules and doctypes from Swagger Settings
         excluded_modules = {d.module.lower() for d in swagger_settings.get("excluded_modules", [])}
-    except frappe.DoesNotExistError:
-        excluded_modules = set()
+        excluded_doctypes = {d.doctype for d in swagger_settings.get("excluded_doctypes", [])}
 
-    # Define the output directory and ensure it exists
-    output_dir = os.path.join(frappe.get_app_path('rokct'), 'public', 'api')
-    os.makedirs(output_dir, exist_ok=True)
+        # Define the output directory and ensure it exists
+        output_dir = os.path.join(frappe.get_app_path('rokct'), 'public', 'api')
+        os.makedirs(output_dir, exist_ok=True)
 
-    # Clean up old JSON files before generating new ones
-    for filename in os.listdir(output_dir):
-        if filename.endswith(".json"):
-            os.remove(os.path.join(output_dir, filename))
+        # Clean up old JSON files before generating new ones
+        for filename in os.listdir(output_dir):
+            if filename.endswith(".json"):
+                os.remove(os.path.join(output_dir, filename))
 
-    # Initialize the Swagger specification
-    base_swagger = {
-        "openapi": "3.0.0",
-        "info": {
-            "title": "PLATFORM API",
-            "version": "v1.0.0",
-        },
-        "paths": {},
-        "components": {
-            "schemas": {
-                "Error": {
-                    "type": "object",
-                    "properties": {
-                        "exc_type": {"type": "string", "description": "The type of the exception."},
-                        "exc": {"type": "string", "description": "The stack trace of the exception."},
-                        "message": {"type": "string", "description": "A human-readable error message."},
-                    }
-                },
-                "Success": {
-                    "type": "object",
-                    "properties": {
-                        "data": {"type": "object", "description": "The data returned by the API."}
-                    }
-                }
-            },
-            "securitySchemes": {
-                "BasicAuth": {
-                    "type": "http",
-                    "scheme": "basic",
-                    "description": "Standard HTTP Basic Authentication with API Key and API Secret. Example: `Authorization: Basic <base64-encoded api_key:api_secret>`"
-                },
-                "BearerAuth": {
-                    "type": "http",
-                    "scheme": "bearer",
-                    "bearerFormat": "JWT",
-                    "description": "Bearer token authentication. Example: `Authorization: Bearer <token>`"
-                }
-            }
-        },
-        "security": [
-            {"BasicAuth": []},
-            {"BearerAuth": []}
-        ],
-        "tags": []
-    }
-
-    # Define common error responses for reuse
-    base_swagger["components"]["responses"] = {
-        "UnauthorizedError": {
-            "description": "Authentication information is missing or invalid.",
-            "content": {
-                "application/json": {
-                    "schema": {"$ref": "#/components/schemas/Error"},
-                    "examples": {
-                        "Unauthorized": {
-                            "value": {
-                                "exc_type": "frappe.exceptions.AuthenticationError",
-                                "exc": "Traceback (most recent call last):...",
-                                "message": "Authentication failed"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "NotFoundError": {
-            "description": "The requested resource could not be found.",
-            "content": {
-                "application/json": {
-                    "schema": {"$ref": "#/components/schemas/Error"},
-                    "examples": {
-                        "Not Found": {
-                            "value": {
-                                "exc_type": "frappe.exceptions.DoesNotExistError",
-                                "exc": "Traceback (most recent call last):...",
-                                "message": "The resource was not found"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "BadRequestError": {
-            "description": "The request was malformed or invalid.",
-            "content": {
-                "application/json": {
-                    "schema": {"$ref": "#/components/schemas/Error"},
-                    "examples": {
-                        "Bad Request": {
-                            "value": {
-                                "exc_type": "frappe.exceptions.ValidationError",
-                                "exc": "Traceback (most recent call last):...",
-                                "message": "Mandatory field 'title' is not set."
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-
-    # Get the path to the Frappe bench directory
-    frappe_bench_dir = frappe.utils.get_bench_path()
-    file_paths = []
-
-    # Store DocTypes grouped by app/module for a better HTML display
-    app_doctypes = {}
-
-    # Get all DocTypes and group them by app
-    all_doctypes = frappe.db.get_list("DocType", pluck="name", ignore_permissions=True)
-    failed_doctypes = []
-    for doctype in all_doctypes:
-        try:
-            doctype_meta = frappe.get_meta(doctype)
-            # Skip child tables for the main grouping, as they will be handled within their parent's schema
-            if doctype_meta.istable:
-                continue
-            app_name = doctype_meta.module.lower()
-            if app_name not in app_doctypes:
-                app_doctypes[app_name] = []
-            app_doctypes[app_name].append(doctype)
-        except Exception as e:
-            # Log the error silently and continue
-            failed_doctypes.append({"doctype": doctype, "error": str(e)})
-            continue
-
-
-    # Gather all Python files in the `api` folders of each installed app, except for 'frappe'
-    for app in frappe.get_installed_apps():
-        if app == 'frappe':
-            continue
-        try:
-            api_dir = os.path.join(frappe_bench_dir, "apps", app, app, "api")
-            if os.path.exists(api_dir) and os.path.isdir(api_dir):
-                for root, dirs, files in os.walk(api_dir):
-                    for file in files:
-                        if file.endswith(".py"):
-                            file_paths.append((app,os.path.join(root, file)))
-        except Exception as e:
-            # Log any errors encountered while processing the app
-            frappe.log_error(f"Error processing app '{app}': {str(e)}")
-            continue
-
-    # Initialize data structures for modular and full spec generation
-    modules_list = []
-    full_swagger = base_swagger.copy()
-    full_swagger["paths"] = {}
-    full_swagger["tags"] = []
-    full_swagger["components"] = base_swagger["components"]
-
-    total_doctypes = len(all_doctypes)
-    processed_doctypes_count = 0
-
-    # Process each Python file found to create module-specific JSONs
-    for app,file_path in file_paths:
-        try:
-            if os.path.isfile(file_path) and app in str(file_path):
-                module = load_module_from_file(file_path)
-                module_name = os.path.basename(file_path).replace(".py", "")
-
-                # Skip excluded modules
-                if module_name.lower() in excluded_modules:
-                    continue
-
-                module_spec = {
-                    "openapi": "3.0.0",
-                    "info": {
-                        "title": "PLATFORM API",
-                        "version": "v1.0.0"
-                    },
-                    "paths": {},
-                    "tags": [],
-                    "components": base_swagger["components"],
-                    "security": base_swagger["security"]
-                }
-
-                module_spec["tags"].append({"name": module_name, "description": f"Endpoints for the **{module_name}** module in the **{app}** app."})
-                modules_list.append(f"{app}-{module_name}")
-
-                for func_name, func in inspect.getmembers(module, inspect.isfunction):
-                    process_function(app, module_name, func_name, func, module_spec, module)
-
-                safe_module_name = re.sub(r'[^a-zA-Z0-9\-_]', '', f"{app}-{module_name}")
-                module_file_path = os.path.join(output_dir, f"module-{safe_module_name}.json")
-                with open(module_file_path, "w") as module_file:
-                    json.dump(module_spec, module_file, indent=4)
-
-                full_swagger["paths"].update(module_spec["paths"])
-                full_swagger["tags"].extend(module_spec["tags"])
-
-            else:
-                print(f"File not found: {file_path}")
-        except Exception as e:
-            frappe.log_error(f"Error loading or processing file {file_path}: {str(e)}")
-
-    # Add DocType endpoints to the full swagger spec and create module-specific DocType JSONs
-    for app_name, doctypes in app_doctypes.items():
-        # Skip excluded modules
-        if app_name.lower() in excluded_modules:
-            continue
-
-        module_spec = {
+        # Initialize the Swagger specification
+        base_swagger = {
             "openapi": "3.0.0",
             "info": {
                 "title": "PLATFORM API",
-                "version": "v1.0.0"
+                "version": "v1.0.0",
             },
             "paths": {},
-            "tags": [],
-            "components": base_swagger["components"],
-            "security": base_swagger["security"]
+            "components": {
+                "schemas": {
+                    "Error": {
+                        "type": "object",
+                        "properties": {
+                            "exc_type": {"type": "string", "description": "The type of the exception."},
+                            "exc": {"type": "string", "description": "The stack trace of the exception."},
+                            "message": {"type": "string", "description": "A human-readable error message."},
+                        }
+                    },
+                    "Success": {
+                        "type": "object",
+                        "properties": {
+                            "data": {"type": "object", "description": "The data returned by the API."}
+                        }
+                    }
+                },
+                "securitySchemes": {
+                    "BasicAuth": {
+                        "type": "http",
+                        "scheme": "basic",
+                        "description": "Standard HTTP Basic Authentication with API Key and API Secret. Example: `Authorization: Basic <base64-encoded api_key:api_secret>`"
+                    },
+                    "BearerAuth": {
+                        "type": "http",
+                        "scheme": "bearer",
+                        "bearerFormat": "JWT",
+                        "description": "Bearer token authentication. Example: `Authorization: Bearer <token>`"
+                    }
+                }
+            },
+            "security": [
+                {"BasicAuth": []},
+                {"BearerAuth": []}
+            ],
+            "tags": []
         }
 
-        modules_list.append(app_name)
-
-        for doctype in doctypes:
-            try:
-                doctype_meta = frappe.get_meta(doctype)
-                sanitized_doctype = doctype.replace(" ", "_")
-
-                # Default operation IDs
-                get_op_id = f"get_api_v1_resource_{sanitized_doctype}"
-                list_op_id = f"get_api_v1_resource_{sanitized_doctype}"
-                create_op_id = f"post_api_v1_resource_{sanitized_doctype}"
-                update_op_id = f"put_api_v1_resource_{sanitized_doctype}"
-                delete_op_id = f"delete_api_v1_resource_{sanitized_doctype}"
-
-                # Custom operation IDs for 'paas' module
-                if doctype_meta.module.lower() == 'paas':
-                    try:
-                        # Dynamically find the app name from the module definition
-                        module_def = frappe.get_doc("Module Def", doctype_meta.module)
-                        app_name_for_path = module_def.app_name
-
-                        # Construct the custom prefix for the operationId
-                        prefix = f"/api/v1/method/{app_name_for_path}.{doctype_meta.module.lower()}"
-
-                        # Set the custom operation IDs
-                        get_op_id = f"{prefix}.get_{sanitized_doctype}"
-                        list_op_id = f"{prefix}.list_{sanitized_doctype}"
-                        create_op_id = f"{prefix}.create_{sanitized_doctype}"
-                        update_op_id = f"{prefix}.update_{sanitized_doctype}"
-                        delete_op_id = f"{prefix}.delete_{sanitized_doctype}"
-
-                    except frappe.DoesNotExistError:
-                        # If Module Def is not found for some reason, log it and fall back to default operation IDs
-                        frappe.log_error(f"Swagger Generation: Module Def '{doctype_meta.module}' not found for DocType '{doctype}'.")
-                        pass
-
-                tag_name = f"{doctype} DocType"
-                tag_description = f"Endpoints for the **{doctype}** DocType in the **{app_name}** module."
-                module_spec["tags"].append({"name": tag_name, "description": tag_description})
-                full_swagger["tags"].append({"name": tag_name, "description": tag_description})
-
-                if doctype_meta.issingle:
-                    # Handle single DocTypes
-                    example_doc = frappe.get_doc(doctype).as_dict()
-                    doctype_schema = get_doctype_schema(doctype, example_doc)
-                    endpoint = f"/api/v1/resource/{urllib.parse.quote(doctype)}"
-
-                    # Add GET operation for single DocType
-                    module_spec["paths"][endpoint] = {
-                        "get": {
-                            "summary": f"Get {doctype}",
-                            "operationId": get_op_id,
-                            "security": [{"BasicAuth": []}, {"BearerAuth": []}],
-                            "tags": [tag_name],
-                            "responses": {
-                                "200": {
-                                    "description": f"Returns the {doctype} document.",
-                                    "content": {
-                                        "application/json": {
-                                            "schema": {
-                                                "type": "object",
-                                                "properties": {"data": doctype_schema}
-                                            }
-                                        }
-                                    }
-                                },
-                                "401": {"$ref": "#/components/responses/UnauthorizedError"}
-                            }
-                        },
-                        "put": {
-                            "summary": f"Update {doctype}",
-                            "operationId": update_op_id,
-                            "security": [{"BasicAuth": []}, {"BearerAuth": []}],
-                            "tags": [tag_name],
-                            "requestBody": {
-                                "description": f"The {doctype} document to be updated.",
-                                "required": True,
-                                "content": {
-                                    "application/json": {"schema": doctype_schema}
+        # Define common error responses for reuse
+        base_swagger["components"]["responses"] = {
+            "UnauthorizedError": {
+                "description": "Authentication information is missing or invalid.",
+                "content": {
+                    "application/json": {
+                        "schema": {"$ref": "#/components/schemas/Error"},
+                        "examples": {
+                            "Unauthorized": {
+                                "value": {
+                                    "exc_type": "frappe.exceptions.AuthenticationError",
+                                    "exc": "Traceback (most recent call last):...",
+                                    "message": "Authentication failed"
                                 }
-                            },
-                            "responses": {
-                                "200": {
-                                    "description": f"Successfully updated the {doctype} document.",
-                                    "content": {
-                                        "application/json": {
-                                            "schema": {"$ref": "#/components/schemas/Success"}
-                                        }
-                                    }
-                                },
-                                "400": {"$ref": "#/components/responses/BadRequestError"},
-                                "401": {"$ref": "#/components/responses/UnauthorizedError"}
                             }
                         }
                     }
-                else:
-                    # Handle regular DocTypes
-                    try:
-                        example_doc = frappe.get_list(doctype, limit=1, as_list=False)
-                        example_doc = example_doc[0] if example_doc else {}
-                    except Exception:
-                        example_doc = {}
-                    doctype_schema = get_doctype_schema(doctype, example_doc)
-
-                    endpoint = f"/api/v1/resource/{urllib.parse.quote(doctype)}"
-                    module_spec["paths"][endpoint] = {
-                        "get": {
-                            "summary": f"List {doctype}",
-                            "operationId": list_op_id,
-                            "security": [{"BasicAuth": []}, {"BearerAuth": []}],
-                            "tags": [tag_name],
-                            "parameters": [
-                                {
-                                    "name": "limit_start",
-                                    "in": "query",
-                                    "description": "Start fetching records from this index.",
-                                    "required": False,
-                                    "schema": {
-                                        "type": "integer",
-                                        "default": 0
-                                    }
-                                },
-                                {
-                                    "name": "limit_page_length",
-                                    "in": "query",
-                                    "description": "Number of records to return in this page.",
-                                    "required": False,
-                                    "schema": {
-                                        "type": "integer",
-                                        "default": 20
-                                    }
-                                },
-                                {
-                                    "name": "filters",
-                                    "in": "query",
-                                    "description": "Filters to apply to the list of documents. Example: [[\"status\",\"=\",\"Open\"]]",
-                                    "required": False,
-                                    "schema": { "type": "string" }
-                                },
-                                {
-                                    "name": "fields",
-                                    "in": "query",
-                                    "description": "Fields to retrieve. Example: [\"name\", \"subject\"]",
-                                    "required": False,
-                                    "schema": { "type": "string" }
-                                },
-                                {
-                                    "name": "order_by",
-                                    "in": "query",
-                                    "description": "Field to sort the results by. Example: 'creation desc'",
-                                    "required": False,
-                                    "schema": { "type": "string" }
+                }
+            },
+            "NotFoundError": {
+                "description": "The requested resource could not be found.",
+                "content": {
+                    "application/json": {
+                        "schema": {"$ref": "#/components/schemas/Error"},
+                        "examples": {
+                            "Not Found": {
+                                "value": {
+                                    "exc_type": "frappe.exceptions.DoesNotExistError",
+                                    "exc": "Traceback (most recent call last):...",
+                                    "message": "The resource was not found"
                                 }
-                            ],
-                            "responses": {
-                                "200": {
-                                    "description": f"Returns a list of {doctype} documents.",
+                            }
+                        }
+                    }
+                }
+            },
+            "BadRequestError": {
+                "description": "The request was malformed or invalid.",
+                "content": {
+                    "application/json": {
+                        "schema": {"$ref": "#/components/schemas/Error"},
+                        "examples": {
+                            "Bad Request": {
+                                "value": {
+                                    "exc_type": "frappe.exceptions.ValidationError",
+                                    "exc": "Traceback (most recent call last):...",
+                                    "message": "Mandatory field 'title' is not set."
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+
+        # Get the path to the Frappe bench directory
+        frappe_bench_dir = frappe.utils.get_bench_path()
+        file_paths = []
+
+        # Store DocTypes grouped by app/module for a better HTML display
+        app_doctypes = {}
+
+        # Get all DocTypes and group them by app
+        all_doctypes = frappe.db.get_list("DocType", pluck="name", ignore_permissions=True)
+        failed_doctypes = []
+        for doctype in all_doctypes:
+            try:
+                doctype_meta = frappe.get_meta(doctype)
+                # Skip child tables for the main grouping, as they will be handled within their parent's schema
+                if doctype_meta.istable:
+                    continue
+                app_name = doctype_meta.module.lower()
+                if app_name not in app_doctypes:
+                    app_doctypes[app_name] = []
+                app_doctypes[app_name].append(doctype)
+            except Exception as e:
+                # Log the error silently and continue
+                failed_doctypes.append({"doctype": doctype, "error": str(e)})
+                continue
+
+
+        # Gather all Python files in the `api` folders of each installed app, except for 'frappe'
+        for app in frappe.get_installed_apps():
+            if app == 'frappe':
+                continue
+            try:
+                api_dir = os.path.join(frappe_bench_dir, "apps", app, app, "api")
+                if os.path.exists(api_dir) and os.path.isdir(api_dir):
+                    for root, dirs, files in os.walk(api_dir):
+                        for file in files:
+                            if file.endswith(".py"):
+                                file_paths.append((app,os.path.join(root, file)))
+            except Exception as e:
+                # Log any errors encountered while processing the app
+                frappe.log_error(f"Error processing app '{app}': {str(e)}")
+                continue
+
+        # Initialize data structures for modular and full spec generation
+        modules_list = []
+        full_swagger = base_swagger.copy()
+        full_swagger["paths"] = {}
+        full_swagger["tags"] = []
+        full_swagger["components"] = base_swagger["components"]
+
+        total_doctypes = len(all_doctypes)
+        processed_doctypes_count = 0
+
+        # Process each Python file found to create module-specific JSONs
+        for app,file_path in file_paths:
+            try:
+                if os.path.isfile(file_path) and app in str(file_path):
+                    module = load_module_from_file(file_path)
+                    module_name = os.path.basename(file_path).replace(".py", "")
+
+                    # Skip excluded modules
+                    if module_name.lower() in excluded_modules:
+                        continue
+
+                    module_spec = {
+                        "openapi": "3.0.0",
+                        "info": {
+                            "title": "PLATFORM API",
+                            "version": "v1.0.0"
+                        },
+                        "paths": {},
+                        "tags": [],
+                        "components": base_swagger["components"],
+                        "security": base_swagger["security"]
+                    }
+
+                    module_spec["tags"].append({"name": module_name, "description": f"Endpoints for the **{module_name}** module in the **{app}** app."})
+                    modules_list.append(f"{app}-{module_name}")
+
+                    for func_name, func in inspect.getmembers(module, inspect.isfunction):
+                        process_function(app, module_name, func_name, func, module_spec, module)
+
+                    safe_module_name = re.sub(r'[^a-zA-Z0-9\-_]', '', f"{app}-{module_name}")
+                    module_file_path = os.path.join(output_dir, f"module-{safe_module_name}.json")
+                    with open(module_file_path, "w") as module_file:
+                        json.dump(module_spec, module_file, indent=4)
+
+                    full_swagger["paths"].update(module_spec["paths"])
+                    full_swagger["tags"].extend(module_spec["tags"])
+
+                else:
+                    print(f"File not found: {file_path}")
+            except Exception as e:
+                frappe.log_error(f"Error loading or processing file {file_path}: {str(e)}")
+
+        # Add DocType endpoints to the full swagger spec and create module-specific DocType JSONs
+        for app_name, doctypes in app_doctypes.items():
+            # Skip excluded modules
+            if app_name.lower() in excluded_modules:
+                continue
+
+            module_spec = {
+                "openapi": "3.0.0",
+                "info": {
+                    "title": "PLATFORM API",
+                    "version": "v1.0.0"
+                },
+                "paths": {},
+                "tags": [],
+                "components": base_swagger["components"],
+                "security": base_swagger["security"]
+            }
+
+            modules_list.append(app_name)
+
+            for doctype in doctypes:
+                try:
+                # Skip excluded doctypes
+                if doctype in excluded_doctypes:
+                    continue
+
+                    doctype_meta = frappe.get_meta(doctype)
+                    sanitized_doctype = doctype.replace(" ", "_")
+
+                    # Default operation IDs
+                    get_op_id = f"get_api_v1_resource_{sanitized_doctype}"
+                    list_op_id = f"get_api_v1_resource_{sanitized_doctype}"
+                    create_op_id = f"post_api_v1_resource_{sanitized_doctype}"
+                    update_op_id = f"put_api_v1_resource_{sanitized_doctype}"
+                    delete_op_id = f"delete_api_v1_resource_{sanitized_doctype}"
+
+                    # Custom operation IDs for 'paas' module
+                    if doctype_meta.module.lower() == 'paas':
+                        try:
+                            # Dynamically find the app name from the module definition
+                            module_def = frappe.get_doc("Module Def", doctype_meta.module)
+                            app_name_for_path = module_def.app_name
+
+                            # Construct the custom prefix for the operationId
+                            prefix = f"/api/v1/method/{app_name_for_path}.{doctype_meta.module.lower()}"
+
+                            # Set the custom operation IDs
+                            get_op_id = f"{prefix}.get_{sanitized_doctype}"
+                            list_op_id = f"{prefix}.list_{sanitized_doctype}"
+                            create_op_id = f"{prefix}.create_{sanitized_doctype}"
+                            update_op_id = f"{prefix}.update_{sanitized_doctype}"
+                            delete_op_id = f"{prefix}.delete_{sanitized_doctype}"
+
+                        except frappe.DoesNotExistError:
+                            # If Module Def is not found for some reason, log it and fall back to default operation IDs
+                            frappe.log_error(f"Swagger Generation: Module Def '{doctype_meta.module}' not found for DocType '{doctype}'.")
+                            pass
+
+                    tag_name = f"{doctype} DocType"
+                    tag_description = f"Endpoints for the **{doctype}** DocType in the **{app_name}** module."
+                    module_spec["tags"].append({"name": tag_name, "description": tag_description})
+                    full_swagger["tags"].append({"name": tag_name, "description": tag_description})
+
+                    if doctype_meta.issingle:
+                        # Handle single DocTypes
+                        example_doc = frappe.get_doc(doctype).as_dict()
+                        doctype_schema = get_doctype_schema(doctype, example_doc)
+                        endpoint = f"/api/v1/resource/{urllib.parse.quote(doctype)}"
+
+                        # Add GET operation for single DocType
+                        module_spec["paths"][endpoint] = {
+                            "get": {
+                                "summary": f"Get {doctype}",
+                                "operationId": get_op_id,
+                                "security": [{"BasicAuth": []}, {"BearerAuth": []}],
+                                "tags": [tag_name],
+                                "responses": {
+                                    "200": {
+                                        "description": f"Returns the {doctype} document.",
+                                        "content": {
+                                            "application/json": {
+                                                "schema": {
+                                                    "type": "object",
+                                                    "properties": {"data": doctype_schema}
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "401": {"$ref": "#/components/responses/UnauthorizedError"}
+                                }
+                            },
+                            "put": {
+                                "summary": f"Update {doctype}",
+                                "operationId": update_op_id,
+                                "security": [{"BasicAuth": []}, {"BearerAuth": []}],
+                                "tags": [tag_name],
+                                "requestBody": {
+                                    "description": f"The {doctype} document to be updated.",
+                                    "required": True,
                                     "content": {
-                                        "application/json": {
-                                            "schema": {
-                                                "type": "object",
-                                                "properties": {
-                                                    "data": {
-                                                        "type": "array",
-                                                        "items": doctype_schema
+                                        "application/json": {"schema": doctype_schema}
+                                    }
+                                },
+                                "responses": {
+                                    "200": {
+                                        "description": f"Successfully updated the {doctype} document.",
+                                        "content": {
+                                            "application/json": {
+                                                "schema": {"$ref": "#/components/schemas/Success"}
+                                            }
+                                        }
+                                    },
+                                    "400": {"$ref": "#/components/responses/BadRequestError"},
+                                    "401": {"$ref": "#/components/responses/UnauthorizedError"}
+                                }
+                            }
+                        }
+                    else:
+                        # Handle regular DocTypes
+                        try:
+                            example_doc = frappe.get_list(doctype, limit=1, as_list=False)
+                            example_doc = example_doc[0] if example_doc else {}
+                        except Exception:
+                            example_doc = {}
+                        doctype_schema = get_doctype_schema(doctype, example_doc)
+
+                        endpoint = f"/api/v1/resource/{urllib.parse.quote(doctype)}"
+                        module_spec["paths"][endpoint] = {
+                            "get": {
+                                "summary": f"List {doctype}",
+                                "operationId": list_op_id,
+                                "security": [{"BasicAuth": []}, {"BearerAuth": []}],
+                                "tags": [tag_name],
+                                "parameters": [
+                                    {
+                                        "name": "limit_start",
+                                        "in": "query",
+                                        "description": "Start fetching records from this index.",
+                                        "required": False,
+                                        "schema": {
+                                            "type": "integer",
+                                            "default": 0
+                                        }
+                                    },
+                                    {
+                                        "name": "limit_page_length",
+                                        "in": "query",
+                                        "description": "Number of records to return in this page.",
+                                        "required": False,
+                                        "schema": {
+                                            "type": "integer",
+                                            "default": 20
+                                        }
+                                    },
+                                    {
+                                        "name": "filters",
+                                        "in": "query",
+                                        "description": "Filters to apply to the list of documents. Example: [[\"status\",\"=\",\"Open\"]]",
+                                        "required": False,
+                                        "schema": { "type": "string" }
+                                    },
+                                    {
+                                        "name": "fields",
+                                        "in": "query",
+                                        "description": "Fields to retrieve. Example: [\"name\", \"subject\"]",
+                                        "required": False,
+                                        "schema": { "type": "string" }
+                                    },
+                                    {
+                                        "name": "order_by",
+                                        "in": "query",
+                                        "description": "Field to sort the results by. Example: 'creation desc'",
+                                        "required": False,
+                                        "schema": { "type": "string" }
+                                    }
+                                ],
+                                "responses": {
+                                    "200": {
+                                        "description": f"Returns a list of {doctype} documents.",
+                                        "content": {
+                                            "application/json": {
+                                                "schema": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "data": {
+                                                            "type": "array",
+                                                            "items": doctype_schema
+                                                        }
                                                     }
                                                 }
                                             }
                                         }
-                                    }
-                                },
-                                "401": {"$ref": "#/components/responses/UnauthorizedError"}
-                            }
-                        },
-                        "post": {
-                            "summary": f"Create {doctype}",
-                            "operationId": create_op_id,
-                            "security": [{"BasicAuth": []}, {"BearerAuth": []}],
-                            "tags": [tag_name],
-                            "requestBody": {
-                                "description": f"The {doctype} document to be created.",
-                                "required": True,
-                                "content": {
-                                    "application/json": {
-                                        "schema": doctype_schema
-                                    }
+                                    },
+                                    "401": {"$ref": "#/components/responses/UnauthorizedError"}
                                 }
                             },
-                            "responses": {
-                                "200": {
-                                    "description": f"Successfully created a new {doctype} document.",
+                            "post": {
+                                "summary": f"Create {doctype}",
+                                "operationId": create_op_id,
+                                "security": [{"BasicAuth": []}, {"BearerAuth": []}],
+                                "tags": [tag_name],
+                                "requestBody": {
+                                    "description": f"The {doctype} document to be created.",
+                                    "required": True,
                                     "content": {
                                         "application/json": {
-                                            "schema": {"$ref": "#/components/schemas/Success"}
+                                            "schema": doctype_schema
                                         }
                                     }
                                 },
-                                "400": {"$ref": "#/components/responses/BadRequestError"},
-                                "401": {"$ref": "#/components/responses/UnauthorizedError"}
+                                "responses": {
+                                    "200": {
+                                        "description": f"Successfully created a new {doctype} document.",
+                                        "content": {
+                                            "application/json": {
+                                                "schema": {"$ref": "#/components/schemas/Success"}
+                                            }
+                                        }
+                                    },
+                                    "400": {"$ref": "#/components/responses/BadRequestError"},
+                                    "401": {"$ref": "#/components/responses/UnauthorizedError"}
+                                }
                             }
                         }
-                    }
-                    module_spec["paths"][f"{endpoint}/{{name}}"] = {
-                        "parameters": [
-                            {
-                                "name": "name",
-                                "in": "path",
-                                "required": True,
-                                "schema": {
-                                    "type": "string"
-                                },
-                                "description": f"The name of the {doctype} to retrieve, update, or delete."
-                            }
-                        ],
-                        "get": {
-                            "summary": f"Get {doctype} by name",
-                            "operationId": get_op_id,
-                            "security": [{"BasicAuth": []}, {"BearerAuth": []}],
-                            "tags": [tag_name],
-                            "responses": {
-                                "200": {
-                                    "description": f"Returns a single {doctype} document.",
-                                    "content": {
-                                        "application/json": {
-                                            "schema": {
-                                                "type": "object",
-                                                "properties": {
-                                                    "data": doctype_schema
+                        module_spec["paths"][f"{endpoint}/{{name}}"] = {
+                            "parameters": [
+                                {
+                                    "name": "name",
+                                    "in": "path",
+                                    "required": True,
+                                    "schema": {
+                                        "type": "string"
+                                    },
+                                    "description": f"The name of the {doctype} to retrieve, update, or delete."
+                                }
+                            ],
+                            "get": {
+                                "summary": f"Get {doctype} by name",
+                                "operationId": get_op_id,
+                                "security": [{"BasicAuth": []}, {"BearerAuth": []}],
+                                "tags": [tag_name],
+                                "responses": {
+                                    "200": {
+                                        "description": f"Returns a single {doctype} document.",
+                                        "content": {
+                                            "application/json": {
+                                                "schema": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "data": doctype_schema
+                                                    }
                                                 }
                                             }
                                         }
-                                    }
-                                },
-                                "401": {"$ref": "#/components/responses/UnauthorizedError"},
-                                "404": {"$ref": "#/components/responses/NotFoundError"}
-                            }
-                        },
-                        "put": {
-                            "summary": f"Update {doctype}",
-                            "operationId": update_op_id,
-                            "security": [{"BasicAuth": []}, {"BearerAuth": []}],
-                            "tags": [tag_name],
-                            "requestBody": {
-                                "description": "The fields of the DocType to be updated. Only send the fields you want to change.",
-                                "required": True,
-                                "content": {
-                                    "application/json": {
-                                        "schema": doctype_schema
-                                    }
+                                    },
+                                    "401": {"$ref": "#/components/responses/UnauthorizedError"},
+                                    "404": {"$ref": "#/components/responses/NotFoundError"}
                                 }
                             },
-                            "responses": {
-                                "200": {
-                                    "description": f"Successfully updated the {doctype} document.",
+                            "put": {
+                                "summary": f"Update {doctype}",
+                                "operationId": update_op_id,
+                                "security": [{"BasicAuth": []}, {"BearerAuth": []}],
+                                "tags": [tag_name],
+                                "requestBody": {
+                                    "description": "The fields of the DocType to be updated. Only send the fields you want to change.",
+                                    "required": True,
                                     "content": {
                                         "application/json": {
-                                            "schema": {"$ref": "#/components/schemas/Success"}
+                                            "schema": doctype_schema
                                         }
                                     }
                                 },
-                                "400": {"$ref": "#/components/responses/BadRequestError"},
-                                "401": {"$ref": "#/components/responses/UnauthorizedError"},
-                                "404": {"$ref": "#/components/responses/NotFoundError"}
-                            }
-                        },
-                        "delete": {
-                            "summary": f"Delete {doctype}",
-                            "operationId": delete_op_id,
-                            "security": [{"BasicAuth": []}, {"BearerAuth": []}],
-                            "tags": [tag_name],
-                            "responses": {
-                                "200": {
-                                    "description": f"Successfully deleted the {doctype} document.",
-                                    "content": {
-                                        "application/json": {
-                                            "schema": {
-                                                "type": "object",
-                                                "properties": {
-                                                    "message": {"type": "string", "example": "ok"}
+                                "responses": {
+                                    "200": {
+                                        "description": f"Successfully updated the {doctype} document.",
+                                        "content": {
+                                            "application/json": {
+                                                "schema": {"$ref": "#/components/schemas/Success"}
+                                            }
+                                        }
+                                    },
+                                    "400": {"$ref": "#/components/responses/BadRequestError"},
+                                    "401": {"$ref": "#/components/responses/UnauthorizedError"},
+                                    "404": {"$ref": "#/components/responses/NotFoundError"}
+                                }
+                            },
+                            "delete": {
+                                "summary": f"Delete {doctype}",
+                                "operationId": delete_op_id,
+                                "security": [{"BasicAuth": []}, {"BearerAuth": []}],
+                                "tags": [tag_name],
+                                "responses": {
+                                    "200": {
+                                        "description": f"Successfully deleted the {doctype} document.",
+                                        "content": {
+                                            "application/json": {
+                                                "schema": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "message": {"type": "string", "example": "ok"}
+                                                    }
                                                 }
                                             }
                                         }
-                                    }
-                                },
-                                "401": {"$ref": "#/components/responses/UnauthorizedError"},
-                                "404": {"$ref": "#/components/responses/NotFoundError"}
+                                    },
+                                    "401": {"$ref": "#/components/responses/UnauthorizedError"},
+                                    "404": {"$ref": "#/components/responses/NotFoundError"}
+                                }
                             }
                         }
-                    }
-                processed_doctypes_count += 1
-            except Exception as e:
-                failed_doctypes.append({"doctype": doctype, "error": str(e)})
-                continue
+                    processed_doctypes_count += 1
+                except Exception as e:
+                    failed_doctypes.append({"doctype": doctype, "error": str(e)})
+                    continue
 
-        safe_module_name = re.sub(r'[^a-zA-Z0-9\-_]', '', app_name)
-        module_file_path = os.path.join(output_dir, f"module-{safe_module_name}.json")
-        with open(module_file_path, "w") as module_file:
-            json.dump(module_spec, module_file, indent=4)
+            safe_module_name = re.sub(r'[^a-zA-Z0-9\-_]', '', app_name)
+            module_file_path = os.path.join(output_dir, f"module-{safe_module_name}.json")
+            with open(module_file_path, "w") as module_file:
+                json.dump(module_spec, module_file, indent=4)
 
-        full_swagger["paths"].update(module_spec["paths"])
+            full_swagger["paths"].update(module_spec["paths"])
 
-    full_swagger["info"]["title"] = "PLATFORM API"
-    full_swagger["x-total-doctypes"] = total_doctypes
-    full_swagger["x-processed-doctypes"] = processed_doctypes_count
+        full_swagger["info"]["title"] = "PLATFORM API"
+        full_swagger["x-total-doctypes"] = total_doctypes
+        full_swagger["x-processed-doctypes"] = processed_doctypes_count
 
-    full_file_path = os.path.join(output_dir, "swagger-full.json")
-    with open(full_file_path, "w") as full_file:
-        json.dump(full_swagger, full_file, indent=4)
+        full_file_path = os.path.join(output_dir, "swagger-full.json")
+        with open(full_file_path, "w") as full_file:
+            json.dump(full_swagger, full_file, indent=4)
 
-    modules_file_path = os.path.join(output_dir, "modules.json")
-    with open(modules_file_path, "w") as modules_file:
-        json.dump({"modules": modules_list}, modules_file, indent=4)
+        modules_file_path = os.path.join(output_dir, "modules.json")
+        with open(modules_file_path, "w") as modules_file:
+            json.dump({"modules": modules_list}, modules_file, indent=4)
 
-    if failed_doctypes:
-        frappe.log_error(
-            title=f"Swagger Generation: Failed to process {len(failed_doctypes)} DocTypes.",
-            message=str(failed_doctypes)
-        )
+        if failed_doctypes:
+            frappe.log_error(
+                title=f"Swagger Generation: Failed to process {len(failed_doctypes)} DocTypes.",
+                message=str(failed_doctypes)
+            )
 
-    frappe.msgprint(f"""
-        <b>Swagger Generation Complete</b><br><br>
-        Successfully processed: {processed_doctypes_count}<br>
-        Failed: {len(failed_doctypes)}<br>
-        Total found: {total_doctypes}<br><br>
-        <i>Check the Error Log for details on failed DocTypes.</i>
-    """)
+        frappe.msgprint(f"""
+            <b>Swagger Generation Complete</b><br><br>
+            Successfully processed: {processed_doctypes_count}<br>
+            Failed: {len(failed_doctypes)}<br>
+            Total found: {total_doctypes}<br><br>
+            <i>Check the Error Log for details on failed DocTypes.</i>
+        """)
+
+        # On success
+        swagger_settings.generation_status = "Success"
+        swagger_settings.save(ignore_permissions=True)
+        frappe.db.commit()
+
+    except Exception as e:
+        # On failure
+        swagger_settings.generation_status = "Failed"
+        swagger_settings.save(ignore_permissions=True)
+        frappe.db.commit()
+        frappe.log_error(f"Swagger Generation Failed: {str(e)}", "Swagger Generator")
+        raise

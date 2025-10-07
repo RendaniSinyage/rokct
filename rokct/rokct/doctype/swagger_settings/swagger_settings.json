@@ -13,8 +13,12 @@
   "token_based_basicauth",
   "column_break_lxux",
   "bearerauth",
+  "status_section",
+  "last_generation_time",
+  "generation_status",
   "exclusions_section",
-  "excluded_modules"
+  "excluded_modules",
+  "excluded_doctypes"
  ],
  "fields": [
   {
@@ -59,6 +63,24 @@
    "label": "BearerAuth"
   },
   {
+   "fieldname": "status_section",
+   "fieldtype": "Section Break",
+   "label": "Status"
+  },
+  {
+   "fieldname": "last_generation_time",
+   "fieldtype": "Datetime",
+   "label": "Last Generation Time",
+   "read_only": 1
+  },
+  {
+   "fieldname": "generation_status",
+   "fieldtype": "Select",
+   "label": "Generation Status",
+   "options": "Success\nFailed\nIn Progress",
+   "read_only": 1
+  },
+  {
    "fieldname": "exclusions_section",
    "fieldtype": "Section Break",
    "label": "Exclusions"
@@ -68,6 +90,12 @@
    "fieldtype": "Table",
    "label": "Excluded Modules",
    "options": "Excluded Swagger Module"
+  },
+  {
+   "fieldname": "excluded_doctypes",
+   "fieldtype": "Table",
+   "label": "Excluded DocTypes",
+   "options": "Excluded Swagger DocType"
   }
  ],
  "index_web_pages_for_search": 1,
