@@ -597,8 +597,11 @@ def generate_swagger_json():
                     }
                 else:
                     # Handle regular DocTypes
-                    example_doc = frappe.get_list(doctype, limit=1, as_list=False)
-                    example_doc = example_doc[0] if example_doc else {}
+                    try:
+                        example_doc = frappe.get_list(doctype, limit=1, as_list=False)
+                        example_doc = example_doc[0] if example_doc else {}
+                    except Exception:
+                        example_doc = {}
                     doctype_schema = get_doctype_schema(doctype, example_doc)
 
                     endpoint = f"/api/v1/resource/{doctype}"
