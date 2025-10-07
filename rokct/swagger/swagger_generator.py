@@ -315,7 +315,7 @@ def get_child_table_schema(child_doctype, example_data=None):
 def generate_swagger_json():
     """Generate Swagger JSON documentation for all API methods.
 
-    This function processes all Python files in the `api` directories of installed apps
+    This function processes all Python files in the `api` directories of the 'rokct' app
     to generate a Swagger JSON file that describes the API methods.
     """
     # Define the output directory and ensure it exists
@@ -326,8 +326,6 @@ def generate_swagger_json():
     for filename in os.listdir(output_dir):
         if filename.endswith(".json"):
             os.remove(os.path.join(output_dir, filename))
-
-    swagger_settings = frappe.get_single("Swagger Settings")
 
     # Initialize the Swagger specification
     base_swagger = {
@@ -438,13 +436,13 @@ def generate_swagger_json():
     # Store DocTypes grouped by app/module for a better HTML display
     app_doctypes = {}
 
-    # Get all DocTypes and group them by app
-    all_doctypes = frappe.db.get_list("DocType", pluck="name", ignore_permissions=True)
+    # Get all DocTypes from the 'rokct' app's modules
+    rokct_modules = ["Rokct", "PaaS", "Roadmap"]
+    all_doctypes = frappe.db.get_list("DocType", filters={"module": ("in", rokct_modules)}, pluck="name", ignore_permissions=True)
     failed_doctypes = []
     for doctype in all_doctypes:
         try:
             doctype_meta = frappe.get_meta(doctype)
-            # Skip child tables for the main grouping, as they will be handled within their parent's schema
             if doctype_meta.istable:
                 continue
             app_name = doctype_meta.module
@@ -452,7 +450,6 @@ def generate_swagger_json():
                 app_doctypes[app_name] = []
             app_doctypes[app_name].append(doctype)
         except Exception as e:
-            # Log the error silently and continue
             failed_doctypes.append({"doctype": doctype, "error": str(e)})
             continue
 
@@ -461,16 +458,12 @@ def generate_swagger_json():
     app = 'rokct'
     try:
         api_dir = os.path.join(frappe_bench_dir, "apps", app, app, "api")
-
-        # Check if the `api` directory exists
         if os.path.exists(api_dir) and os.path.isdir(api_dir):
-            # Walk through the `api` directory to gather all `.py` files
             for root, dirs, files in os.walk(api_dir):
                 for file in files:
                     if file.endswith(".py"):
                         file_paths.append((app,os.path.join(root, file)))
     except Exception as e:
-        # Log any errors encountered while processing the app
         frappe.log_error(f"Error processing app '{app}': {str(e)}")
 
     # Initialize data structures for modular and full spec generation
@@ -490,7 +483,6 @@ def generate_swagger_json():
                 module = load_module_from_file(file_path)
                 module_name = os.path.basename(file_path).replace(".py", "")
 
-                # Create a new Swagger spec for this module
                 module_spec = {
                     "openapi": "3.0.0",
                     "info": {
@@ -503,20 +495,17 @@ def generate_swagger_json():
                     "security": base_swagger["security"]
                 }
 
-                # Add a tag for the module
                 module_spec["tags"].append({"name": module_name, "description": f"Endpoints for the **{module_name}** module in the **{app}** app."})
                 modules_list.append(f"{app}-{module_name}")
 
                 for func_name, func in inspect.getmembers(module, inspect.isfunction):
                     process_function(app, module_name, func_name, func, module_spec, module)
 
-                # Save the module-specific JSON
                 safe_module_name = re.sub(r'[^a-zA-Z0-9\-_]', '', f"{app}-{module_name}")
                 module_file_path = os.path.join(output_dir, f"module-{safe_module_name}.json")
                 with open(module_file_path, "w") as module_file:
                     json.dump(module_spec, module_file, indent=4)
 
-                # Merge into the full spec
                 full_swagger["paths"].update(module_spec["paths"])
                 full_swagger["tags"].extend(module_spec["tags"])
 
@@ -539,29 +528,24 @@ def generate_swagger_json():
             "security": base_swagger["security"]
         }
 
-        # Add app name as a module
-        modules_list.append(f"{app_name}-doctypes")
+        modules_list.append(app_name)
 
         for doctype in doctypes:
             try:
-                # Add DocType as a separate tag, so its name is clean
                 tag_name = f"{doctype} DocType"
                 tag_description = f"Endpoints for the **{doctype}** DocType in the **{app_name}** module."
                 module_spec["tags"].append({"name": tag_name, "description": tag_description})
                 full_swagger["tags"].append({"name": tag_name, "description": tag_description})
 
-                # Fetch a real example document to improve the schema examples
                 example_doc = frappe.get_list(doctype, limit=1, as_list=False)
                 example_doc = example_doc[0] if example_doc else {}
 
                 doctype_schema = get_doctype_schema(doctype, example_doc)
                 processed_doctypes_count += 1
             except Exception as e:
-                # Silently log the error and add it to the failed list
                 failed_doctypes.append({"doctype": doctype, "error": str(e)})
                 continue
 
-            # Correctly prefix with /api/v1/
             endpoint = f"/api/v1/resource/{doctype}"
             module_spec["paths"][endpoint] = {
                 "get": {
@@ -742,40 +726,36 @@ def generate_swagger_json():
                     "404": {"$ref": "#/components/responses/NotFoundError"}
                 }
             }
-        }
 
-    # Save the module-specific DocType JSON
-    safe_module_name = re.sub(r'[^a-zA-Z0-9\-_]', '', f"{app_name}-doctypes")
-    module_file_path = os.path.join(output_dir, f"module-{safe_module_name}.json")
-    with open(module_file_path, "w") as module_file:
-        json.dump(module_spec, module_file, indent=4)
+        safe_module_name = re.sub(r'[^a-zA-Z0-9\-_]', '', app_name)
+        module_file_path = os.path.join(output_dir, f"module-{safe_module_name}.json")
+        with open(module_file_path, "w") as module_file:
+            json.dump(module_spec, module_file, indent=4)
 
-    # Merge doctype paths into the full spec
-    full_swagger["paths"].update(module_spec["paths"])
+        full_swagger["paths"].update(module_spec["paths"])
 
-full_swagger["info"]["title"] = "Platform API"
-full_swagger["x-total-doctypes"] = total_doctypes
-full_swagger["x-processed-doctypes"] = processed_doctypes_count
+    full_swagger["info"]["title"] = "Platform API"
+    full_swagger["x-total-doctypes"] = total_doctypes
+    full_swagger["x-processed-doctypes"] = processed_doctypes_count
 
-# Save the full swagger JSON
-full_file_path = os.path.join(output_dir, "swagger-full.json")
-with open(full_file_path, "w") as full_file:
-    json.dump(full_swagger, full_file, indent=4)
+    full_file_path = os.path.join(output_dir, "swagger-full.json")
+    with open(full_file_path, "w") as full_file:
+        json.dump(full_swagger, full_file, indent=4)
 
-# Save the modules list
-modules_file_path = os.path.join(output_dir, "modules.json")
-with open(modules_file_path, "w") as modules_file:
-    json.dump({"modules": modules_list}, modules_file, indent=4)
+    modules_file_path = os.path.join(output_dir, "modules.json")
+    with open(modules_file_path, "w") as modules_file:
+        json.dump({"modules": modules_list}, modules_file, indent=4)
 
-# Log the failed doctypes for debugging purposes
-if failed_doctypes:
-    frappe.log_error(message=f"Swagger Generation: Failed to process {len(failed_doctypes)} DocTypes.", context=str(failed_doctypes))
+    if failed_doctypes:
+        frappe.log_error(
+            title=f"Swagger Generation: Failed to process {len(failed_doctypes)} DocTypes.",
+            message=str(failed_doctypes)
+        )
 
-# Print the final report
-frappe.msgprint(f"""
-    <b>Swagger Generation Complete</b><br><br>
-    Successfully processed: {processed_doctypes_count}<br>
-    Failed: {len(failed_doctypes)}<br>
-    Total found: {total_doctypes}<br><br>
-    <i>Check the Error Log for details on failed DocTypes.</i>
-""")
+    frappe.msgprint(f"""
+        <b>Swagger Generation Complete</b><br><br>
+        Successfully processed: {processed_doctypes_count}<br>
+        Failed: {len(failed_doctypes)}<br>
+        Total found: {total_doctypes}<br><br>
+        <i>Check the Error Log for details on failed DocTypes.</i>
+    """)
