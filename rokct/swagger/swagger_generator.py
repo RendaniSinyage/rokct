@@ -462,17 +462,16 @@ def generate_swagger_json():
     try:
         api_dir = os.path.join(frappe_bench_dir, "apps", app, app, "api")
 
-            # Check if the `api` directory exists
-            if os.path.exists(api_dir) and os.path.isdir(api_dir):
-                # Walk through the `api` directory to gather all `.py` files
-                for root, dirs, files in os.walk(api_dir):
-                    for file in files:
-                        if file.endswith(".py"):
-                            file_paths.append((app,os.path.join(root, file)))
-        except Exception as e:
-            # Log any errors encountered while processing the app
-            frappe.log_error(f"Error processing app '{app}': {str(e)}")
-            continue
+        # Check if the `api` directory exists
+        if os.path.exists(api_dir) and os.path.isdir(api_dir):
+            # Walk through the `api` directory to gather all `.py` files
+            for root, dirs, files in os.walk(api_dir):
+                for file in files:
+                    if file.endswith(".py"):
+                        file_paths.append((app,os.path.join(root, file)))
+    except Exception as e:
+        # Log any errors encountered while processing the app
+        frappe.log_error(f"Error processing app '{app}': {str(e)}")
 
     # Initialize data structures for modular and full spec generation
     modules_list = []
