@@ -328,7 +328,7 @@ def generate_swagger_json():
     base_swagger = {
         "openapi": "3.0.0",
         "info": {
-            "title": f"{swagger_settings.app_name} API",
+            "title": "Platform API",
             "version": "v1.0.0",
         },
         "paths": {},
@@ -490,7 +490,7 @@ def generate_swagger_json():
                 module_spec = {
                     "openapi": "3.0.0",
                     "info": {
-                        "title": f"{module_name.title()} API",
+                        "title": "Platform API",
                         "version": "v1.0.0"
                     },
                     "paths": {},
@@ -526,7 +526,7 @@ def generate_swagger_json():
         module_spec = {
             "openapi": "3.0.0",
             "info": {
-                "title": f"{app_name} DocTypes API",
+                "title": "Platform API",
                 "version": "v1.0.0"
             },
             "paths": {},
@@ -738,42 +738,40 @@ def generate_swagger_json():
                     "404": {"$ref": "#/components/responses/NotFoundError"}
                 }
             }
+        }
 
-        # Save the module-specific DocType JSON
-        safe_module_name = re.sub(r'[^a-zA-Z0-9\-_]', '', f"{app_name}-doctypes")
-        module_file_path = os.path.join(output_dir, f"module-{safe_module_name}.json")
-        with open(module_file_path, "w") as module_file:
-            json.dump(module_spec, module_file, indent=4)
+    # Save the module-specific DocType JSON
+    safe_module_name = re.sub(r'[^a-zA-Z0-9\-_]', '', f"{app_name}-doctypes")
+    module_file_path = os.path.join(output_dir, f"module-{safe_module_name}.json")
+    with open(module_file_path, "w") as module_file:
+        json.dump(module_spec, module_file, indent=4)
 
-        # Merge doctype paths into the full spec
-        full_swagger["paths"].update(module_spec["paths"])
+    # Merge doctype paths into the full spec
+    full_swagger["paths"].update(module_spec["paths"])
 
-    full_swagger["info"]["title"] = f"{swagger_settings.app_name} Full API"
-    full_swagger["x-total-doctypes"] = total_doctypes
-    full_swagger["x-processed-doctypes"] = processed_doctypes_count
+full_swagger["info"]["title"] = "Platform API"
+full_swagger["x-total-doctypes"] = total_doctypes
+full_swagger["x-processed-doctypes"] = processed_doctypes_count
 
-    # Save the full swagger JSON
-    full_file_path = os.path.join(output_dir, "swagger-full.json")
-    with open(full_file_path, "w") as full_file:
-        json.dump(full_swagger, full_file, indent=4)
+# Save the full swagger JSON
+full_file_path = os.path.join(output_dir, "swagger-full.json")
+with open(full_file_path, "w") as full_file:
+    json.dump(full_swagger, full_file, indent=4)
 
-    # Save the modules list
-    modules_file_path = os.path.join(output_dir, "modules.json")
-    with open(modules_file_path, "w") as modules_file:
-        json.dump({"modules": modules_list}, modules_file, indent=4)
+# Save the modules list
+modules_file_path = os.path.join(output_dir, "modules.json")
+with open(modules_file_path, "w") as modules_file:
+    json.dump({"modules": modules_list}, modules_file, indent=4)
 
-    # Log the failed doctypes for debugging purposes
-    if failed_doctypes:
-        frappe.log_error(
-            title=f"Swagger Generation: Failed to process {len(failed_doctypes)} DocTypes.",
-            message=str(failed_doctypes)
-        )
+# Log the failed doctypes for debugging purposes
+if failed_doctypes:
+    frappe.log_error(message=f"Swagger Generation: Failed to process {len(failed_doctypes)} DocTypes.", context=str(failed_doctypes))
 
-    # Print the final report
-    frappe.msgprint(f"""
-        <b>Swagger Generation Complete</b><br><br>
-        Successfully processed: {processed_doctypes_count}<br>
-        Failed: {len(failed_doctypes)}<br>
-        Total found: {total_doctypes}<br><br>
-        <i>Check the Error Log for details on failed DocTypes.</i>
-    """)
+# Print the final report
+frappe.msgprint(f"""
+    <b>Swagger Generation Complete</b><br><br>
+    Successfully processed: {processed_doctypes_count}<br>
+    Failed: {len(failed_doctypes)}<br>
+    Total found: {total_doctypes}<br><br>
+    <i>Check the Error Log for details on failed DocTypes.</i>
+""")
