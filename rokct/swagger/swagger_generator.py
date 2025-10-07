@@ -315,7 +315,7 @@ def get_child_table_schema(child_doctype, example_data=None):
 def generate_swagger_json():
     """Generate Swagger JSON documentation for all API methods.
 
-    This function processes all Python files in the `api` directories of the 'rokct' app
+    This function processes all Python files in the `api` directories of installed apps
     to generate a Swagger JSON file that describes the API methods.
     """
     # Define the output directory and ensure it exists
@@ -436,13 +436,13 @@ def generate_swagger_json():
     # Store DocTypes grouped by app/module for a better HTML display
     app_doctypes = {}
 
-    # Get all DocTypes from the 'rokct' app's modules
-    rokct_modules = ["Rokct", "PaaS", "Roadmap"]
-    all_doctypes = frappe.db.get_list("DocType", filters={"module": ("in", rokct_modules)}, pluck="name", ignore_permissions=True)
+    # Get all DocTypes and group them by app
+    all_doctypes = frappe.db.get_list("DocType", pluck="name", ignore_permissions=True)
     failed_doctypes = []
     for doctype in all_doctypes:
         try:
             doctype_meta = frappe.get_meta(doctype)
+            # Skip child tables for the main grouping, as they will be handled within their parent's schema
             if doctype_meta.istable:
                 continue
             app_name = doctype_meta.module
@@ -450,21 +450,26 @@ def generate_swagger_json():
                 app_doctypes[app_name] = []
             app_doctypes[app_name].append(doctype)
         except Exception as e:
+            # Log the error silently and continue
             failed_doctypes.append({"doctype": doctype, "error": str(e)})
             continue
 
 
-    # Gather all Python files in the `api` folder of the 'rokct' app
-    app = 'rokct'
-    try:
-        api_dir = os.path.join(frappe_bench_dir, "apps", app, app, "api")
-        if os.path.exists(api_dir) and os.path.isdir(api_dir):
-            for root, dirs, files in os.walk(api_dir):
-                for file in files:
-                    if file.endswith(".py"):
-                        file_paths.append((app,os.path.join(root, file)))
-    except Exception as e:
-        frappe.log_error(f"Error processing app '{app}': {str(e)}")
+    # Gather all Python files in the `api` folders of each installed app, except for 'frappe'
+    for app in frappe.get_installed_apps():
+        if app == 'frappe':
+            continue
+        try:
+            api_dir = os.path.join(frappe_bench_dir, "apps", app, app, "api")
+            if os.path.exists(api_dir) and os.path.isdir(api_dir):
+                for root, dirs, files in os.walk(api_dir):
+                    for file in files:
+                        if file.endswith(".py"):
+                            file_paths.append((app,os.path.join(root, file)))
+        except Exception as e:
+            # Log any errors encountered while processing the app
+            frappe.log_error(f"Error processing app '{app}': {str(e)}")
+            continue
 
     # Initialize data structures for modular and full spec generation
     modules_list = []
