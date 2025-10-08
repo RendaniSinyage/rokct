@@ -92,9 +92,12 @@ def cache_installed_apps():
 			apps = frappe.get_installed_apps()
 
 		if apps:
-			swagger_settings = frappe.get_single("Swagger Settings")
-			swagger_settings.installed_apps_cache = json.dumps(apps)
-			swagger_settings.save(ignore_permissions=True)
+			frappe.db.set_value(
+				"Swagger Settings",
+				"Swagger Settings",
+				"installed_apps_cache",
+				json.dumps(apps)
+			)
 			frappe.db.commit()
 			frappe.logger().info("Successfully cached the list of installed apps.")
 		return apps
