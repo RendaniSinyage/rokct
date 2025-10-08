@@ -382,7 +382,7 @@
                     // Populate the module dropdown with app groups
                     appNames.forEach(appName => {
                         const optgroup = document.createElement('optgroup');
-                        optgroup.label = appName;
+                        optgroup.label = appName.toUpperCase();
 
                         const modules = apps[appName] || [];
                         modules.forEach(moduleName => {
