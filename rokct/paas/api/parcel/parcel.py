@@ -46,3 +46,23 @@ def create_parcel_order(order_data):
 
     parcel_order.insert(ignore_permissions=True)
     return parcel_order.as_dict()
+
+@frappe.whitelist()
+def get_parcel_orders(limit=20, offset=0):
+    """
+    Retrieves a paginated list of parcel orders for the current user.
+    """
+    user = frappe.session.user
+    if user == "Guest":
+        frappe.throw("You must be logged in to view parcel orders.", frappe.AuthenticationError)
+
+    parcel_orders = frappe.get_list(
+        "Parcel Order",
+        filters={"user": user},
+        fields=["name", "status", "delivery_date", "total_price", "address_to"],
+        limit_page_length=limit,
+        start=offset,
+        order_by="modified desc"
+    )
+
+    return parcel_orders
