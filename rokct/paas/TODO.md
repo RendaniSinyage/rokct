@@ -4,11 +4,6 @@ This file tracks important tasks that need to be completed as part of the PaaS m
 
 ## Incomplete Features
 
-### Subscription Management (Admin & Seller)
--   **Task:** Implement subscription management for both administrators and sellers.
--   **Status:** Pending
--   **Notes:** This feature was present in the original Laravel application but was overlooked during the initial migration. It needs to be implemented to allow sellers to manage their subscriptions and for admins to have oversight.
-
 ### Re-order / Scheduled Orders
 -   **Task:** Implement the feature for creating recurring or scheduled orders.
 -   **Status:** To Be Discussed
@@ -25,6 +20,11 @@ This file tracks important tasks that need to be completed as part of the PaaS m
 -   **Notes:** The following REST APIs are still pending: Push Notifications, Parcel Orders, Delivery Points.
 
 ## Completed Tasks
+
+### Subscription Management (Admin & Seller)
+-   **Task:** Implement subscription management for both administrators and sellers.
+-   **Status:** Completed
+-   **Notes:** This feature has been implemented, providing full CRUD capabilities for admins and subscription management for sellers.
 
 ### Booking Module (Comprehensive)
 -   **Task:** Implement the full booking system, including user, seller, and waiter-facing functionalities.

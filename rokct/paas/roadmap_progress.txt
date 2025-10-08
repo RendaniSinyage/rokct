@@ -152,7 +152,7 @@
 - [x] Dashboard (Seller): Delivery Man Delivery Zones
 - [x] Dashboard (Seller): Combos
 - [x] Dashboard (Seller): Booking Management
-- [ ] Dashboard (Seller): Subscription Management
+- [x] Dashboard (Seller): Subscription Management
 
 ## Admin Dashboard
 - [x] Dashboard (Admin): Dashboard & Statistics
@@ -213,7 +213,7 @@
 - [x] Dashboard (Admin): Careers
 - [x] Dashboard (Admin): Pages
 - [x] Dashboard (Admin): Booking Module
-- [ ] Dashboard (Admin): Subscription Management
+- [x] Dashboard (Admin): Subscription Management
 - [x] Dashboard (Admin): Model Logs
 - [x] Dashboard (Admin): Inventory
 - [x] Dashboard (Admin): Ads Packages

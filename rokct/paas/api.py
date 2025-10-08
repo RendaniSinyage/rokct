@@ -195,6 +195,19 @@ from rokct.paas.api.booking.booking import (
     manage_shop_booking_working_days,
     manage_shop_booking_closed_dates,
 )
+from rokct.paas.api.subscription.subscription import (
+    create_subscription,
+    get_subscription,
+    list_subscriptions,
+    update_subscription,
+    delete_subscription,
+    assign_subscription_to_shop,
+    get_shop_subscriptions,
+    update_shop_subscription,
+    cancel_shop_subscription,
+    get_my_shop_subscription,
+    subscribe_my_shop,
+)
 from rokct.paas.api.admin_reports.admin_reports import (
     get_admin_statistics,
     get_multi_company_sales_report,
