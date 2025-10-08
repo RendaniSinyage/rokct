@@ -48,6 +48,18 @@ def get_app_role():
 @frappe.whitelist()
 def get_installed_apps_list():
 	"""
-	Returns a list of all installed apps for use in dropdowns.
+	Returns a list of all installed apps for the current site by reading
+	the apps.txt file, which is a more reliable method in a multi-tenant environment.
 	"""
-	return frappe.get_installed_apps()
+	try:
+		site_path = frappe.get_site_path()
+		apps_txt_path = os.path.join(site_path, "apps.txt")
+
+		if os.path.exists(apps_txt_path):
+			with open(apps_txt_path, "r") as f:
+				apps = [line.strip() for line in f if line.strip()]
+				return apps
+		return frappe.get_installed_apps() # Fallback
+	except Exception:
+		frappe.log_error(f"Could not read apps.txt, falling back to frappe.get_installed_apps. Error: {traceback.format_exc()}")
+		return frappe.get_installed_apps() # Fallback
