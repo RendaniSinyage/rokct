@@ -12,6 +12,11 @@ def create_order(order_data):
 
     # Check for hierarchical auto-approval
     paas_settings = frappe.get_single("PaaS Settings")
+
+    # Validate phone number if required by admin settings
+    if paas_settings.require_phone_for_order and not order_data.get("phone"):
+        frappe.throw("A phone number is required to create this order.", frappe.ValidationError)
+
     shop = frappe.get_doc("Shop", order_data.get("shop"))
 
     initial_status = "New"

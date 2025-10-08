@@ -36,6 +36,11 @@ This file tracks important tasks that need to be completed as part of the PaaS m
 -   **Status:** Completed
 -   **Notes:** The `create_parcel_order` API now checks the new `auto_approve_parcel_orders` setting in `PaaS Settings` to determine if a new parcel order should be automatically approved.
 
+### Require Phone Number for Orders
+-   **Task:** Add a setting to require a phone number for new orders.
+-   **Status:** Completed
+-   **Notes:** The `create_order` API now checks the `require_phone_for_order` setting in `PaaS Settings`. If enabled, the API will throw a `ValidationError` if the phone number is missing.
+
 ### Subscription Management (Admin & Seller)
 -   **Task:** Implement subscription management for both administrators and sellers.
 -   **Status:** Completed
