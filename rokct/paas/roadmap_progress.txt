@@ -60,7 +60,7 @@
   - [x] Update Order Status
   - [x] Review Order
 - [x] REST: Push Notifications
-- [x] REST: Parcel Orders
+- [ ] REST: Parcel Orders (Incomplete - API only supports creation)
 - [x] REST: Payment Gateways
   - [x] Implemented PayFast (including tokenization)
   - [x] Implemented PayPal integration.
@@ -75,7 +75,7 @@
 - [x] Dashboard (User): Booking Management
 - [x] Dashboard (User): Membership
 - [x] Dashboard (User): Orders
-- [x] Dashboard (User): Parcel Orders
+- [ ] Dashboard (User): Parcel Orders (Incomplete)
 - [x] Dashboard (User): Addresses
 - [x] Dashboard (User): Invites
 - [x] Dashboard (User): Wallet
@@ -96,7 +96,7 @@
 - [x] Dashboard (Deliveryman): Shop Bans
 - [x] Dashboard (Deliveryman): Payouts
 - [x] Dashboard (Deliveryman): Order Reports
-- [x] Dashboard (Deliveryman): Parcel Orders
+- [ ] Dashboard (Deliveryman): Parcel Orders (Incomplete)
 - [x] Dashboard (Deliveryman): Payment to Partners
 - [x] Dashboard (Deliveryman): Delivery Zones
 
@@ -170,9 +170,9 @@
 - [x] Dashboard (Admin): Extras (Groups & Values)
 - [x] Dashboard (Admin): Products
 - [x] Dashboard (Admin): Orders
-- [x] Dashboard (Admin): Parcel Orders
-- [x] Dashboard (Admin): Parcel Options
-- [x] Dashboard (Admin): Parcel Order Settings
+- [ ] Dashboard (Admin): Parcel Orders (Incomplete)
+- [ ] Dashboard (Admin): Parcel Options (Missing)
+- [ ] Dashboard (Admin): Parcel Order Settings (Incomplete)
 - [x] Dashboard (Admin): Users
 - [x] Dashboard (Admin): Roles
 - [x] Dashboard (Admin): Wallet Histories
