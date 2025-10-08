@@ -30,8 +30,11 @@ app_license = "mit"
 # ------------------
 
 # include js, css files in header of desk.html
-# app_include_css = "/assets/rokct/css/rokct.css"
-# app_include_js = "/assets/rokct/js/rokct.js"
+app_include_css = "/assets/rokct/css/ui_theme.css"
+app_include_js = [
+    "/assets/rokct/js/custom_sidebar.js",
+    "/assets/rokct/js/custom_top_bar.js"
+]
 
 # include js, css files in header of web template
 # web_include_css = "/assets/rokct/css/rokct.css"
@@ -221,7 +224,8 @@ whitelisted_methods = {
     "rokct.rokct.tenant.api.log_frontend_error": "rokct.rokct.tenant.api.log_frontend_error",
     "rokct.rokct.tenant.api.get_subscription_details": "rokct.rokct.tenant.api.get_subscription_details",
     "rokct.rokct.tenant.api.record_token_usage": "rokct.rokct.tenant.api.record_token_usage",
-    "rokct.rokct.scripts.setup_control_panel.configure_control_panel": "rokct.rokct.scripts.setup_control_panel.configure_control_panel"
+    "rokct.rokct.scripts.setup_control_panel.configure_control_panel": "rokct.rokct.scripts.setup_control_panel.configure_control_panel",
+    "rokct.rokct.api.get_weather": "rokct.rokct.api.get_weather"
 }
 #
 # each overriding function accepts a `data` argument;
