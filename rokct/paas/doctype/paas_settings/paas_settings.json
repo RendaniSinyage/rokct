@@ -1,0 +1,23 @@
+{
+    "name": "PaaS Settings",
+    "engine": "InnoDB",
+    "doctype": "DocType",
+    "issingle": 1,
+    "module": "paas",
+    "fields": [
+        {
+            "fieldname": "auto_approve_orders",
+            "fieldtype": "Check",
+            "label": "Auto Approve All Orders",
+            "default": "0",
+            "description": "If checked, all new orders from any shop will be automatically approved upon creation."
+        }
+    ],
+    "permissions": [
+        {
+            "role": "System Manager",
+            "read": 1,
+            "write": 1
+        }
+    ]
+}

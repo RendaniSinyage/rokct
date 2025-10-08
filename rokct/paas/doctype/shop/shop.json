@@ -152,12 +152,6 @@
             "fieldtype": "Table",
             "label": "Booking Closed Dates",
             "options": "Shop Booking Closed Date"
-        },
-        {
-            "fieldname": "auto_approve_orders",
-            "fieldtype": "Check",
-            "label": "Auto Approve Orders",
-            "default": "0"
         }
     ],
     "modified": "2025-10-07 16:45:15.000000",
