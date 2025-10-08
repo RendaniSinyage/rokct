@@ -8,6 +8,7 @@
   "basic_settings_section",
   "app_name",
   "column_break_yztn",
+  "refresh_app_list",
   "generate_swagger_json",
   "auth_settings_section",
   "token_based_basicauth",
@@ -38,6 +39,11 @@
   {
    "fieldname": "column_break_yztn",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "refresh_app_list",
+   "fieldtype": "Button",
+   "label": "Refresh App List"
   },
   {
    "fieldname": "generate_swagger_json",

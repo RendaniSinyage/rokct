@@ -69,18 +69,31 @@ frappe.ui.form.on("Swagger Settings", {
                     });
                     frm.enable_save();
 
-                    // Automatically refresh the app list on page load and populate the dropdown
+                    // Dynamically set options for the original_name field from the cache on page load
                     frappe.call({
-                        method: "rokct.rokct.doctype.swagger_settings.swagger_settings.cache_installed_apps",
-                        callback: function(r) {
-                            if (r.message) {
+                        method: "rokct.rokct.doctype.swagger_settings.swagger_settings.get_installed_apps_list",
+                        callback: function(res) {
+                            if (res.message) {
                                 let field = frappe.meta.get_docfield("Swagger App Rename", "original_name", frm.doc.name);
-                                field.options = r.message.join("\n");
+                                field.options = res.message.join("\n");
                                 frm.refresh_field("app_renaming_rules");
                             }
                         }
                     });
                 }
+            }
+        });
+    },
+
+    refresh_app_list: function(frm) {
+        frappe.call({
+            method: "rokct.rokct.doctype.swagger_settings.swagger_settings.cache_installed_apps",
+            callback: function(r) {
+                frappe.show_alert({
+                    message: __("App list cache updated. Refreshing..."),
+                    indicator: 'green'
+                }, 5);
+                frm.reload_doc();
             }
         });
     },
