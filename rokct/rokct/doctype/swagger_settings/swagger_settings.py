@@ -58,10 +58,21 @@ def get_installed_apps_list():
 		site_name = frappe.local.site
 		apps_txt_path = os.path.join(bench_path, "sites", site_name, "apps.txt")
 
+		# Detailed logging for debugging
+		log_message = (
+			f"Swagger App List Debug:\n"
+			f"- Bench Path: {bench_path}\n"
+			f"- Site Name: {site_name}\n"
+			f"- Constructed apps.txt Path: {apps_txt_path}\n"
+			f"- Path Exists: {os.path.exists(apps_txt_path)}"
+		)
+		frappe.log_error(log_message, "Swagger App List Debug")
+
 		if os.path.exists(apps_txt_path):
 			with open(apps_txt_path, "r") as f:
 				apps = [line.strip() for line in f if line.strip()]
 				return apps
+
 		# If apps.txt doesn't exist for some reason, fall back to the standard method.
 		return frappe.get_installed_apps()
 	except Exception:
