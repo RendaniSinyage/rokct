@@ -19,11 +19,6 @@ This file tracks important tasks that need to be completed as part of the PaaS m
 -   **Status:** To Be Discussed
 -   **Notes:** The original Laravel app has a feature for scheduling repeated orders. This is more complex than a simple "re-order now" button and requires further discussion.
 
-### Auto-approve Orders
--   **Task:** Implement the setting to automatically approve orders.
--   **Status:** To Be Discussed
--   **Notes:** The original Laravel app has a setting for auto-approving orders. This needs to be implemented.
-
 ### Other Pending REST APIs
 -   **Task:** Implement the remaining REST APIs.
 -   **Status:** Pending
@@ -40,6 +35,11 @@ This file tracks important tasks that need to be completed as part of the PaaS m
 -   **Task:** Implement the full booking system, including user, seller, and waiter-facing functionalities.
 -   **Status:** Completed
 -   **Notes:** The comprehensive booking module has been implemented, including all DocTypes and APIs for Admin, User, Seller, and Waiter roles.
+
+### Auto-approve Orders
+-   **Task:** Implement the setting to automatically approve orders.
+-   **Status:** Completed
+-   **Notes:** Added an `auto_approve_orders` checkbox to the `Shop` DocType. The `create_order` function now checks this setting and sets the order status to "Accepted" if enabled.
 
 ### REST: Branches API
 -   **Task:** Implement the Branches API.

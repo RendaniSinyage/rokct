@@ -10,11 +10,15 @@ def create_order(order_data):
     if isinstance(order_data, str):
         order_data = json.loads(order_data)
 
+    # Check if the shop has auto-approval enabled
+    shop = frappe.get_doc("Shop", order_data.get("shop"))
+    initial_status = "Accepted" if shop.auto_approve_orders else "New"
+
     order = frappe.get_doc({
         "doctype": "Order",
         "user": order_data.get("user"),
         "shop": order_data.get("shop"),
-        "status": "New",
+        "status": initial_status,
         "delivery_type": order_data.get("delivery_type"),
         "currency": order_data.get("currency"),
         "rate": order_data.get("rate"),
