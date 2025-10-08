@@ -11,7 +11,7 @@
  "fields": [
   {
    "fieldname": "original_name",
-   "fieldtype": "Data",
+   "fieldtype": "Select",
    "label": "Original App Name",
    "in_list_view": 1,
    "reqd": 1

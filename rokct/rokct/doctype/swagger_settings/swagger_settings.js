@@ -68,6 +68,18 @@ frappe.ui.form.on("Swagger Settings", {
                         }
                     });
                     frm.enable_save();
+
+                    // Dynamically set options for the original_name field in the app_renaming_rules table
+                    frappe.call({
+                        method: "rokct.rokct.doctype.swagger_settings.swagger_settings.get_installed_apps_list",
+                        callback: function(res) {
+                            if (res.message) {
+                                let field = frappe.meta.get_docfield("Swagger App Rename", "original_name", frm.doc.name);
+                                field.options = res.message.join("\n");
+                                frm.refresh_field("app_renaming_rules");
+                            }
+                        }
+                    });
                 }
             }
         });

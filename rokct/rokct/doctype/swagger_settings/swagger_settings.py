@@ -44,3 +44,10 @@ def get_app_role():
 	Returns the app_role from the site config to the client-side script.
 	"""
 	return frappe.get_conf().get("app_role")
+
+@frappe.whitelist()
+def get_installed_apps_list():
+	"""
+	Returns a list of all installed apps for use in dropdowns.
+	"""
+	return frappe.get_installed_apps()
