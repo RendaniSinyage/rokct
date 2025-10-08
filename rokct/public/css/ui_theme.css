@@ -1,0 +1,273 @@
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@400;700;900&display=swap');
+
+/* Define color variables based on the Flutter app's theme */
+:root {
+    --primary-bg-color: #1E272E;
+    --secondary-bg-color: #2C2C2C;
+    --primary-accent-color: #FF6600;
+    --primary-text-color: #E0E0E0;
+    --secondary-text-color: #B0B0B0;
+    --border-color: #3A3A3A;
+    --card-bg-color: #2A2A2A;
+    --input-bg-color: #2C2C2C;
+    --input-text-color: #E0E0E0;
+    --button-text-color: #FFFFFF;
+    --border-radius: 8px;
+}
+
+/* Apply base styles to the body */
+body {
+    background-color: var(--primary-bg-color) !important;
+    color: var(--primary-text-color) !important;
+    font-family: 'Inter', sans-serif !important;
+}
+
+/* --- Typography --- */
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Montserrat', sans-serif !important;
+    color: var(--primary-text-color) !important;
+}
+
+/* --- Main Layout --- */
+/* Override the default white background of the page content */
+.page-content, .page-container {
+    background-color: var(--primary-bg-color) !important;
+}
+
+.container {
+    background-color: var(--primary-bg-color) !important;
+}
+
+/* --- Buttons --- */
+.btn-primary {
+    background-color: var(--primary-accent-color) !important;
+    border-color: var(--primary-accent-color) !important;
+    color: var(--button-text-color) !important;
+    border-radius: var(--border-radius) !important;
+    font-weight: 600 !important;
+}
+
+.btn-secondary {
+    background-color: var(--secondary-bg-color) !important;
+    border-color: var(--border-color) !important;
+    color: var(--primary-text-color) !important;
+    border-radius: var(--border-radius) !important;
+}
+
+/* --- Cards --- */
+.frappe-card, .workspace-widget-card {
+    background-color: var(--card-bg-color) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--border-radius) !important;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
+}
+
+.card-body {
+    background-color: var(--card-bg-color) !important;
+}
+
+/* --- Forms & Inputs --- */
+.form-control, .form-select {
+    background-color: var(--input-bg-color) !important;
+    color: var(--input-text-color) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--border-radius) !important;
+}
+
+.form-control:focus {
+    border-color: var(--primary-accent-color) !important;
+    box-shadow: 0 0 0 2px rgba(255, 102, 0, 0.25) !important;
+}
+
+/* --- Workspace --- */
+.workspace-sidebar {
+    background-color: var(--secondary-bg-color) !important;
+}
+
+.workspace-sidebar .list-group-item {
+    color: var(--secondary-text-color) !important;
+}
+
+.workspace-sidebar .list-group-item.active {
+    background-color: var(--primary-accent-color) !important;
+    color: var(--button-text-color) !important;
+    border-radius: var(--border-radius) !important;
+}
+
+/* --- Navbar --- */
+.navbar.navbar-light {
+    background-color: var(--secondary-bg-color) !important;
+    border-bottom: 1px solid var(--border-color) !important;
+}
+
+.navbar .navbar-brand, .navbar .nav-link, .navbar .navbar-text, .navbar .indicator-pill {
+    color: var(--primary-text-color) !important;
+}
+
+.navbar .nav-link:hover {
+    color: var(--primary-accent-color) !important;
+}
+
+.navbar .dropdown-menu {
+    background-color: var(--secondary-bg-color) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--border-radius) !important;
+}
+
+.navbar .dropdown-item {
+    color: var(--primary-text-color) !important;
+}
+
+.navbar .dropdown-item:hover {
+    background-color: var(--primary-accent-color) !important;
+    color: var(--button-text-color) !important;
+}
+
+/* --- List View --- */
+.list-row-container, .list-row {
+    background-color: var(--card-bg-color) !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    color: var(--primary-text-color) !important;
+}
+
+.list-row:hover {
+    background-color: var(--secondary-bg-color) !important;
+}
+
+.list-subject .level-item, .list-id {
+    color: var(--primary-text-color) !important;
+}
+
+.list-header-row {
+    background-color: var(--secondary-bg-color) !important;
+}
+
+.list-header-row .list-header-subject, .list-header-row .list-header-meta {
+    color: var(--primary-text-color) !important;
+}
+
+/* --- Modals --- */
+.modal-content {
+    background-color: var(--card-bg-color) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--border-radius) !important;
+}
+
+.modal-header {
+    border-bottom: 1px solid var(--border-color) !important;
+}
+
+.modal-footer {
+    border-top: 1px solid var(--border-color) !important;
+}
+
+/* --- Custom Sidebar --- */
+.custom-sidebar-container {
+    width: 60px;
+    height: 100vh;
+    background-color: var(--secondary-bg-color);
+    border-right: 1px solid var(--border-color);
+    position: fixed;
+    top: 0;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 20px 0;
+    z-index: 1015; /* Below navbar, above page content */
+}
+
+.custom-sidebar-nav {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    margin-top: 60px; /* Offset for navbar */
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--border-radius);
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.nav-item i {
+    font-size: 24px;
+    color: var(--secondary-text-color);
+}
+
+.nav-item:hover {
+    background-color: var(--border-color);
+}
+
+.nav-item:hover i {
+    color: var(--primary-text-color);
+}
+
+.nav-item.active {
+    background-color: var(--primary-accent-color);
+}
+
+.nav-item.active i {
+    color: var(--button-text-color);
+}
+
+.logout-item {
+    list-style: none;
+    text-align: center;
+    padding-bottom: 20px;
+}
+
+.logout-item a {
+    display: inline-block;
+}
+
+.logout-item i {
+    font-size: 24px;
+    color: #FF6B6B; /* Red color from Flutter theme */
+}
+
+/* Adjust main content layout when custom sidebar is active */
+body.custom-sidebar-active .page-container {
+    margin-left: 60px;
+}
+
+/* The standard sidebar is hidden with JS, but this ensures it's gone */
+body.custom-sidebar-active .workspace-sidebar {
+    display: none !important;
+}
+
+/* --- Custom Top Bar --- */
+.dynamic-header-container {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.dynamic-header {
+    font-size: 18px;
+    font-weight: 600;
+    font-family: 'Montserrat', sans-serif;
+    color: var(--primary-text-color);
+}
+
+.weather-widget {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--secondary-text-color);
+}
+
+.weather-icon {
+    width: 24px;
+    height: 24px;
+}
