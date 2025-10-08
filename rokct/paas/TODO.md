@@ -26,6 +26,16 @@ This file tracks important tasks that need to be completed as part of the PaaS m
 
 ## Completed Tasks
 
+### Admin Feature Toggles
+-   **Task:** Add a comprehensive set of admin-level feature toggles.
+-   **Status:** Completed
+-   **Notes:** Added 14 new checkboxes to the `PaaS Settings` DocType to allow administrators to enable or disable major features like the refund system, parcel system, referral earnings, and more.
+
+### Auto-approve Parcel Orders
+-   **Task:** Implement auto-approval for parcel orders.
+-   **Status:** Completed
+-   **Notes:** The `create_parcel_order` API now checks the new `auto_approve_parcel_orders` setting in `PaaS Settings` to determine if a new parcel order should be automatically approved.
+
 ### Subscription Management (Admin & Seller)
 -   **Task:** Implement subscription management for both administrators and sellers.
 -   **Status:** Completed
