@@ -35,15 +35,15 @@ def create_seller_product(product_data):
 
     product_data["shop"] = shop
 
-    # Check the global PaaS setting for auto-approval and set approval_status
+    # Check the global PaaS setting for auto-approval
     paas_settings = frappe.get_single("PaaS Settings")
     initial_status = "Approved" if paas_settings.auto_approve_products else "Pending"
-    product_data["approval_status"] = initial_status
 
     new_product = frappe.get_doc({
         "doctype": "Item",
         **product_data
     })
+    new_product.approval_status = initial_status
     new_product.insert(ignore_permissions=True)
     return new_product.as_dict()
 

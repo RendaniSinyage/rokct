@@ -41,6 +41,11 @@ This file tracks important tasks that need to be completed as part of the PaaS m
 -   **Status:** Completed
 -   **Notes:** The `create_order` API now checks the `require_phone_for_order` setting in `PaaS Settings`. If enabled, the API will throw a `ValidationError` if the phone number is missing.
 
+### Auto-approve Categories
+-   **Task:** Implement auto-approval for categories.
+-   **Status:** Completed
+-   **Notes:** The `create_category` API now checks the `auto_approve_categories` setting in `PaaS Settings` to determine if a new category should be `Approved` or `Pending`.
+
 ### Subscription Management (Admin & Seller)
 -   **Task:** Implement subscription management for both administrators and sellers.
 -   **Status:** Completed
