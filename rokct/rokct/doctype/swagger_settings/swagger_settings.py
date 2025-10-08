@@ -4,6 +4,8 @@
 import frappe
 from frappe.model.document import Document
 from rokct.swagger.swagger_generator import generate_swagger_json
+import os
+import traceback
 
 class SwaggerSettings(Document):
 	pass
@@ -28,7 +30,7 @@ def enqueue_swagger_generation():
 	"""
 	# Check for control panel role again as a security measure
 	if frappe.get_conf().get("app_role") != "control_panel":
-		frappe.throw(__("Swagger generation can only be triggered from the control site."), title="Not Permitted")
+		frappe.throw(frappe._("Swagger generation can only be triggered from the control site."), title="Not Permitted")
 
 	frappe.enqueue(
 		"rokct.swagger.swagger_generator.generate_swagger_json",
@@ -52,14 +54,16 @@ def get_installed_apps_list():
 	the apps.txt file, which is a more reliable method in a multi-tenant environment.
 	"""
 	try:
-		site_path = frappe.get_site_path()
-		apps_txt_path = os.path.join(site_path, "apps.txt")
+		bench_path = frappe.utils.get_bench_path()
+		site_name = frappe.local.site
+		apps_txt_path = os.path.join(bench_path, "sites", site_name, "apps.txt")
 
 		if os.path.exists(apps_txt_path):
 			with open(apps_txt_path, "r") as f:
 				apps = [line.strip() for line in f if line.strip()]
 				return apps
-		return frappe.get_installed_apps() # Fallback
+		# If apps.txt doesn't exist for some reason, fall back to the standard method.
+		return frappe.get_installed_apps()
 	except Exception:
 		frappe.log_error(f"Could not read apps.txt, falling back to frappe.get_installed_apps. Error: {traceback.format_exc()}")
 		return frappe.get_installed_apps() # Fallback
