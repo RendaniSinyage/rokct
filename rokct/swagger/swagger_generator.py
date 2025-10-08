@@ -139,7 +139,7 @@ def process_function(app_name, module_name, func_name, func, swagger, module):
         }
 
         # Assign tags for the Swagger documentation
-        tags = [module_name]
+        tags = [f"{app_name} - {module_name}"]
 
         # Initialize the path if not already present
         if path not in swagger["paths"]:
@@ -328,6 +328,7 @@ def generate_swagger_json():
     frappe.db.commit()
 
     skipped_items_log = []
+    app_to_modules_map = {}
 
     try:
         # Get the list of excluded modules and doctypes from Swagger Settings
@@ -460,7 +461,6 @@ def generate_swagger_json():
                 doctype_meta = frappe.get_meta(doctype)
                 # Skip child tables for the main grouping, as they will be handled within their parent's schema
                 if doctype_meta.istable:
-                    skipped_items_log.append(f"Skipped '{doctype}': Is a child table (istable=1).")
                     continue
                 app_name = doctype_meta.module.lower()
                 if app_name not in app_doctypes:
@@ -489,7 +489,6 @@ def generate_swagger_json():
                 continue
 
         # Initialize data structures for modular and full spec generation
-        modules_list = []
         full_swagger = base_swagger.copy()
         full_swagger["paths"] = {}
         full_swagger["tags"] = []
@@ -510,6 +509,11 @@ def generate_swagger_json():
                         skipped_items_log.append(f"Skipped API Module '{module_name}': Module is in exclusion list.")
                         continue
 
+                    # Group modules by app for the dropdown
+                    if app not in app_to_modules_map:
+                        app_to_modules_map[app] = set()
+                    app_to_modules_map[app].add(module_name)
+
                     module_spec = {
                         "openapi": "3.0.0",
                         "info": {
@@ -522,8 +526,8 @@ def generate_swagger_json():
                         "security": base_swagger["security"]
                     }
 
-                    module_spec["tags"].append({"name": module_name, "description": f"Endpoints for the **{module_name}** module in the **{app}** app."})
-                    modules_list.append(f"{app}-{module_name}")
+                    tag_name = f"{app} - {module_name}"
+                    module_spec["tags"].append({"name": tag_name, "description": f"Endpoints for the **{module_name}** module in the **{app}** app."})
 
                     for func_name, func in inspect.getmembers(module, inspect.isfunction):
                         process_function(app, module_name, func_name, func, module_spec, module)
@@ -542,11 +546,20 @@ def generate_swagger_json():
                 frappe.log_error(f"Error loading or processing file {file_path}: {str(e)}")
 
         # Add DocType endpoints to the full swagger spec and create module-specific DocType JSONs
-        for app_name, doctypes in app_doctypes.items():
+        for module_name, doctypes in app_doctypes.items():
             # Skip excluded modules
-            if app_name.lower() in excluded_modules:
-                skipped_items_log.append(f"Skipped DocType Module '{app_name}': Module is in exclusion list.")
+            if module_name.lower() in excluded_modules:
+                skipped_items_log.append(f"Skipped DocType Module '{module_name}': Module is in exclusion list.")
                 continue
+
+            try:
+                module_def = frappe.get_doc("Module Def", module_name)
+                app = module_def.app_name
+                if app not in app_to_modules_map:
+                    app_to_modules_map[app] = set()
+                app_to_modules_map[app].add(module_name)
+            except frappe.DoesNotExistError:
+                app = "unknown" # Fallback app
 
             module_spec = {
                 "openapi": "3.0.0",
@@ -559,8 +572,6 @@ def generate_swagger_json():
                 "components": base_swagger["components"],
                 "security": base_swagger["security"]
             }
-
-            modules_list.append(app_name)
 
             for doctype in doctypes:
                 try:
@@ -602,7 +613,7 @@ def generate_swagger_json():
                             pass
 
                     tag_name = f"{doctype} DocType"
-                    tag_description = f"Endpoints for the **{doctype}** DocType in the **{app_name}** module."
+                    tag_description = f"Endpoints for the **{doctype}** DocType in the **{module_name}** module."
                     module_spec["tags"].append({"name": tag_name, "description": tag_description})
                     full_swagger["tags"].append({"name": tag_name, "description": tag_description})
 
@@ -859,12 +870,15 @@ def generate_swagger_json():
                     failed_doctypes.append({"doctype": doctype, "error": str(e)})
                     continue
 
-            safe_module_name = re.sub(r'[^a-zA-Z0-9\-_]', '', app_name)
-            module_file_path = os.path.join(output_dir, f"module-{safe_module_name}.json")
+            safe_module_name = re.sub(r'[^a-zA-Z0-9\-_]', '', module_name)
+            module_file_path = os.path.join(output_dir, f"module-{app}-{safe_module_name}.json")
             with open(module_file_path, "w") as module_file:
                 json.dump(module_spec, module_file, indent=4)
 
             full_swagger["paths"].update(module_spec["paths"])
+
+        # Convert sets to sorted lists for consistent JSON output
+        final_app_map = {app: sorted(list(modules)) for app, modules in app_to_modules_map.items()}
 
         full_swagger["info"]["title"] = "PLATFORM API"
         full_swagger["x-total-doctypes"] = total_doctypes
@@ -876,7 +890,7 @@ def generate_swagger_json():
 
         modules_file_path = os.path.join(output_dir, "modules.json")
         with open(modules_file_path, "w") as modules_file:
-            json.dump({"modules": modules_list}, modules_file, indent=4)
+            json.dump({"apps": final_app_map}, modules_file, indent=4)
 
         log_summary = f"Processed: {processed_doctypes_count}, Skipped: {len(skipped_items_log)}, Failed: {len(failed_doctypes)}, Total Found: {total_doctypes}"
 
