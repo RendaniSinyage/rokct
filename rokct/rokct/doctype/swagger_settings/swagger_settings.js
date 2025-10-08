@@ -85,6 +85,19 @@ frappe.ui.form.on("Swagger Settings", {
         });
     },
 
+    refresh_app_list: function(frm) {
+        frappe.call({
+            method: "rokct.rokct.doctype.swagger_settings.swagger_settings.cache_installed_apps",
+            callback: function(r) {
+                frappe.show_alert({
+                    message: __("App list has been refreshed successfully."),
+                    indicator: 'green'
+                }, 5);
+                frm.reload_doc();
+            }
+        });
+    },
+
     generate_swagger_json: function(frm) {
         frappe.call({
             method: "rokct.rokct.doctype.swagger_settings.swagger_settings.enqueue_swagger_generation",

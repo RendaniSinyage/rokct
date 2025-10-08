@@ -72,6 +72,7 @@ def run_swagger_related_hooks():
 	cache_installed_apps()
 	run_swagger_generation_on_control_site()
 
+@frappe.whitelist()
 def cache_installed_apps():
 	"""
 	Reads the site's apps.txt file and caches the list in the Swagger Settings DocType.
