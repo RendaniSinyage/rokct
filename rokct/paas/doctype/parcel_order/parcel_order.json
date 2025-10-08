@@ -113,6 +113,24 @@
    "fieldname": "delivery_time",
    "fieldtype": "Time",
    "label": "Delivery Time"
+  },
+  {
+   "fieldname": "sales_order",
+   "fieldtype": "Link",
+   "label": "Sales Order",
+   "options": "Sales Order"
+  },
+  {
+   "fieldname": "delivery_point",
+   "fieldtype": "Link",
+   "label": "Delivery Point",
+   "options": "Delivery Point"
+  },
+  {
+   "fieldname": "items",
+   "fieldtype": "Table",
+   "label": "Items",
+   "options": "Parcel Order Item"
   }
  ]
 }

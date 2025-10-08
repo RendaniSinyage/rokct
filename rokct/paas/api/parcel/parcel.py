@@ -22,6 +22,8 @@ def create_parcel_order(order_data):
         "note": order_data.get("note"),
         "tax": order_data.get("tax"),
         "status": "New",
+        "sales_order": order_data.get("sales_order_id"),
+        "delivery_point": order_data.get("delivery_point_id"),
         "address_from": json.dumps(order_data.get("address_from")),
         "phone_from": order_data.get("phone_from"),
         "username_from": order_data.get("username_from"),
@@ -32,5 +34,15 @@ def create_parcel_order(order_data):
         "delivery_date": order_data.get("delivery_date"),
         "delivery_time": order_data.get("delivery_time"),
     })
+
+    items = order_data.get("items", [])
+    for item in items:
+        parcel_order.append("items", {
+            "item": item.get("item_code"),
+            "item_name": item.get("item_name"),
+            "quantity": item.get("quantity"),
+            "sales_order_item": item.get("sales_order_item")
+        })
+
     parcel_order.insert(ignore_permissions=True)
     return parcel_order.as_dict()

@@ -21,6 +21,7 @@ import '../../../../components/components.dart';
 import '../../../../theme/theme.dart';
 import '../../riverpod/provider/main_provider.dart';
 import 'generate_check.dart';
+import 'widgets/send_to_pickup/send_to_pickup_dialog.dart';
 
 class OrderDetailPage extends ConsumerStatefulWidget {
   final OrderData order;
@@ -79,6 +80,21 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
                 ),
                 const Spacer(),
                 InvoiceDownload(orderData: state.order),
+                16.horizontalSpace,
+                if (state.order?.status == TrKeys.accepted)
+                  ConfirmButton(
+                    textColor: AppStyle.black,
+                    title: "Send to Pickup Point",
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) {
+                          return SendToPickupDialog(order: state.order);
+                        },
+                      );
+                    },
+                    height: 52.r,
+                  ),
                 16.horizontalSpace,
                 state.order?.status != TrKeys.delivered &&
                         LocalStorage.getUser()?.role != TrKeys.waiter
