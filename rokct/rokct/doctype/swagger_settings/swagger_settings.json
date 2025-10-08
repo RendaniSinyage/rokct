@@ -8,7 +8,6 @@
   "basic_settings_section",
   "app_name",
   "column_break_yztn",
-  "refresh_app_list",
   "generate_swagger_json",
   "auth_settings_section",
   "token_based_basicauth",
@@ -41,11 +40,6 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "refresh_app_list",
-   "fieldtype": "Button",
-   "label": "Refresh App List"
-  },
-  {
    "fieldname": "generate_swagger_json",
    "fieldtype": "Button",
    "label": "Generate Swagger Json"
@@ -66,7 +60,7 @@
    "fieldtype": "Column Break"
   },
   {
-   "default": "0",
+   "default": "1",
    "fieldname": "bearerauth",
    "fieldtype": "Check",
    "label": "BearerAuth"

@@ -69,41 +69,17 @@ frappe.ui.form.on("Swagger Settings", {
                     });
                     frm.enable_save();
 
-                    // Dynamically set options for the original_name field in the app_renaming_rules table
+                    // Automatically refresh the app list on page load and populate the dropdown
                     frappe.call({
-                        method: "rokct.rokct.doctype.swagger_settings.swagger_settings.get_installed_apps_list",
-                        callback: function(res) {
-                            if (res.message) {
+                        method: "rokct.rokct.doctype.swagger_settings.swagger_settings.cache_installed_apps",
+                        callback: function(r) {
+                            if (r.message) {
                                 let field = frappe.meta.get_docfield("Swagger App Rename", "original_name", frm.doc.name);
-                                field.options = res.message.join("\n");
+                                field.options = r.message.join("\n");
                                 frm.refresh_field("app_renaming_rules");
                             }
                         }
                     });
-                }
-            }
-        });
-    },
-
-    refresh_app_list: function(frm) {
-        frappe.call({
-            method: "rokct.rokct.doctype.swagger_settings.swagger_settings.cache_installed_apps",
-            callback: function(r) {
-                if (r.message) {
-                    // Update the options for the 'original_name' field in the child table
-                    let field = frappe.meta.get_docfield("Swagger App Rename", "original_name", frm.doc.name);
-                    field.options = r.message.join("\n");
-                    frm.refresh_field("app_renaming_rules");
-
-                    frappe.show_alert({
-                        message: __("App list has been refreshed successfully."),
-                        indicator: 'green'
-                    }, 5);
-                } else {
-                    frappe.show_alert({
-                        message: __("Failed to refresh app list."),
-                        indicator: 'red'
-                    }, 5);
                 }
             }
         });
