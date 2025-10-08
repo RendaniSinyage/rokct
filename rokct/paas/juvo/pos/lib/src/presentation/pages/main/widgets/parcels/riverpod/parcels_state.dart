@@ -1,4 +1,4 @@
-import 'package:admin_desktop/src/models/data/order_data.dart';
+import 'package:admin_desktop/src/models/data/parcel_order_list_data.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'parcels_state.freezed.dart';
@@ -7,6 +7,6 @@ part 'parcels_state.freezed.dart';
 class ParcelsState with _$ParcelsState {
   const factory ParcelsState({
     @Default(false) bool isLoading,
-    @Default([]) List<OrderData> parcelOrders,
+    @Default([]) List<ParcelOrderListData> parcelOrders,
   }) = _ParcelsState;
 }

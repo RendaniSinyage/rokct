@@ -3,7 +3,7 @@
 
 import frappe
 from frappe.tests.utils import FrappeTestCase
-from rokct.paas.doctype.delivery_point.delivery_point import get_nearest_delivery_points
+from rokct.paas.api import get_nearest_delivery_points
 
 class TestDeliveryPointAPI(FrappeTestCase):
     def setUp(self):

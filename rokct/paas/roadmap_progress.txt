@@ -60,7 +60,7 @@
   - [x] Update Order Status
   - [x] Review Order
 - [x] REST: Push Notifications
-- [ ] REST: Parcel Orders (Incomplete - Creation API enhanced, but full CRUD and status management are missing)
+- [ ] REST: Parcel Orders (Incomplete - Creation and listing APIs implemented, but full management is missing)
 - [x] REST: Payment Gateways
   - [x] Implemented PayFast (including tokenization)
   - [x] Implemented PayPal integration.
@@ -72,7 +72,6 @@
 - [x] Dashboard (User): Profile
 - [ ] Dashboard (User): Loan Management (exclude this feature)
 - [ ] Dashboard (User): Loan Documents (exclude this feature)
-- [x] Dashboard (User): Booking Management
 - [x] Dashboard (User): Membership
 - [x] Dashboard (User): Orders
 - [ ] Dashboard (User): Parcel Orders (Incomplete)
@@ -103,7 +102,6 @@
 ## Waiter Dashboard
 - [x] Dashboard (Waiter): Orders
 - [x] Dashboard (Waiter): Order Reports
-- [x] Dashboard (Waiter): Booking Management
 
 ## Cook Dashboard
 - [x] Dashboard (Cook): Orders
@@ -151,8 +149,6 @@
 - [x] Dashboard (Seller): User Addresses
 - [x] Dashboard (Seller): Delivery Man Delivery Zones
 - [x] Dashboard (Seller): Combos
-- [x] Dashboard (Seller): Booking Management
-- [x] Dashboard (Seller): Subscription Management
 
 ## Admin Dashboard
 - [x] Dashboard (Admin): Dashboard & Statistics
@@ -213,7 +209,6 @@
 - [x] Dashboard (Admin): Careers
 - [x] Dashboard (Admin): Pages
 - [x] Dashboard (Admin): Booking Module
-- [x] Dashboard (Admin): Subscription Management
 - [x] Dashboard (Admin): Model Logs
 - [x] Dashboard (Admin): Inventory
 - [x] Dashboard (Admin): Ads Packages

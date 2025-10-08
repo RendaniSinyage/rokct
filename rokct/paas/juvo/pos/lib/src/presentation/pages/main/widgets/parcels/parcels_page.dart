@@ -2,6 +2,7 @@ import 'package:admin_desktop/src/presentation/components/buttons/confirm_button
 import 'package:admin_desktop/src/presentation/pages/main/widgets/parcels/riverpod/parcels_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'create_parcel_dialog.dart';
 
 class ParcelsPage extends ConsumerStatefulWidget {
   const ParcelsPage({super.key});
@@ -41,7 +42,7 @@ class _ParcelsPageState extends ConsumerState<ParcelsPage> {
               itemBuilder: (context, index) {
                 final parcel = state.parcelOrders[index];
                 return ListTile(
-                  title: Text("Parcel #${parcel.id}"),
+                  title: Text("Parcel #${parcel.name}"),
                   subtitle: Text("To: ${parcel.addressTo ?? 'N/A'}"),
                   trailing: Text(parcel.status ?? "Unknown"),
                 );
@@ -49,8 +50,12 @@ class _ParcelsPageState extends ConsumerState<ParcelsPage> {
             ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          // TODO: Implement Create Parcel Dialog/Screen
-          debugPrint("Create New Parcel tapped");
+          showDialog(
+            context: context,
+            builder: (context) {
+              return const CreateParcelDialog();
+            },
+          );
         },
         label: const Text("Create New Parcel"),
         icon: const Icon(Icons.add),

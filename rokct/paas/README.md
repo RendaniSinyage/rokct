@@ -39,12 +39,3 @@ A `Roadmap` DocType has been created to track the progress of the Juvo applicati
 
 *   **Excluded:** The **Roadmap Feature** is not a user-facing feature for tenants.
 
-## Project Tracking & Documentation
-
-To maintain clarity on the project's progress, we use several key documents. It is crucial that these files are kept synchronized to provide a consistent view of the development status.
-
-*   **`TODO.md`**: This file contains a high-level list of active and pending tasks. It serves as a quick reference for what needs to be worked on next. For complex features, it may link to a more detailed status report.
-*   **`roadmap_progress.txt`**: This is the master checklist for the entire Laravel-to-Frappe conversion. It provides a granular, feature-by-feature view of the project's overall progress.
-*   **Feature Status Reports (e.g., `PARCEL_DELIVERY_STATUS.md`)**: For large, complex features, a dedicated status report may be created. These documents provide a detailed breakdown of the feature, comparing the original implementation with the new one and outlining what is missing.
-
-**Synchronization Guideline:** When you update the status of a task (e.g., in `TODO.md`), you **must** ensure that the corresponding items in `roadmap_progress.txt` are also updated. This ensures that both the high-level and granular views of our progress remain aligned.

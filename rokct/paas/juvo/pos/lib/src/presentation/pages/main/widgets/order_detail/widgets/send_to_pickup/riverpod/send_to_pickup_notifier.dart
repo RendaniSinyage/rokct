@@ -56,11 +56,18 @@ class SendToPickupNotifier extends StateNotifier<SendToPickupState> {
       };
     }).toList() ?? [];
 
-    final response = await _parcelRepository.createParcelOrder(
-      salesOrderId: order.id ?? 0,
-      deliveryPointId: state.selectedPoint!.id!,
-      items: items,
-    );
+    final body = {
+      "sales_order_id": order.id,
+      "delivery_point_id": state.selectedPoint?.id,
+      "items": items,
+      "destination_type": "delivery_point",
+      "address_to": state.selectedPoint?.address,
+      "username_to": "Pickup Point: ${state.selectedPoint?.name}",
+      // You can add other fields from the order if needed, e.g.,
+      // "phone_to": order.user?.phone,
+    };
+
+    final response = await _parcelRepository.createParcelOrder(body: body);
 
     response.when(
       success: (data) {

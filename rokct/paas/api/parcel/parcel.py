@@ -4,7 +4,8 @@ import json
 @frappe.whitelist()
 def create_parcel_order(order_data):
     """
-    Creates a new parcel order.
+    Creates a new parcel order from a flexible payload.
+    'order_data' is a JSON string or dict with parcel details.
     """
     if isinstance(order_data, str):
         order_data = json.loads(order_data)
@@ -13,28 +14,49 @@ def create_parcel_order(order_data):
     if user == "Guest":
         frappe.throw("You must be logged in to create a parcel order.", frappe.AuthenticationError)
 
-    parcel_order = frappe.get_doc({
+    # Basic parcel document setup
+    new_parcel_doc = {
         "doctype": "Parcel Order",
         "user": user,
-        "total_price": order_data.get("total_price"),
-        "currency": order_data.get("currency"),
-        "type": order_data.get("type"),
         "note": order_data.get("note"),
-        "tax": order_data.get("tax"),
         "status": "New",
-        "sales_order": order_data.get("sales_order_id"),
-        "delivery_point": order_data.get("delivery_point_id"),
-        "address_from": json.dumps(order_data.get("address_from")),
-        "phone_from": order_data.get("phone_from"),
-        "username_from": order_data.get("username_from"),
-        "address_to": json.dumps(order_data.get("address_to")),
-        "phone_to": order_data.get("phone_to"),
-        "username_to": order_data.get("username_to"),
-        "delivery_fee": order_data.get("delivery_fee"),
+        # Add other common fields here
         "delivery_date": order_data.get("delivery_date"),
         "delivery_time": order_data.get("delivery_time"),
-    })
+    }
 
+    # Handle different destination types
+    destination_type = order_data.get("destination_type")
+
+    if destination_type == "customer" and order_data.get("customer_id"):
+        customer = frappe.get_doc("User", order_data.get("customer_id"))
+        # Assuming customer has an address field or we construct it
+        new_parcel_doc["username_to"] = customer.get("full_name")
+        new_parcel_doc["phone_to"] = customer.get("phone")
+        # In a real scenario, you'd fetch the customer's primary address
+        new_parcel_doc["address_to"] = f"Customer: {customer.get('full_name')}"
+
+    elif destination_type == "delivery_point" and order_data.get("delivery_point_id"):
+        delivery_point = frappe.get_doc("Delivery Point", order_data.get("delivery_point_id"))
+        new_parcel_doc["delivery_point"] = delivery_point.name
+        new_parcel_doc["address_to"] = delivery_point.address
+        new_parcel_doc["username_to"] = f"Pickup Point: {delivery_point.name}"
+
+    elif destination_type == "custom_location" and order_data.get("address_to"):
+        new_parcel_doc["address_to"] = json.dumps(order_data.get("address_to"))
+
+    else:
+        # Handle reverse logistics or other cases
+        new_parcel_doc["address_from"] = json.dumps(order_data.get("address_from"))
+        new_parcel_doc["address_to"] = json.dumps(order_data.get("address_to"))
+
+    # Link Sales Order if provided
+    if order_data.get("sales_order_id"):
+        new_parcel_doc["sales_order"] = order_data.get("sales_order_id")
+
+    parcel_order = frappe.get_doc(new_parcel_doc)
+
+    # Add items if they exist
     items = order_data.get("items", [])
     for item in items:
         parcel_order.append("items", {
@@ -46,6 +68,7 @@ def create_parcel_order(order_data):
 
     parcel_order.insert(ignore_permissions=True)
     return parcel_order.as_dict()
+
 
 @frappe.whitelist()
 def get_parcel_orders(limit=20, offset=0):
@@ -59,7 +82,7 @@ def get_parcel_orders(limit=20, offset=0):
     parcel_orders = frappe.get_list(
         "Parcel Order",
         filters={"user": user},
-        fields=["name", "status", "delivery_date", "total_price", "address_to"],
+        fields=["name", "status", "delivery_date", "total_price", "address_to", "delivery_point", "sales_order"],
         limit_page_length=limit,
         start=offset,
         order_by="modified desc"
