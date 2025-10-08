@@ -7,6 +7,7 @@ import json
 import os
 import re
 import urllib.parse
+import traceback
 
 import frappe
 from pydantic import BaseModel
@@ -322,6 +323,7 @@ def generate_swagger_json():
     swagger_settings = frappe.get_single("Swagger Settings")
     swagger_settings.generation_status = "In Progress"
     swagger_settings.last_generation_time = frappe.utils.now_datetime()
+    swagger_settings.generation_log = ""  # Clear previous logs
     swagger_settings.save(ignore_permissions=True)
     frappe.db.commit()
 
@@ -557,9 +559,9 @@ def generate_swagger_json():
 
             for doctype in doctypes:
                 try:
-                # Skip excluded doctypes
-                if doctype in excluded_doctypes:
-                    continue
+                    # Skip excluded doctypes
+                    if doctype in excluded_doctypes:
+                        continue
 
                     doctype_meta = frappe.get_meta(doctype)
                     sanitized_doctype = doctype.replace(" ", "_")
@@ -871,10 +873,19 @@ def generate_swagger_json():
             json.dump({"modules": modules_list}, modules_file, indent=4)
 
         if failed_doctypes:
+            log_message = "The following DocTypes failed to process:\n\n"
+            for failure in failed_doctypes:
+                log_message += f"- DocType: {failure['doctype']}\n  Error: {failure['error']}\n\n"
+
+            swagger_settings.generation_log = log_message
+            swagger_settings.generation_status = "Failed"
             frappe.log_error(
                 title=f"Swagger Generation: Failed to process {len(failed_doctypes)} DocTypes.",
-                message=str(failed_doctypes)
+                message=log_message
             )
+        else:
+            swagger_settings.generation_status = "Success"
+            swagger_settings.generation_log = ""
 
         frappe.msgprint(f"""
             <b>Swagger Generation Complete</b><br><br>
@@ -884,14 +895,13 @@ def generate_swagger_json():
             <i>Check the Error Log for details on failed DocTypes.</i>
         """)
 
-        # On success
-        swagger_settings.generation_status = "Success"
         swagger_settings.save(ignore_permissions=True)
         frappe.db.commit()
 
     except Exception as e:
         # On failure
         swagger_settings.generation_status = "Failed"
+        swagger_settings.generation_log = f"A critical error occurred during generation:\n\n{traceback.format_exc()}"
         swagger_settings.save(ignore_permissions=True)
         frappe.db.commit()
         frappe.log_error(f"Swagger Generation Failed: {str(e)}", "Swagger Generator")

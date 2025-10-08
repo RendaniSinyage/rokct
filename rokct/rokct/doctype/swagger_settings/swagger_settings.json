@@ -16,6 +16,7 @@
   "status_section",
   "last_generation_time",
   "generation_status",
+  "generation_log",
   "exclusions_section",
   "excluded_modules",
   "excluded_doctypes"
@@ -78,6 +79,12 @@
    "fieldtype": "Select",
    "label": "Generation Status",
    "options": "Success\nFailed\nIn Progress",
+   "read_only": 1
+  },
+  {
+   "fieldname": "generation_log",
+   "fieldtype": "Code",
+   "label": "Generation Log",
    "read_only": 1
   },
   {

@@ -7,6 +7,11 @@ frappe.ui.form.on("Swagger Settings", {
         frm.dashboard.clear_messages();
         frm.dashboard.clear_indicators();
 
+        // Remove existing custom buttons to prevent duplicates on refresh
+        if(frm.custom_buttons["View Log"]) {
+            frm.remove_custom_button("View Log");
+        }
+
         // Show the generation status
         if (frm.doc.generation_status) {
             let color = {
@@ -20,10 +25,20 @@ frappe.ui.form.on("Swagger Settings", {
                 (frm.doc.last_generation_time ? ` (${frappe.datetime.comment_when(frm.doc.last_generation_time)})` : ''),
                 color
             );
+
+            // Add "View Log" button if the status is Failed and there's a log
+            if (frm.doc.generation_status === 'Failed' && frm.doc.generation_log) {
+                frm.add_custom_button(__('View Log'), function() {
+                    frappe.msgprint({
+                        title: __('Generation Log'),
+                        indicator: 'red',
+                        message: `<pre style="white-space: pre-wrap; word-wrap: break-word;">${frm.doc.generation_log}</pre>`
+                    });
+                });
+            }
         } else {
             frm.dashboard.add_indicator(__('Status not available. Generate documentation to see the status.'), 'gray');
         }
-
 
         frappe.call({
             method: "rokct.rokct.doctype.swagger_settings.swagger_settings.get_app_role",
@@ -46,7 +61,7 @@ frappe.ui.form.on("Swagger Settings", {
                 } else {
                     // If it is the control site, ensure fields are writable
                     // Keep status fields read-only
-                    const read_only_fields = ['last_generation_time', 'generation_status'];
+                    const read_only_fields = ['last_generation_time', 'generation_status', 'generation_log'];
                     frm.fields.forEach(function(field) {
                         if (field.df.fieldname !== 'generate_swagger_json' && !read_only_fields.includes(field.df.fieldname)) {
                            frm.set_df_property(field.df.fieldname, 'read_only', 0);
