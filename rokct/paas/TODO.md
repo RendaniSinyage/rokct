@@ -4,6 +4,14 @@ This file tracks important tasks that need to be completed as part of the PaaS m
 
 ## Incomplete Features
 
+### Parcel Delivery (Comprehensive)
+-   **Task:** Implement the full parcel delivery system.
+-   **Status:** Partially Implemented
+-   **Notes:** The foundational DocTypes (`Parcel Order`, `Parcel Order Setting`) and a basic `create_parcel_order` API exist. However, the feature is largely incomplete. The following key components need to be implemented to achieve parity with the original Laravel application:
+    -   **Parcel Order Management:** Full CRUD APIs for admins, and management APIs for users and deliverymen (view, update status, etc.).
+    -   **Parcel Options:** The entire "Parcel Options" feature, including the DocType and management APIs, is missing.
+    -   **Parcel Order Settings:** The `Parcel Order Setting` DocType needs to be expanded, and full CRUD APIs for managing these settings are required.
+
 ### Re-order / Scheduled Orders
 -   **Task:** Implement the feature for creating recurring or scheduled orders.
 -   **Status:** To Be Discussed
