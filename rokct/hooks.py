@@ -88,9 +88,9 @@ doctype_list_js = {
 before_install = "rokct.install.before_install"
 after_install = "rokct.install.after_install"
 
-on_install = "rokct.rokct.doctype.swagger_settings.swagger_settings.run_swagger_generation_on_control_site"
-on_migrate = "rokct.rokct.doctype.swagger_settings.swagger_settings.run_swagger_generation_on_control_site"
-on_update = "rokct.rokct.doctype.swagger_settings.swagger_settings.run_swagger_generation_on_control_site"
+on_install = "rokct.rokct.doctype.swagger_settings.swagger_settings.run_swagger_related_hooks"
+on_migrate = "rokct.rokct.doctype.swagger_settings.swagger_settings.run_swagger_related_hooks"
+on_update = "rokct.rokct.doctype.swagger_settings.swagger_settings.run_swagger_related_hooks"
 
 # Uninstallation
 # ------------

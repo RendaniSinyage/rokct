@@ -116,6 +116,13 @@
    "fieldtype": "Table",
    "label": "App Renaming Rules",
    "options": "Swagger App Rename"
+  },
+  {
+   "fieldname": "installed_apps_cache",
+   "fieldtype": "Text",
+   "hidden": 1,
+   "label": "Installed Apps Cache",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
