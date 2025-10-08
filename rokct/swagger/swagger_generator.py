@@ -327,6 +327,8 @@ def generate_swagger_json():
     swagger_settings.save(ignore_permissions=True)
     frappe.db.commit()
 
+    skipped_items_log = []
+
     try:
         # Get the list of excluded modules and doctypes from Swagger Settings
         excluded_modules = {d.module.lower() for d in swagger_settings.get("excluded_modules", [])}
@@ -458,6 +460,7 @@ def generate_swagger_json():
                 doctype_meta = frappe.get_meta(doctype)
                 # Skip child tables for the main grouping, as they will be handled within their parent's schema
                 if doctype_meta.istable:
+                    skipped_items_log.append(f"Skipped '{doctype}': Is a child table (istable=1).")
                     continue
                 app_name = doctype_meta.module.lower()
                 if app_name not in app_doctypes:
@@ -504,6 +507,7 @@ def generate_swagger_json():
 
                     # Skip excluded modules
                     if module_name.lower() in excluded_modules:
+                        skipped_items_log.append(f"Skipped API Module '{module_name}': Module is in exclusion list.")
                         continue
 
                     module_spec = {
@@ -541,6 +545,7 @@ def generate_swagger_json():
         for app_name, doctypes in app_doctypes.items():
             # Skip excluded modules
             if app_name.lower() in excluded_modules:
+                skipped_items_log.append(f"Skipped DocType Module '{app_name}': Module is in exclusion list.")
                 continue
 
             module_spec = {
@@ -561,6 +566,7 @@ def generate_swagger_json():
                 try:
                     # Skip excluded doctypes
                     if doctype in excluded_doctypes:
+                        skipped_items_log.append(f"Skipped DocType '{doctype}': DocType is in exclusion list.")
                         continue
 
                     doctype_meta = frappe.get_meta(doctype)
@@ -872,29 +878,28 @@ def generate_swagger_json():
         with open(modules_file_path, "w") as modules_file:
             json.dump({"modules": modules_list}, modules_file, indent=4)
 
-        if failed_doctypes:
-            log_message = "The following DocTypes failed to process:\n\n"
-            for failure in failed_doctypes:
-                log_message += f"- DocType: {failure['doctype']}\n  Error: {failure['error']}\n\n"
+        log_summary = f"Processed: {processed_doctypes_count}, Skipped: {len(skipped_items_log)}, Failed: {len(failed_doctypes)}, Total Found: {total_doctypes}"
 
-            swagger_settings.generation_log = log_message
+        full_log = f"--- Generation Summary ---\n{log_summary}\n\n"
+
+        if skipped_items_log:
+            full_log += "--- Skipped Items ---\n" + "\n".join(skipped_items_log) + "\n\n"
+
+        if failed_doctypes:
             swagger_settings.generation_status = "Failed"
+            full_log += "--- Failures ---\n"
+            for failure in failed_doctypes:
+                full_log += f"- DocType: {failure['doctype']}\n  Error: {failure['error']}\n\n"
+
             frappe.log_error(
                 title=f"Swagger Generation: Failed to process {len(failed_doctypes)} DocTypes.",
-                message=log_message
+                message=full_log
             )
         else:
             swagger_settings.generation_status = "Success"
-            swagger_settings.generation_log = ""
 
-        frappe.msgprint(f"""
-            <b>Swagger Generation Complete</b><br><br>
-            Successfully processed: {processed_doctypes_count}<br>
-            Failed: {len(failed_doctypes)}<br>
-            Total found: {total_doctypes}<br><br>
-            <i>Check the Error Log for details on failed DocTypes.</i>
-        """)
-
+        swagger_settings.generation_log = full_log
+        frappe.msgprint(f"<b>Swagger Generation Complete</b><br><br>{log_summary.replace(', ', '<br>')}<br><br><i>Check the Generation Log for details.</i>")
         swagger_settings.save(ignore_permissions=True)
         frappe.db.commit()
 

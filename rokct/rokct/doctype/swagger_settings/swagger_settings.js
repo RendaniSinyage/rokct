@@ -26,12 +26,12 @@ frappe.ui.form.on("Swagger Settings", {
                 color
             );
 
-            // Add "View Log" button if the status is Failed and there's a log
-            if (frm.doc.generation_status === 'Failed' && frm.doc.generation_log) {
+            // Add "View Log" button if there is a log to show
+            if (frm.doc.generation_log) {
                 frm.add_custom_button(__('View Log'), function() {
                     frappe.msgprint({
                         title: __('Generation Log'),
-                        indicator: 'red',
+                        indicator: frm.doc.generation_status === 'Failed' ? 'red' : 'blue',
                         message: `<pre style="white-space: pre-wrap; word-wrap: break-word;">${frm.doc.generation_log}</pre>`
                     });
                 });
