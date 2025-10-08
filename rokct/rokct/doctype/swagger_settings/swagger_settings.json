@@ -31,7 +31,7 @@
    "label": "Basic Settings"
   },
   {
-   "default": "Frappe",
+   "default": "ROKCT",
    "fieldname": "app_name",
    "fieldtype": "Data",
    "label": "App Name"
