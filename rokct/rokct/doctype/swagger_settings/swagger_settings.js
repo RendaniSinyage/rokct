@@ -89,11 +89,22 @@ frappe.ui.form.on("Swagger Settings", {
         frappe.call({
             method: "rokct.rokct.doctype.swagger_settings.swagger_settings.cache_installed_apps",
             callback: function(r) {
-                frappe.show_alert({
-                    message: __("App list has been refreshed successfully."),
-                    indicator: 'green'
-                }, 5);
-                frm.reload_doc();
+                if (r.message) {
+                    // Update the options for the 'original_name' field in the child table
+                    let field = frappe.meta.get_docfield("Swagger App Rename", "original_name", frm.doc.name);
+                    field.options = r.message.join("\n");
+                    frm.refresh_field("app_renaming_rules");
+
+                    frappe.show_alert({
+                        message: __("App list has been refreshed successfully."),
+                        indicator: 'green'
+                    }, 5);
+                } else {
+                    frappe.show_alert({
+                        message: __("Failed to refresh app list."),
+                        indicator: 'red'
+                    }, 5);
+                }
             }
         });
     },
