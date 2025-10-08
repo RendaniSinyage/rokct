@@ -35,7 +35,7 @@ def enqueue_swagger_generation():
 		queue="long",
 		job_name="swagger_generation"
 	)
-	return __("Swagger generation has been successfully enqueued. It will be processed in the background.")
+	return frappe._("Swagger generation has been successfully enqueued. It will be processed in the background.")
 
 
 @frappe.whitelist()
