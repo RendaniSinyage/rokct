@@ -74,11 +74,14 @@ frappe.ui.form.on("Swagger Settings", {
     },
 
     generate_swagger_json: function(frm) {
-        frm.call('enqueue_swagger_generation').then(r => {
-            if (r.message) {
-                frappe.msgprint(r.message);
-                frm.refresh(); // Refresh to show the "In Progress" status
+        frappe.call({
+            method: "rokct.rokct.doctype.swagger_settings.swagger_settings.enqueue_swagger_generation",
+            callback: function(r) {
+                if (r.message) {
+                    frappe.msgprint(r.message);
+                    frm.refresh(); // Refresh to show the "In Progress" status
+                }
             }
-        })
+        });
     }
 });
