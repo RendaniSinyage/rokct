@@ -3,6 +3,19 @@
 
 frappe.ui.form.on("Swagger Settings", {
     refresh: function(frm) {
+        // --- FOCUSED DEBUGGING STEP ---
+        // This call is placed at the top to run unconditionally for debugging.
+        frappe.call({
+            method: "rokct.rokct.doctype.swagger_settings.swagger_settings.get_installed_apps_list",
+            callback: function(res) {
+                // This callback will run after the backend method, which contains the logging.
+                // We will add the UI logic back here once debugging is complete.
+                console.log("Debug call to get_installed_apps_list completed.");
+            }
+        });
+        // --- END OF DEBUGGING STEP ---
+
+
         // Clear previous messages and indicators
         frm.dashboard.clear_messages();
         frm.dashboard.clear_indicators();
@@ -68,18 +81,6 @@ frappe.ui.form.on("Swagger Settings", {
                         }
                     });
                     frm.enable_save();
-
-                    // Dynamically set options for the original_name field in the app_renaming_rules table
-                    frappe.call({
-                        method: "rokct.rokct.doctype.swagger_settings.swagger_settings.get_installed_apps_list",
-                        callback: function(res) {
-                            if (res.message) {
-                                let field = frappe.meta.get_docfield("Swagger App Rename", "original_name", frm.doc.name);
-                                field.options = res.message.join("\n");
-                                frm.refresh_field("app_renaming_rules");
-                            }
-                        }
-                    });
                 }
             }
         });
