@@ -75,7 +75,7 @@ class _OrderPageState extends ConsumerState<OrderPage>
 
   @override
   void initState() {
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     _controllerCenter =
         ConfettiController(duration: const Duration(seconds: 2));
     refreshController = RefreshController();

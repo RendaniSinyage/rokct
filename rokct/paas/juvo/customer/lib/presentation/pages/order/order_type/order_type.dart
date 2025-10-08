@@ -7,6 +7,7 @@ import 'package:foodyman/presentation/components/custom_tab_bar.dart';
 import 'package:foodyman/presentation/theme/theme.dart';
 import 'widgets/order_delivery.dart';
 import 'widgets/order_pick_up.dart';
+import 'widgets/order_pickup_point.dart';
 
 class OrderType extends StatefulWidget {
   final ValueChanged<bool> onChange;
@@ -29,13 +30,24 @@ class OrderType extends StatefulWidget {
 }
 
 class _OrderPageState extends State<OrderType> {
-  final _tabs = [
-    Tab(text: AppHelpers.getTranslation(TrKeys.delivery)),
-    Tab(text: AppHelpers.getTranslation(TrKeys.pickup)),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    widget.tabController.addListener(() {
+      if (mounted) {
+        setState(() {});
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final _tabs = [
+      Tab(text: AppHelpers.getTranslation(TrKeys.delivery)),
+      Tab(text: AppHelpers.getTranslation(TrKeys.pickup)),
+      Tab(text: AppHelpers.getTranslation(TrKeys.pickup_point)),
+    ];
+
     final bool isLtr = LocalStorage.getLangLtr();
     return Directionality(
       textDirection: isLtr ? TextDirection.ltr : TextDirection.rtl,
@@ -53,11 +65,7 @@ class _OrderPageState extends State<OrderType> {
               tabs: _tabs,
             ),
             SizedBox(
-              height: widget.tabController.index == 1
-                  ? 48 + 360.h
-                  : widget.sendUser
-                      ? 300 + 268.h
-                      : 300 + 200.h,
+              height: _calculateHeight(),
               child: TabBarView(controller: widget.tabController, children: [
                 OrderDelivery(
                   onChange: widget.onChange,
@@ -65,6 +73,7 @@ class _OrderPageState extends State<OrderType> {
                   shopId: widget.shopId,
                 ),
                 const OrderPickUp(),
+                const OrderPickupPoint(),
               ]),
             )
           ],
@@ -72,5 +81,17 @@ class _OrderPageState extends State<OrderType> {
       ),
     );
   }
-}
 
+  double _calculateHeight() {
+    switch (widget.tabController.index) {
+      case 0: // Delivery
+        return widget.sendUser ? 300 + 268.h : 300 + 200.h;
+      case 1: // Pickup
+        return 48 + 360.h;
+      case 2: // Pickup Point
+        return 48 + 450.h; // Height for map view
+      default:
+        return 300 + 200.h;
+    }
+  }
+}

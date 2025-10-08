@@ -201,9 +201,12 @@ class _OrderCheckState extends ConsumerState<OrderCheck> {
         shopId: state.shopData?.id ?? 0,
         coupon: state.promoCode,
         deliveryFee: state.calculateData?.deliveryFee ?? 0,
+        deliveryPointId: state.selectedDeliveryPoint?.id,
         deliveryType: state.tabIndex == 0
             ? DeliveryTypeEnum.delivery
-            : DeliveryTypeEnum.pickup,
+            : (state.tabIndex == 1
+                ? DeliveryTypeEnum.pickup
+                : DeliveryTypeEnum.pickupPoint),
         location: Location(
             longitude: stateMap.place?.location?.last ??
                 LocalStorage.getAddressSelected()?.location?.longitude ??

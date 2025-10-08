@@ -43,6 +43,8 @@ import '../../infrastructure/repository/wallet_repository.dart';
 import '../handlers/http_service.dart';
 import '../interface/loans.dart';
 import '../interface/wallet.dart';
+import 'package:foodyman/domain/interface/delivery_points.dart';
+import 'package:foodyman/infrastructure/repository/delivery_points_repository.dart';
 
 final GetIt getIt = GetIt.instance;
 
@@ -70,6 +72,7 @@ Future<void> setUpDependencies() async {
   getIt.registerSingleton<Map>(LocalStorage.getTranslations());
   getIt.registerSingleton<WalletRepositoryFacade>(WalletRepository());
   getIt.registerSingleton<LoansRepositoryFacade>(LoansRepository());
+  getIt.registerSingleton<DeliveryPointsRepositoryFacade>(DeliveryPointsRepository());
 }
 
 final dioHttp = getIt.get<HttpService>();
@@ -96,4 +99,5 @@ final translation = getIt.get<Map>();
 //final walletRepository = WalletRepository();
 final walletRepository = getIt.get<WalletRepositoryFacade>();
 final loansRepository = getIt.get<LoansRepositoryFacade>();
+final deliveryPointsRepository = getIt.get<DeliveryPointsRepositoryFacade>();
 
