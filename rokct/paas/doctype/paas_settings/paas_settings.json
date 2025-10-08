@@ -69,6 +69,13 @@
             "description": "If checked, new categories created by sellers will be automatically approved."
         },
         {
+            "fieldname": "auto_approve_products",
+            "fieldtype": "Check",
+            "label": "Auto Approve Products",
+            "default": "0",
+            "description": "If checked, new products created by sellers will be automatically approved."
+        },
+        {
             "fieldname": "enable_parcel_system",
             "fieldtype": "Check",
             "label": "Enable Parcel System",
