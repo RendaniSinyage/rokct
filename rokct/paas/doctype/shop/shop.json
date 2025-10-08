@@ -152,6 +152,13 @@
             "fieldtype": "Table",
             "label": "Booking Closed Dates",
             "options": "Shop Booking Closed Date"
+        },
+        {
+            "fieldname": "auto_approve_orders",
+            "fieldtype": "Check",
+            "label": "Auto Approve Orders",
+            "default": "0",
+            "description": "Enable auto-approval for orders in this shop. This will only take effect if the global 'Auto Approve All Orders' setting is also enabled by the admin."
         }
     ],
     "modified": "2025-10-07 16:45:15.000000",

@@ -39,7 +39,7 @@ This file tracks important tasks that need to be completed as part of the PaaS m
 ### Auto-approve Orders
 -   **Task:** Implement the setting to automatically approve orders.
 -   **Status:** Completed
--   **Notes:** Implemented as a global, admin-controlled setting. A new singleton DocType, `PaaS Settings`, was created with an `auto_approve_orders` checkbox. The `create_order` function now checks this global setting to determine if an order should be immediately approved.
+-   **Notes:** Implemented with a hierarchical logic. A global setting in `PaaS Settings` enables the feature platform-wide, and a second setting on the `Shop` DocType allows individual sellers to opt-in. An order is only auto-approved if both the global and the shop-level settings are enabled.
 
 ### REST: Branches API
 -   **Task:** Implement the Branches API.

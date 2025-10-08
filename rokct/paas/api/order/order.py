@@ -10,9 +10,13 @@ def create_order(order_data):
     if isinstance(order_data, str):
         order_data = json.loads(order_data)
 
-    # Check the global PaaS setting for auto-approval
+    # Check for hierarchical auto-approval
     paas_settings = frappe.get_single("PaaS Settings")
-    initial_status = "Accepted" if paas_settings.auto_approve_orders else "New"
+    shop = frappe.get_doc("Shop", order_data.get("shop"))
+
+    initial_status = "New"
+    if paas_settings.auto_approve_orders and shop.auto_approve_orders:
+        initial_status = "Accepted"
 
     order = frappe.get_doc({
         "doctype": "Order",
