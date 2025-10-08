@@ -96,7 +96,7 @@ def cache_installed_apps():
 			swagger_settings.installed_apps_cache = json.dumps(apps)
 			swagger_settings.save(ignore_permissions=True)
 			frappe.db.commit()
-			frappe.log_info(title="Swagger Settings Info", message="Successfully cached the list of installed apps.")
+			frappe.logger().info("Successfully cached the list of installed apps.")
 		return apps
 	except Exception:
 		frappe.log_error(f"Failed to cache installed apps list. Error: {traceback.format_exc()}")
