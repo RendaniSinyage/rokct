@@ -1,0 +1,39 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2025-10-08 11:20:47.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "original_name",
+  "new_name"
+ ],
+ "fields": [
+  {
+   "fieldname": "original_name",
+   "fieldtype": "Data",
+   "label": "Original App Name",
+   "in_list_view": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "new_name",
+   "fieldtype": "Data",
+   "label": "New App Name",
+   "in_list_view": 1,
+   "reqd": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "istable": 1,
+ "links": [],
+ "modified": "2025-10-08 11:20:47.000000",
+ "modified_by": "Administrator",
+ "module": "Rokct",
+ "name": "Swagger App Rename",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

@@ -53,7 +53,7 @@ def get_pydantic_model_schema(model_name, module):
             return model.model_json_schema()
     return None
 
-def process_function(app_name, module_name, func_name, func, swagger, module):
+def process_function(app_name, module_name, func_name, func, swagger, module, app_rename_map):
     """Process each function to update the Swagger paths.
 
     Args:
@@ -138,8 +138,9 @@ def process_function(app_name, module_name, func_name, func, swagger, module):
             }
         }
 
+        display_app_name = app_rename_map.get(app_name, app_name)
         # Assign tags for the Swagger documentation
-        tags = [f"{app_name} - {module_name}"]
+        tags = [f"{display_app_name} - {module_name}"]
 
         # Initialize the path if not already present
         if path not in swagger["paths"]:
@@ -331,9 +332,11 @@ def generate_swagger_json():
     app_to_modules_map = {}
 
     try:
-        # Get the list of excluded modules and doctypes from Swagger Settings
+        # Get settings
         excluded_modules = {d.module.lower() for d in swagger_settings.get("excluded_modules", [])}
         excluded_doctypes = {d.doctype for d in swagger_settings.get("excluded_doctypes", [])}
+        app_rename_map = {rule.original_name.lower(): rule.new_name for rule in swagger_settings.get("app_renaming_rules", [])}
+
 
         # Define the output directory and ensure it exists
         output_dir = os.path.join(frappe.get_app_path('rokct'), 'public', 'api')
@@ -510,9 +513,10 @@ def generate_swagger_json():
                         continue
 
                     # Group modules by app for the dropdown
-                    if app not in app_to_modules_map:
-                        app_to_modules_map[app] = set()
-                    app_to_modules_map[app].add(module_name)
+                    display_app_name = app_rename_map.get(app, app)
+                    if display_app_name not in app_to_modules_map:
+                        app_to_modules_map[display_app_name] = set()
+                    app_to_modules_map[display_app_name].add(module_name)
 
                     module_spec = {
                         "openapi": "3.0.0",
@@ -526,13 +530,14 @@ def generate_swagger_json():
                         "security": base_swagger["security"]
                     }
 
-                    tag_name = f"{app} - {module_name}"
-                    module_spec["tags"].append({"name": tag_name, "description": f"Endpoints for the **{module_name}** module in the **{app}** app."})
+                    tag_name = f"{display_app_name} - {module_name}"
+                    description_app_name = display_app_name if display_app_name.lower().endswith(" app") else f"{display_app_name} app"
+                    module_spec["tags"].append({"name": tag_name, "description": f"Endpoints for the **{module_name}** module in the **{description_app_name}**."})
 
                     for func_name, func in inspect.getmembers(module, inspect.isfunction):
-                        process_function(app, module_name, func_name, func, module_spec, module)
+                        process_function(app, module_name, func_name, func, module_spec, module, app_rename_map)
 
-                    safe_module_name = re.sub(r'[^a-zA-Z0-9\-_]', '', f"{app}-{module_name}")
+                    safe_module_name = re.sub(r'[^a-zA-Z0-9\-_]', '', f"{display_app_name}-{module_name}")
                     module_file_path = os.path.join(output_dir, f"module-{safe_module_name}.json")
                     with open(module_file_path, "w") as module_file:
                         json.dump(module_spec, module_file, indent=4)
@@ -555,11 +560,12 @@ def generate_swagger_json():
             try:
                 module_def = frappe.get_doc("Module Def", module_name)
                 app = module_def.app_name
-                if app not in app_to_modules_map:
-                    app_to_modules_map[app] = set()
-                app_to_modules_map[app].add(module_name)
+                display_app_name = app_rename_map.get(app, app)
+                if display_app_name not in app_to_modules_map:
+                    app_to_modules_map[display_app_name] = set()
+                app_to_modules_map[display_app_name].add(module_name)
             except frappe.DoesNotExistError:
-                app = "unknown" # Fallback app
+                display_app_name = "unknown" # Fallback app
 
             module_spec = {
                 "openapi": "3.0.0",
@@ -595,7 +601,7 @@ def generate_swagger_json():
                         try:
                             # Dynamically find the app name from the module definition
                             module_def = frappe.get_doc("Module Def", doctype_meta.module)
-                            app_name_for_path = module_def.app_name
+                            app_name_for_path = app_rename_map.get(module_def.app_name, module_def.app_name)
 
                             # Construct the custom prefix for the operationId
                             prefix = f"/api/v1/method/{app_name_for_path}.{doctype_meta.module.lower()}"
@@ -613,7 +619,8 @@ def generate_swagger_json():
                             pass
 
                     tag_name = f"{doctype} DocType"
-                    tag_description = f"Endpoints for the **{doctype}** DocType in the **{module_name}** module."
+                    description_app_name = display_app_name if display_app_name.lower().endswith(" app") else f"{display_app_name} app"
+                    tag_description = f"Endpoints for the **{doctype}** DocType in the **{module_name}** module in the **{description_app_name}**."
                     module_spec["tags"].append({"name": tag_name, "description": tag_description})
                     full_swagger["tags"].append({"name": tag_name, "description": tag_description})
 
@@ -871,7 +878,7 @@ def generate_swagger_json():
                     continue
 
             safe_module_name = re.sub(r'[^a-zA-Z0-9\-_]', '', module_name)
-            module_file_path = os.path.join(output_dir, f"module-{app}-{safe_module_name}.json")
+            module_file_path = os.path.join(output_dir, f"module-{display_app_name}-{safe_module_name}.json")
             with open(module_file_path, "w") as module_file:
                 json.dump(module_spec, module_file, indent=4)
 

@@ -19,7 +19,9 @@
   "generation_log",
   "exclusions_section",
   "excluded_modules",
-  "excluded_doctypes"
+  "excluded_doctypes",
+  "renaming_section",
+  "app_renaming_rules"
  ],
  "fields": [
   {
@@ -103,6 +105,17 @@
    "fieldtype": "Table",
    "label": "Excluded DocTypes",
    "options": "Excluded Swagger DocType"
+  },
+  {
+   "fieldname": "renaming_section",
+   "fieldtype": "Section Break",
+   "label": "App Renaming"
+  },
+  {
+   "fieldname": "app_renaming_rules",
+   "fieldtype": "Table",
+   "label": "App Renaming Rules",
+   "options": "Swagger App Rename"
   }
  ],
  "index_web_pages_for_search": 1,
