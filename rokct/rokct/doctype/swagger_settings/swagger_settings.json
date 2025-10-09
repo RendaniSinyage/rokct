@@ -66,7 +66,7 @@
    "fieldtype": "Column Break"
   },
   {
-   "default": "0",
+   "default": "1",
    "fieldname": "bearerauth",
    "fieldtype": "Check",
    "label": "BearerAuth"
@@ -136,7 +136,7 @@
  "links": [],
  "modified": "2024-08-27 09:58:48.621772",
  "modified_by": "Administrator",
- "module": "Rokct",
+ "module": "rokct",
  "name": "Swagger Settings",
  "owner": "Administrator",
  "permissions": [

@@ -7,7 +7,7 @@
         "fieldtype": "Check",
         "default": "1",
         "insert_after": "disabled",
-        "module": "PaaS"
+        "module": "paas"
     }
 ]
 
