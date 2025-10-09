@@ -81,10 +81,21 @@ frappe.ui.form.on("Swagger Settings", {
                     frappe.call({
                         method: "rokct.rokct.doctype.swagger_settings.swagger_settings.get_installed_apps_list",
                         callback: function(res) {
-                            if (res.message) {
+                            console.log("Swagger Settings: Received response for get_installed_apps_list.");
+                            console.log("Swagger Settings: Full response object:", res);
+
+                            if (res.message && Array.isArray(res.message)) {
+                                console.log("Swagger Settings: App list received:", res.message);
                                 let field = frappe.meta.get_docfield("Swagger App Rename", "original_name", frm.doc.name);
-                                field.options = res.message.join("\n");
-                                frm.refresh_field("app_renaming_rules");
+                                if (field) {
+                                    field.options = res.message.join("\n");
+                                    frm.refresh_field("app_renaming_rules");
+                                    console.log("Swagger Settings: Dropdown options updated.");
+                                } else {
+                                    console.error("Swagger Settings: Could not find the 'original_name' field to update.");
+                                }
+                            } else {
+                                console.error("Swagger Settings: No app list found in response or response is not an array. Full response:", res);
                             }
                         }
                     });
