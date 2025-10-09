@@ -9,6 +9,8 @@ import re
 import urllib.parse
 import traceback
 import subprocess
+import pwd
+import grp
 
 import frappe
 from pydantic import BaseModel
@@ -339,6 +341,13 @@ def copy_api_files():
     log_messages.append(f"Destination ({log_source}): {dest}")
 
     try:
+        # Get user and group info for debugging permissions
+        uid = os.getuid()
+        gid = os.getgid()
+        user_info = pwd.getpwuid(uid)
+        group_info = grp.getgrgid(gid)
+        log_messages.append(f"Attempting to run rsync as user: {user_info.pw_name} (UID: {uid}), group: {group_info.gr_name} (GID: {gid})")
+
         os.makedirs(dest, exist_ok=True)
 
         command = ["rsync", "-av", "--delete", source, dest]
