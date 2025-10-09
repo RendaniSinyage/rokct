@@ -27,7 +27,7 @@ class TestOrderAPI(unittest.TestCase):
             frappe.get_doc({
                 "doctype": "DocType",
                 "name": "PaaS Settings",
-                "module": "PaaS",
+                "module": "paas",
                 "custom": 1,
                 "issingle": 1,
                 "fields": [

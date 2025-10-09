@@ -22,7 +22,7 @@
  "links": [],
  "modified": "2025-10-07 16:48:41.000000",
  "modified_by": "Administrator",
- "module": "Rokct",
+ "module": "rokct",
  "name": "Excluded Swagger DocType",
  "owner": "Administrator",
  "permissions": [],

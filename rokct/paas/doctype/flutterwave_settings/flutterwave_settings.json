@@ -2,7 +2,7 @@
     "name": "Flutterwave Settings",
     "doctype": "DocType",
     "issingle": 1,
-    "module": "PaaS",
+    "module": "paas",
     "custom": 0,
     "fields": [
         {

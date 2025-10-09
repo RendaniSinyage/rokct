@@ -3,7 +3,7 @@
     "name": "Coupon Usage",
     "engine": "InnoDB",
     "istable": 0,
-    "module": "PaaS",
+    "module": "paas",
     "fields": [
         {
             "fieldname": "user",
