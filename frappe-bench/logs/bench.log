@@ -1,0 +1,5 @@
+2025-10-09 16:34:27,984 DEBUG cd frappe-bench && python3 -m venv env
+2025-10-09 16:34:33,080 DEBUG cd frappe-bench && /app/frappe-bench/env/bin/python -m pip install --quiet --upgrade pip
+2025-10-09 16:34:36,347 DEBUG cd frappe-bench && /app/frappe-bench/env/bin/python -m pip install --quiet wheel
+2025-10-09 16:34:38,569 ERROR There was a problem while creating frappe-bench
+2025-10-09 16:34:38,570 WARNING /home/jules/.pyenv/versions/3.12.11/bin/bench init frappe-bench executed with exit code 1

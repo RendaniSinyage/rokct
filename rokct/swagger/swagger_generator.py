@@ -8,6 +8,7 @@ import os
 import re
 import urllib.parse
 import traceback
+import subprocess
 
 import frappe
 from pydantic import BaseModel
@@ -313,6 +314,40 @@ def get_child_table_schema(child_doctype, example_data=None):
         schema["required"] = required_fields
 
     return schema
+
+def copy_api_files():
+    """
+    Copies the generated Swagger API files from the app's public directory
+    to the destination specified in the Swagger Settings.
+    """
+    swagger_settings = frappe.get_single("Swagger Settings")
+    source = os.path.join(frappe.get_app_path('rokct'), 'public', 'api/')
+    dest = swagger_settings.rsync_destination
+
+    if not dest:
+        frappe.log_info("Swagger rsync", "Rsync destination is not set in Swagger Settings. Skipping file copy.")
+        return
+
+    try:
+        # Ensure the destination directory exists
+        os.makedirs(dest, exist_ok=True)
+
+        command = ["rsync", "-av", "--delete", source, dest]
+        result = subprocess.run(command, capture_output=True, text=True)
+
+        if result.returncode == 0:
+            frappe.log_info("Swagger rsync", f"Successfully copied API files to {dest}")
+        else:
+            frappe.log_error(
+                title="Swagger rsync Failed",
+                message=f"Error copying API files: {result.stderr}"
+            )
+
+    except Exception as e:
+        frappe.log_error(
+            title="Swagger rsync Exception",
+            message=f"An exception occurred during rsync: {str(e)}"
+        )
 
 @frappe.whitelist(allow_guest=True)
 def generate_swagger_json():
@@ -923,6 +958,9 @@ def generate_swagger_json():
         frappe.msgprint(f"<b>Swagger Generation Complete</b><br><br>{log_summary.replace(', ', '<br>')}<br><br><i>Check the Generation Log for details.</i>")
         swagger_settings.save(ignore_permissions=True)
         frappe.db.commit()
+
+        # After successful generation, copy the files
+        copy_api_files()
 
     except Exception as e:
         # On failure

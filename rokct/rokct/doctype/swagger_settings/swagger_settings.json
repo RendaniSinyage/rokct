@@ -10,6 +10,7 @@
   "column_break_yztn",
   "refresh_app_list",
   "generate_swagger_json",
+  "rsync_destination",
   "auth_settings_section",
   "token_based_basicauth",
   "column_break_lxux",
@@ -49,6 +50,13 @@
    "fieldname": "generate_swagger_json",
    "fieldtype": "Button",
    "label": "Generate Swagger Json"
+  },
+  {
+   "fieldname": "rsync_destination",
+   "fieldtype": "Data",
+   "label": "Rsync Destination",
+   "description": "The destination path for the rsync command. e.g. /var/www/html/api/",
+   "default": "/var/www/html/api/"
   },
   {
    "fieldname": "auth_settings_section",
