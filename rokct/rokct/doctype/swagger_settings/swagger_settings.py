@@ -51,20 +51,18 @@ def get_app_role():
 @frappe.whitelist()
 def get_installed_apps_list():
 	"""
-	Returns the cached list of installed apps from the database.
-	The cache is populated by the 'cache_installed_apps' function.
+	Returns a list of all installed apps for the current site by reading
+	the cached list from the database.
 	"""
 	try:
 		cached_apps = frappe.db.get_single_value("Swagger Settings", "installed_apps_cache")
 		if cached_apps:
 			return json.loads(cached_apps)
-		else:
-			# If cache is empty or not set, return an empty list.
-			# The frontend should handle this gracefully.
-			return []
 	except Exception:
-		frappe.log_error(f"Could not read or parse cached app list. Error: {traceback.format_exc()}")
-		return [] # Return empty list on error to prevent frontend breakage.
+		frappe.log_error(f"Could not read or parse cached app list. Falling back. Error: {traceback.format_exc()}")
+
+	# Fallback to the direct method if cache is empty or fails
+	return frappe.get_installed_apps()
 
 def run_swagger_related_hooks():
 	"""
@@ -77,26 +75,32 @@ def run_swagger_related_hooks():
 @frappe.whitelist()
 def cache_installed_apps():
 	"""
-	Caches the list of installed apps in the Swagger Settings DocType
-	using the reliable frappe.get_installed_apps() method.
+	Reads the site's apps.txt file and caches the list in the Swagger Settings DocType.
+	This is called via hooks on `on_migrate` and `on_update`.
 	"""
 	try:
-		apps = frappe.get_installed_apps()
+		bench_path = frappe.utils.get_bench_path()
+		site_name = frappe.local.site
+		apps_txt_path = os.path.join(bench_path, "sites", site_name, "apps.txt")
 
-		# We will cache the list, even if it's empty, to reflect the current state.
-		# The frontend is responsible for handling an empty list.
-		frappe.db.set_value(
-			"Swagger Settings",
-			"Swagger Settings",
-			"installed_apps_cache",
-			json.dumps(apps or []), # Ensure we cache an empty list, not null
-			update_modified=False
-		)
-		frappe.db.commit()
-		frappe.logger().info(f"Successfully cached {len(apps)} installed apps.")
+		apps = []
+		if os.path.exists(apps_txt_path):
+			with open(apps_txt_path, "r") as f:
+				apps = [line.strip() for line in f if line.strip()]
+		else:
+			# Fallback if apps.txt is not found for any reason
+			apps = frappe.get_installed_apps()
+
+		if apps:
+			frappe.db.set_value(
+				"Swagger Settings",
+				"Swagger Settings",
+				"installed_apps_cache",
+				json.dumps(apps),
+				update_modified=False
+			)
+			frappe.db.commit()
+			frappe.logger().info("Successfully cached the list of installed apps.")
 		return apps
 	except Exception:
-		# Log the full traceback in case of an unexpected error
 		frappe.log_error(f"Failed to cache installed apps list. Error: {traceback.format_exc()}")
-		# Return an empty list to prevent frontend errors
-		return []

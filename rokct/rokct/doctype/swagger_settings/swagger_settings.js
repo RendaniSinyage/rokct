@@ -7,14 +7,6 @@ frappe.ui.form.on("Swagger Settings", {
         frm.dashboard.clear_messages();
         frm.dashboard.clear_indicators();
 
-        // Programmatically add the click handler for the refresh button.
-        // This is a more robust way to ensure the event is captured, as the
-        // declarative handler seems to be failing intermittently.
-        frm.get_field('refresh_app_list').$input.off('click').on('click', () => {
-            // We call the function from the events object to keep the logic organized.
-            frm.events.refresh_app_list(frm);
-        });
-
         // Remove existing custom buttons to prevent duplicates on refresh
         if(frm.custom_buttons["View Log"]) {
             frm.remove_custom_button("View Log");
@@ -81,21 +73,10 @@ frappe.ui.form.on("Swagger Settings", {
                     frappe.call({
                         method: "rokct.rokct.doctype.swagger_settings.swagger_settings.get_installed_apps_list",
                         callback: function(res) {
-                            console.log("Swagger Settings: Received response for get_installed_apps_list.");
-                            console.log("Swagger Settings: Full response object:", res);
-
-                            if (res.message && Array.isArray(res.message)) {
-                                console.log("Swagger Settings: App list received:", res.message);
+                            if (res.message) {
                                 let field = frappe.meta.get_docfield("Swagger App Rename", "original_name", frm.doc.name);
-                                if (field) {
-                                    field.options = res.message.join("\n");
-                                    frm.refresh_field("app_renaming_rules");
-                                    console.log("Swagger Settings: Dropdown options updated.");
-                                } else {
-                                    console.error("Swagger Settings: Could not find the 'original_name' field to update.");
-                                }
-                            } else {
-                                console.error("Swagger Settings: No app list found in response or response is not an array. Full response:", res);
+                                field.options = res.message.join("\n");
+                                frm.refresh_field("app_renaming_rules");
                             }
                         }
                     });
