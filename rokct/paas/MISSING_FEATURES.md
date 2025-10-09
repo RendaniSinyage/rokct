@@ -41,3 +41,15 @@ The following features were present in the original Laravel application but have
 -   **ERPGo Integration:** The integration with ERPGo has been deprecated and is no longer needed.
 -   **Specific Webhooks:** The following webhooks have been excluded: Razorpay, MyFatoorah, Iyzico, MercadoPago, PayTabs, Moyasar, ZainCash, Mollie, Maksekeskus, and Telegram.
 -   **Resource APIs:** Several resource-related APIs, such as those for Apps, Roadmap Versions, and various operational metrics (Expenses, Energy Consumption, etc.), have been moved to the core `rokct` app or excluded.
+
+## 5. Parcel Delivery (Comprehensive)
+
+While the core APIs for creating and listing parcel orders exist, key business logic and management functionalities are missing, as noted in the `PARCEL_DELIVERY_STATUS.md` file. The following specific features have not been implemented in the existing APIs:
+
+-   **Parcel Order State Machine:**
+    -   **Location:** `rokct/paas/api/parcel/parcel.py` (in `update_parcel_status`)
+    -   **Description:** There is no validation logic to enforce a valid state machine for parcel orders. The `update_parcel_status` function allows the status to be changed to any arbitrary string, which could lead to invalid states (e.g., from "Delivered" back to "New").
+
+-   **Role-Based Authorization for Status Updates:**
+    -   **Location:** `rokct/paas/api/parcel/parcel.py` (in `update_parcel_status`)
+    -   **Description:** The authorization logic for updating a parcel's status is incomplete. It only allows the creator of the order to change the status, which is insufficient for a real-world workflow where administrators, sellers, and delivery personnel would need to perform updates.

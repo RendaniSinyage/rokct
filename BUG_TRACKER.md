@@ -172,3 +172,57 @@ This document tracks the list of identified bugs in the `rokct` repository. Each
 -   **Location:** `rokct/paas/api/order/order.py` (in `add_order_review`)
 -   **Issue:** The function checks if an order is "Delivered" before allowing a review, but it does not account for orders that might have been returned after delivery.
 -   **Impact:** This could allow users to leave reviews for orders that have been returned, which may not be the desired behavior.
+
+---
+
+### Bug 22: Inconsistent Parameter Names in `check_coupon` API
+-   **Status:** To Be Discussed
+-   **Location:** `rokct/paas/api/coupon/coupon.py`
+-   **Function:** `check_coupon(code: str, shop_id: str, qty: int = 1)`
+-   **Issue:** The function uses `code` and `qty` as parameter names, but the project's `roadmap_progress.txt` specifies that the endpoint should use `name` and `quantity`.
+-   **Impact:** This inconsistency can lead to integration failures with the frontend, which likely expects the parameters to be `name` and `quantity` based on the conversion requirements.
+
+---
+
+### Bug 23: Critical Security Vulnerability (Missing Input Validation) in `create_parcel_order`
+-   **Status:** To Be Discussed
+-   **Location:** `rokct/paas/api/parcel/parcel.py`
+-   **Function:** `create_parcel_order`
+-   **Issue:** The function directly saves data from the `order_data` payload without validation. Numeric fields like `total_price` are not type-checked, and string fields are not sanitized.
+-   **Impact:** This could lead to data corruption or stored Cross-Site Scripting (XSS) attacks.
+
+---
+
+### Bug 24: Insufficient Authorization in `create_parcel_order`
+-   **Status:** To Be Discussed
+-   **Location:** `rokct/paas/api/parcel/parcel.py`
+-   **Function:** `create_parcel_order`
+-   **Issue:** The API allows a user to create a parcel order for another customer or a specific delivery point without verifying if the user has the authority to do so.
+-   **Impact:** This could allow users to create orders on behalf of others without their consent.
+
+---
+
+### Bug 25: Data Integrity Issue in `create_parcel_order`
+-   **Status:** To Be Discussed
+-   **Location:** `rokct/paas/api/parcel/parcel.py`
+-   **Function:** `create_parcel_order`
+-   **Issue:** The function improperly handles address data. It either stores a JSON string representation of the address or, in the case of a customer or delivery point destination, overwrites the address with a simple, unstructured string (e.g., `"Customer: John Doe"`), resulting in the loss of structured address information.
+-   **Impact:** This leads to loss of important address data and makes the address unusable for any automated processing.
+
+---
+
+### Bug 26: Critical Security Vulnerability (Information Disclosure) in `get_receipts`
+-   **Status:** To Be Discussed
+-   **Location:** `rokct/paas/api/receipt/receipt.py`
+-   **Function:** `get_receipts`
+-   **Issue:** The function is publicly accessible to guests (`allow_guest=True`) and returns a list of all receipts in the database, including all data fields (`fields=["*"]`).
+-   **Impact:** This is a severe information disclosure vulnerability that exposes all receipt data to unauthenticated users.
+
+---
+
+### Bug 27: Critical Security Vulnerability (Missing Authorization) in `get_receipt`
+-   **Status:** To Be Discussed
+-   **Location:** `rokct/paas/api/receipt/receipt.py`
+-   **Function:** `get_receipt`
+-   **Issue:** This function is also publicly accessible to guests (`allow_guest=True`) and retrieves a specific receipt by its ID without any authorization check.
+-   **Impact:** This allows any user to access any receipt in the system by simply guessing or iterating through IDs.
