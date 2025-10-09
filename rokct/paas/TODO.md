@@ -2,57 +2,14 @@
 
 This file tracks important tasks that need to be completed as part of the PaaS module development.
 
-## REST: Branches API
-- **Task:** Implement the Branches API.
-- **Status:** Completed
-- **Notes:** A basic CRUD API for branches has been implemented.
-
-## REST: Orders
-- **Task:** Implement the full functionality of the Orders API.
-- **Status:** Completed
-- **Notes:** The core functionality of the Orders API has been implemented, including creation, listing, status updates, reviews, and cancellation. The re-ordering feature has been deferred for later discussion. Stock replenishment and order calculation logic have been corrected.
-
-## Payment Gateways
-- **Task:** Implement the required payment gateways.
-- **Status:** Completed
-- **Notes:** The following payment gateways have been converted: PayFast, PayPal, PayStack, Flutterwave.
-
 ## Incomplete Features
 
 ### Parcel Delivery (Comprehensive)
 -   **Task:** Implement the full parcel delivery system.
 -   **Status:** Partially Implemented
--   **Notes:** The foundational DocTypes and APIs for creating and listing parcel orders have been implemented. This includes support for item bundling and linking to Sales Orders and Delivery Points. However, the feature is still incomplete. The following key components are still missing:
+-   **Notes:** The foundational DocTypes (`Parcel Order`, `Parcel Order Setting`) and APIs for creating and listing parcel orders have been implemented. This includes support for item bundling and linking to Sales Orders and Delivery Points. However, the feature is still incomplete. The following key components are still missing:
     -   **Parcel Order Management:** Full CRUD APIs for admins, and management APIs for users and deliverymen (view, update status, etc.).
     -   **Parcel Options:** The entire "Parcel Options" feature, including the DocType and management APIs.
-    -   **Parcel Order Settings:** The `Parcel Order Setting` DocType needs to be expanded, and full CRUD APIs for managing these settings are required.
-
-    **Reference:** For a detailed breakdown of the feature status, see `rokct/paas/PARCEL_DELIVERY_STATUS.md`.
-
-## Future Features (To Be Discussed)
-- **Re-order / Scheduled Orders:** The original Laravel app has a feature for scheduling repeated orders. This is more complex than a simple "re-order now" button and requires further discussion.
-- **Auto-approve Orders:** The original Laravel app has a setting for auto-approving orders. This needs to be implemented.
-- **Other REST APIs:** The following REST APIs are still pending: Push Notifications.
-
-## Coupon Logic
-- **Task:** Implement Coupon Usage Recording.
-- **Status:** Completed
-- **Details:** The `check_coupon` API has been updated to prevent a user from using the same coupon code multiple times. The logic to *record* that a coupon has been used is present in the `create_order` API.
-- **Note:** This task was marked as pending, but the implementation was already present.
-
-## Payment Gateway Callbacks
-- **Task:** Make Payment Gateway Redirect URLs Configurable.
-- **Status:** Completed
-- **Details:** The callback functions for Flutterwave, PayPal, and PayFast now use configurable redirect URLs from the `Payment Gateway` settings.
-- **Files modified:** `rokct/paas/api.py`.
-## Incomplete Features
-
-### Parcel Delivery (Comprehensive)
--   **Task:** Implement the full parcel delivery system.
--   **Status:** Partially Implemented
--   **Notes:** The foundational DocTypes (`Parcel Order`, `Parcel Order Setting`) and a basic `create_parcel_order` API exist. However, the feature is largely incomplete. The following key components need to be implemented to achieve parity with the original Laravel application:
-    -   **Parcel Order Management:** Full CRUD APIs for admins, and management APIs for users and deliverymen (view, update status, etc.).
-    -   **Parcel Options:** The entire "Parcel Options" feature, including the DocType and management APIs, is missing.
     -   **Parcel Order Settings:** The `Parcel Order Setting` DocType needs to be expanded, and full CRUD APIs for managing these settings are required.
 
     **Reference:** For a detailed breakdown of the feature status, see `rokct/paas/PARCEL_DELIVERY_STATUS.md`.
