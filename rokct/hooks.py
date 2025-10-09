@@ -6,7 +6,7 @@ app_name = "rokct"
 app_title = "ROKCT"
 app_publisher = "ROKCT Holdings"
 app_description = "All custom work lives here"
-app_logo_url = "rokct.rokct.utils.get_dynamic_logo_url"
+app_logo_url = "/assets/rokct/images/logo_dark.svg"
 app_email = "admin@rokct.ai"
 app_license = "mit"
 
