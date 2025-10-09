@@ -1,5 +1,0 @@
-enum PaymentType {
-  simplePayment,
-  recurringBilling,
-}
-
