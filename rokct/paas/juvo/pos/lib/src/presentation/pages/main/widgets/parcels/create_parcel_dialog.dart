@@ -1,5 +1,6 @@
 import 'package:admin_desktop/src/core/utils/app_helpers.dart';
 import 'package:admin_desktop/src/core/utils/tr_keys.dart';
+import 'package:admin_desktop/src/models/data/parcel_option_data.dart';
 import 'package:admin_desktop/src/presentation/pages/main/widgets/parcels/customer_selection_view.dart';
 import 'package:admin_desktop/src/presentation/pages/main/widgets/parcels/custom_location_selection_view.dart';
 import 'package:admin_desktop/src/presentation/pages/main/widgets/parcels/pickup_point_selection_view.dart';
@@ -37,6 +38,9 @@ class _CreateParcelDialogState extends ConsumerState<CreateParcelDialog>
           break;
       }
     });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(createParcelProvider.notifier).getParcelOptions(context);
+    });
   }
 
   @override
@@ -65,6 +69,29 @@ class _CreateParcelDialogState extends ConsumerState<CreateParcelDialog>
               onChanged: notifier.setDescription,
             ),
             const SizedBox(height: 20),
+            if (state.isFetchingOptions)
+              const CircularProgressIndicator()
+            else
+              DropdownButton<ParcelOptionData>(
+                value: state.selectedParcelOption,
+                hint: const Text("Select Parcel Type"),
+                isExpanded: true,
+                onChanged: (ParcelOptionData? newValue) {
+                  if (newValue != null) {
+                    notifier.selectParcelOption(newValue);
+                  }
+                },
+                items: state.parcelOptions
+                    .map<DropdownMenuItem<ParcelOptionData>>(
+                        (ParcelOptionData value) {
+                  return DropdownMenuItem<ParcelOptionData>(
+                    value: value,
+                    child: Text(
+                        "${value.title ?? ''} (${AppHelpers.numberFormat(number: value.price)})"),
+                  );
+                }).toList(),
+              ),
+            const SizedBox(height: 20),
             TabBar(
               controller: _tabController,
               tabs: [
@@ -92,12 +119,14 @@ class _CreateParcelDialogState extends ConsumerState<CreateParcelDialog>
           child: const Text("Cancel"),
         ),
         ElevatedButton(
-          onPressed: () {
-            notifier.createParcel(context, () {
-              Navigator.of(context).pop();
-            });
-          },
-          child: state.isLoading
+          onPressed: state.isCreating
+              ? null
+              : () {
+                  notifier.createParcel(context, () {
+                    Navigator.of(context).pop();
+                  });
+                },
+          child: state.isCreating
               ? const CircularProgressIndicator()
               : const Text("Create"),
         ),

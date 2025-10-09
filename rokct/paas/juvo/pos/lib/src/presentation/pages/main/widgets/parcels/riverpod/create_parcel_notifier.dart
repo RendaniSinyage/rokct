@@ -1,5 +1,6 @@
 import 'package:admin_desktop/src/models/data/customer_model.dart';
 import 'package:admin_desktop/src/models/data/delivery_point_data.dart';
+import 'package:admin_desktop/src/models/data/parcel_option_data.dart';
 import 'package:admin_desktop/src/repository/delivery_points_repository.dart';
 import 'package:admin_desktop/src/repository/parcel_repository.dart';
 import 'package:admin_desktop/src/repository/users_repository.dart';
@@ -37,6 +38,25 @@ class CreateParcelNotifier extends StateNotifier<CreateParcelState> {
 
   void selectCustomLocation(LatLng location) {
     state = state.copyWith(selectedCustomLocation: location);
+  }
+
+  void selectParcelOption(ParcelOptionData option) {
+    state = state.copyWith(selectedParcelOption: option);
+  }
+
+  Future<void> getParcelOptions(BuildContext context) async {
+    state = state.copyWith(isFetchingOptions: true);
+    final response = await _parcelRepository.getParcelOptions();
+    response.when(
+      success: (data) {
+        state = state.copyWith(
+            isFetchingOptions: false, parcelOptions: data.data ?? []);
+      },
+      failure: (failure) {
+        state = state.copyWith(isFetchingOptions: false);
+        debugPrint('==> fetch parcel options failure: $failure');
+      },
+    );
   }
 
   Future<void> fetchDeliveryPoints(BuildContext context,
@@ -78,10 +98,16 @@ class CreateParcelNotifier extends StateNotifier<CreateParcelState> {
   }
 
   Future<void> createParcel(BuildContext context, VoidCallback onSuccess) async {
+    if (state.selectedParcelOption == null) {
+      // TODO: Show error message
+      debugPrint("Parcel option not selected");
+      return;
+    }
     state = state.copyWith(isCreating: true);
 
     Map<String, dynamic> body = {
       "note": state.description,
+      "parcel_option_id": state.selectedParcelOption?.name,
       // Add other common fields here
     };
 

@@ -127,6 +127,12 @@
    "options": "Delivery Point"
   },
   {
+   "fieldname": "parcel_option",
+   "fieldtype": "Link",
+   "label": "Parcel Option",
+   "options": "Parcel Option"
+  },
+  {
    "fieldname": "items",
    "fieldtype": "Table",
    "label": "Items",

@@ -171,6 +171,9 @@ from rokct.paas.api.parcel.parcel import (
     get_parcel_orders,
     update_parcel_status,
 )
+from rokct.paas.api.parcel_option.parcel_option import (
+    get_parcel_options,
+)
 from rokct.paas.api.admin_reports.admin_reports import (
     get_admin_statistics,
     get_multi_company_sales_report,

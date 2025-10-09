@@ -1,5 +1,6 @@
 import 'package:admin_desktop/src/models/data/customer_model.dart';
 import 'package:admin_desktop/src/models/data/delivery_point_data.dart';
+import 'package:admin_desktop/src/models/data/parcel_option_data.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
@@ -14,10 +15,12 @@ class CreateParcelState with _$CreateParcelState {
     @Default(false) bool isCreating,
     @Default(false) bool isFetchingPoints,
     @Default(false) bool isSearchingCustomers,
+    @Default(false) bool isFetchingOptions,
 
     // Data lists
     @Default([]) List<DeliveryPointData> deliveryPoints,
     @Default([]) List<CustomerModel> searchedCustomers,
+    @Default([]) List<ParcelOptionData> parcelOptions,
 
     // User selections
     @Default(DestinationType.customer) DestinationType destinationType,
@@ -25,5 +28,6 @@ class CreateParcelState with _$CreateParcelState {
     CustomerModel? selectedCustomer,
     DeliveryPointData? selectedPickupPoint,
     LatLng? selectedCustomLocation,
+    ParcelOptionData? selectedParcelOption,
   }) = _CreateParcelState;
 }

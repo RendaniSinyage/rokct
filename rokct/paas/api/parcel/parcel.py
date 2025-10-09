@@ -54,6 +54,10 @@ def create_parcel_order(order_data):
     if order_data.get("sales_order_id"):
         new_parcel_doc["sales_order"] = order_data.get("sales_order_id")
 
+    # Link Parcel Option if provided
+    if order_data.get("parcel_option_id"):
+        new_parcel_doc["parcel_option"] = order_data.get("parcel_option_id")
+
     parcel_order = frappe.get_doc(new_parcel_doc)
 
     # Add items if they exist
