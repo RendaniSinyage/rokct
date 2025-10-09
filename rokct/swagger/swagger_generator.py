@@ -318,14 +318,20 @@ def get_child_table_schema(child_doctype, example_data=None):
 def copy_api_files():
     """
     Copies the generated Swagger API files from the app's public directory
-    to the destination specified in the Swagger Settings.
+    to the destination specified in the Swagger Settings or site_config.json.
     """
     swagger_settings = frappe.get_single("Swagger Settings")
     source = os.path.join(frappe.get_app_path('rokct'), 'public', 'api/')
+
+    # Priority 1: Get destination from Swagger Settings UI
     dest = swagger_settings.rsync_destination
 
+    # Priority 2: If not in UI, get from site_config.json
     if not dest:
-        frappe.log_info("Swagger rsync", "Rsync destination is not set in Swagger Settings. Skipping file copy.")
+        dest = frappe.conf.get("rsync_destination")
+
+    if not dest:
+        frappe.log_info("Swagger rsync", "Rsync destination is not set in Swagger Settings or site_config.json. Skipping file copy.")
         return
 
     try:

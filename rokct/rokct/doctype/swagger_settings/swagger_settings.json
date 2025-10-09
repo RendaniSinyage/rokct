@@ -55,8 +55,7 @@
    "fieldname": "rsync_destination",
    "fieldtype": "Data",
    "label": "Rsync Destination",
-   "description": "The destination path for the rsync command. e.g. /var/www/html/api/",
-   "default": "/var/www/fastuser/data/www/platform.rokct.ai/api/"
+   "description": "The destination path for the rsync command. e.g. /var/www/html/api/"
   },
   {
    "fieldname": "auth_settings_section",
