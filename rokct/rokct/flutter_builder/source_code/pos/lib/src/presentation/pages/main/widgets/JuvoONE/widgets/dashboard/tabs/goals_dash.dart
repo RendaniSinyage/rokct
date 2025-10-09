@@ -1,0 +1,4 @@
+class GoalsScreen {
+  const GoalsScreen();
+}
+
