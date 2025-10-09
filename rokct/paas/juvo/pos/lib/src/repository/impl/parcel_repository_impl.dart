@@ -46,4 +46,28 @@ class ParcelRepositoryImpl implements ParcelRepository {
       );
     }
   }
+
+  @override
+  Future<SingleResponse> updateParcelStatus({
+    required String parcelOrderId,
+    required String status,
+  }) async {
+    try {
+      final data = {
+        "parcel_order_id": parcelOrderId,
+        "status": status,
+      };
+      final client = dioHttp.client(requireAuth: true);
+      final response = await client.post(
+        '/api/v1/method/rokct.paas.api.parcel.update_parcel_status',
+        data: data,
+      );
+      return SingleResponse.fromJson(response.data, (data) => data);
+    } catch (e) {
+      return SingleResponse(
+        statusCode: 1,
+        error: NetworkExceptions.getDioException(e),
+      );
+    }
+  }
 }

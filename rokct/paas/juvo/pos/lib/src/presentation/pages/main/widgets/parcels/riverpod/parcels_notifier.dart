@@ -21,4 +21,24 @@ class ParcelsNotifier extends StateNotifier<ParcelsState> {
       },
     );
   }
+
+  Future<void> updateParcelStatus(BuildContext context, {
+    required String parcelOrderId,
+    required String status,
+  }) async {
+    state = state.copyWith(isLoading: true);
+    final response = await _parcelRepository.updateParcelStatus(
+      parcelOrderId: parcelOrderId,
+      status: status,
+    );
+    response.when(
+      success: (data) {
+        fetchParcels(context);
+      },
+      failure: (failure) {
+        state = state.copyWith(isLoading: false);
+        debugPrint('==> update parcel status failure: $failure');
+      },
+    );
+  }
 }

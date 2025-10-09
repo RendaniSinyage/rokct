@@ -89,3 +89,31 @@ def get_parcel_orders(limit=20, offset=0):
     )
 
     return parcel_orders
+
+@frappe.whitelist()
+def update_parcel_status(parcel_order_id, status):
+    """
+    Updates the status of a specific parcel order.
+    """
+    user = frappe.session.user
+    if user == "Guest":
+        frappe.throw("You must be logged in to update a parcel order.", frappe.AuthenticationError)
+
+    try:
+        parcel_order = frappe.get_doc("Parcel Order", parcel_order_id)
+
+        # Basic ownership/permission check
+        if parcel_order.user != user:
+            frappe.throw("You are not authorized to update this parcel order.", frappe.PermissionError)
+
+        # TODO: Add more robust status transition validation logic here
+
+        parcel_order.status = status
+        parcel_order.save(ignore_permissions=True)
+        frappe.db.commit()
+
+        return parcel_order.as_dict()
+    except frappe.DoesNotExistError:
+        frappe.throw(f"Parcel Order {parcel_order_id} not found.", frappe.DoesNotExistError)
+    except Exception as e:
+        frappe.throw(f"An error occurred: {str(e)}")

@@ -169,6 +169,7 @@ from rokct.paas.api.branch.branch import (
 from rokct.paas.api.parcel.parcel import (
     create_parcel_order,
     get_parcel_orders,
+    update_parcel_status,
 )
 from rokct.paas.api.admin_reports.admin_reports import (
     get_admin_statistics,

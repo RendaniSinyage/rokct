@@ -8,4 +8,9 @@ abstract class ParcelRepository {
   });
 
   Future<SingleResponse<List<ParcelOrderListData>>> getParcelOrders();
+
+  Future<SingleResponse> updateParcelStatus({
+    required String parcelOrderId,
+    required String status,
+  });
 }
