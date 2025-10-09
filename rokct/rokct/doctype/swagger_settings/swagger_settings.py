@@ -79,9 +79,17 @@ def cache_installed_apps():
 	This is called via hooks on `on_migrate` and `on_update`.
 	"""
 	try:
-		# Log the raw output of get_installed_apps for debugging
-		apps = frappe.get_installed_apps()
-		frappe.logger().info(f"Swagger: frappe.get_installed_apps() returned: {apps}")
+		bench_path = frappe.utils.get_bench_path()
+		site_name = frappe.local.site
+		apps_txt_path = os.path.join(bench_path, "sites", site_name, "apps.txt")
+
+		apps = []
+		if os.path.exists(apps_txt_path):
+			with open(apps_txt_path, "r") as f:
+				apps = [line.strip() for line in f if line.strip()]
+		else:
+			# Fallback if apps.txt is not found for any reason
+			apps = frappe.get_installed_apps()
 
 		if apps:
 			frappe.db.set_value(
@@ -92,11 +100,7 @@ def cache_installed_apps():
 				update_modified=False
 			)
 			frappe.db.commit()
-			frappe.logger().info(f"Successfully cached {len(apps)} installed apps.")
-		else:
-			frappe.logger().warning("Swagger: No apps found to cache.")
-
+			frappe.logger().info("Successfully cached the list of installed apps.")
 		return apps
 	except Exception:
 		frappe.log_error(f"Failed to cache installed apps list. Error: {traceback.format_exc()}")
-		return []
