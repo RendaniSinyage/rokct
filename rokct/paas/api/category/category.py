@@ -109,6 +109,9 @@ def create_category(category_data):
     if frappe.db.exists("Category", {"uuid": category_uuid}):
         frappe.throw("Category with this UUID already exists.")
 
+    paas_settings = frappe.get_single("PaaS Settings")
+    initial_status = "Approved" if paas_settings.auto_approve_categories else "Pending"
+
     category = frappe.get_doc({
         "doctype": "Category",
         "uuid": category_uuid,
@@ -118,7 +121,7 @@ def create_category(category_data):
         "type": category_data.get("type"),
         "image": category_data.get("image"),
         "active": category_data.get("active", 1),
-        "status": category_data.get("status", "pending"),
+        "status": initial_status,
         "shop": category_data.get("shop"),
         "input": category_data.get("input"),
     })

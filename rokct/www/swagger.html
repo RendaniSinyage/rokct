@@ -338,17 +338,15 @@
                 downloadFullBtn.disabled = false;
             };
 
-            const loadModuleSpec = async (moduleName) => {
+            const loadModuleSpec = async (moduleFile) => {
                 try {
                     moduleLoading.classList.add('visible');
-                    updateLoadingStatus(`Loading ${moduleName} module...`);
+                    updateLoadingStatus(`Loading ${moduleFile}...`);
 
-                    // Create safe filename
-                    const safeModuleName = moduleName.replace(/[^a-zA-Z0-9\-_]/g, '');
-                    const response = await fetch(`/assets/rokct/api/module-${safeModuleName}.json`);
+                    const response = await fetch(`/assets/rokct/api/${moduleFile}`);
 
                     if (!response.ok) {
-                        throw new Error(`Failed to load module ${moduleName}: ${response.status}`);
+                        throw new Error(`Failed to load module ${moduleFile}: ${response.status}`);
                     }
 
                     const moduleSpec = await response.json();
@@ -356,8 +354,8 @@
                     renderSwaggerUI(moduleSpec);
 
                 } catch (error) {
-                    console.error(`Error loading module ${moduleName}:`, error);
-                    showError(`Failed to load module "${moduleName}". Please try again or select a different module.`);
+                    console.error(`Error loading module ${moduleFile}:`, error);
+                    showError(`Failed to load module "${moduleFile}". Please try again or select a different module.`);
                 } finally {
                     moduleLoading.classList.remove('visible');
                 }
@@ -367,31 +365,45 @@
                 try {
                     updateLoadingStatus('Loading modules list...');
 
-                    // First, load the modules list
                     const modulesResponse = await fetch("/assets/rokct/api/modules.json");
                     if (!modulesResponse.ok) {
                         throw new Error(`Failed to load modules: ${modulesResponse.status}`);
                     }
 
                     modulesData = await modulesResponse.json();
-                    const modules = modulesData.modules || [];
+                    const apps = modulesData.apps || {};
+                    const appNames = Object.keys(apps);
 
-                    // Populate the module dropdown
-                    modules.forEach(moduleName => {
-                        const option = document.createElement('option');
-                        option.value = moduleName;
-                        option.innerText = moduleName;
-                        moduleDropdown.appendChild(option);
+                    if (appNames.length === 0) {
+                        showError('No apps or modules found.');
+                        return;
+                    }
+
+                    // Populate the module dropdown with app groups
+                    appNames.forEach(appName => {
+                        const optgroup = document.createElement('optgroup');
+                        optgroup.label = appName.toUpperCase();
+
+                        const modules = apps[appName] || [];
+                        modules.forEach(moduleName => {
+                            const option = document.createElement('option');
+                            const safeModuleName = `${appName}-${moduleName}`.replace(/[^a-zA-Z0-9\-_]/g, '');
+                            option.value = `module-${safeModuleName}.json`;
+                            option.innerText = moduleName;
+                            optgroup.appendChild(option);
+                        });
+
+                        moduleDropdown.appendChild(optgroup);
                     });
 
-                    if (modules.length > 0) {
-                        // Set EDI as default, fallback to first module if EDI doesn't exist
-                        const defaultModule = modules.includes('EDI') ? 'EDI' : modules[0];
-                        moduleDropdown.value = defaultModule;
-                        await loadModuleSpec(defaultModule);
-                    } else {
-                        showError('No modules found.');
-                    }
+                    // Set a default selection and load it
+                    const firstApp = appNames[0];
+                    const firstModule = apps[firstApp][0];
+                    const firstModuleSafeName = `${firstApp}-${firstModule}`.replace(/[^a-zA-Z0-9\-_]/g, '');
+                    const defaultModuleFile = `module-${firstModuleSafeName}.json`;
+
+                    moduleDropdown.value = defaultModuleFile;
+                    await loadModuleSpec(defaultModuleFile);
 
                 } catch (error) {
                     console.error("Failed to initialize Swagger UI:", error);
@@ -401,13 +413,13 @@
 
             // Event listener for module dropdown changes
             moduleDropdown.addEventListener('change', async (event) => {
-                const selectedModule = event.target.value;
-                if (selectedModule) {
+                const selectedModuleFile = event.target.value;
+                if (selectedModuleFile) {
                     loadingSpinnerContainer.style.display = 'flex';
                     swaggerUiContainer.style.display = 'none';
                     downloadBtnContainer.style.display = 'none';
 
-                    await loadModuleSpec(selectedModule);
+                    await loadModuleSpec(selectedModuleFile);
                 }
             });
 
@@ -415,7 +427,7 @@
             downloadCurrentBtn.addEventListener('click', () => {
                 try {
                     const spec = window.ui ? window.ui.specSelectors.specJson().toJS() : currentModuleSpec;
-                    const moduleName = moduleDropdown.value || 'current';
+                    const moduleName = moduleDropdown.options[moduleDropdown.selectedIndex].text || 'current';
                     const blob = new Blob([JSON.stringify(spec, null, 2)], { type: 'application/json' });
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
@@ -437,7 +449,6 @@
                     downloadFullBtn.disabled = true;
                     downloadFullBtn.textContent = 'Downloading...';
 
-                    // FIXED: Changed the fetch URL to the correct filename
                     const response = await fetch('/assets/rokct/api/swagger-full.json');
                     if (!response.ok) {
                         throw new Error(`Failed to load full swagger: ${response.status}`);
@@ -448,7 +459,6 @@
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
-                    // FIXED: Corrected the download filename
                     a.download = 'full-swagger.json';
                     document.body.appendChild(a);
                     a.click();

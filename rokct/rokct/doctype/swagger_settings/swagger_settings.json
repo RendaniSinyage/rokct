@@ -8,6 +8,7 @@
   "basic_settings_section",
   "app_name",
   "column_break_yztn",
+  "refresh_app_list",
   "generate_swagger_json",
   "auth_settings_section",
   "token_based_basicauth",
@@ -16,9 +17,12 @@
   "status_section",
   "last_generation_time",
   "generation_status",
+  "generation_log",
   "exclusions_section",
   "excluded_modules",
-  "excluded_doctypes"
+  "excluded_doctypes",
+  "renaming_section",
+  "app_renaming_rules"
  ],
  "fields": [
   {
@@ -27,7 +31,7 @@
    "label": "Basic Settings"
   },
   {
-   "default": "Frappe",
+   "default": "ROKCT",
    "fieldname": "app_name",
    "fieldtype": "Data",
    "label": "App Name"
@@ -35,6 +39,11 @@
   {
    "fieldname": "column_break_yztn",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "refresh_app_list",
+   "fieldtype": "Button",
+   "label": "Refresh App List"
   },
   {
    "fieldname": "generate_swagger_json",
@@ -57,7 +66,7 @@
    "fieldtype": "Column Break"
   },
   {
-   "default": "0",
+   "default": "1",
    "fieldname": "bearerauth",
    "fieldtype": "Check",
    "label": "BearerAuth"
@@ -81,6 +90,12 @@
    "read_only": 1
   },
   {
+   "fieldname": "generation_log",
+   "fieldtype": "Code",
+   "label": "Generation Log",
+   "read_only": 1
+  },
+  {
    "fieldname": "exclusions_section",
    "fieldtype": "Section Break",
    "label": "Exclusions"
@@ -96,6 +111,24 @@
    "fieldtype": "Table",
    "label": "Excluded DocTypes",
    "options": "Excluded Swagger DocType"
+  },
+  {
+   "fieldname": "renaming_section",
+   "fieldtype": "Section Break",
+   "label": "App Renaming"
+  },
+  {
+   "fieldname": "app_renaming_rules",
+   "fieldtype": "Table",
+   "label": "App Renaming Rules",
+   "options": "Swagger App Rename"
+  },
+  {
+   "fieldname": "installed_apps_cache",
+   "fieldtype": "Text",
+   "hidden": 1,
+   "label": "Installed Apps Cache",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
@@ -103,7 +136,7 @@
  "links": [],
  "modified": "2024-08-27 09:58:48.621772",
  "modified_by": "Administrator",
- "module": "Rokct",
+ "module": "rokct",
  "name": "Swagger Settings",
  "owner": "Administrator",
  "permissions": [

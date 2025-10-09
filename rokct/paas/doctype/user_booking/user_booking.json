@@ -1,0 +1,55 @@
+{
+    "doctype": "DocType",
+    "name": "User Booking",
+    "engine": "InnoDB",
+    "istable": 0,
+    "module": "PaaS",
+    "fields": [
+        {
+            "fieldname": "booking",
+            "fieldtype": "Link",
+            "label": "Booking",
+            "options": "Booking",
+            "reqd": 1
+        },
+        {
+            "fieldname": "user",
+            "fieldtype": "Link",
+            "label": "User",
+            "options": "User",
+            "reqd": 1
+        },
+        {
+            "fieldname": "table",
+            "fieldtype": "Link",
+            "label": "Table",
+            "options": "Table",
+            "reqd": 1
+        },
+        {
+            "fieldname": "start_date",
+            "fieldtype": "Datetime",
+            "label": "Start Date"
+        },
+        {
+            "fieldname": "end_date",
+            "fieldtype": "Datetime",
+            "label": "End Date"
+        },
+        {
+            "fieldname": "status",
+            "fieldtype": "Select",
+            "label": "Status",
+            "options": "New\nAccepted\nCancelled"
+        }
+    ],
+    "permissions": [
+        {
+            "role": "System Manager",
+            "read": 1,
+            "create": 1,
+            "write": 1,
+            "delete": 1
+        }
+    ]
+}

@@ -10,11 +10,24 @@ def create_order(order_data):
     if isinstance(order_data, str):
         order_data = json.loads(order_data)
 
+    # Check for hierarchical auto-approval
+    paas_settings = frappe.get_single("PaaS Settings")
+
+    # Validate phone number if required by admin settings
+    if paas_settings.require_phone_for_order and not order_data.get("phone"):
+        frappe.throw("A phone number is required to create this order.", frappe.ValidationError)
+
+    shop = frappe.get_doc("Shop", order_data.get("shop"))
+
+    initial_status = "New"
+    if paas_settings.auto_approve_orders and shop.auto_approve_orders:
+        initial_status = "Accepted"
+
     order = frappe.get_doc({
         "doctype": "Order",
         "user": order_data.get("user"),
         "shop": order_data.get("shop"),
-        "status": "New",
+        "status": initial_status,
         "delivery_type": order_data.get("delivery_type"),
         "currency": order_data.get("currency"),
         "rate": order_data.get("rate"),

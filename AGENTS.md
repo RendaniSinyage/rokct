@@ -36,7 +36,7 @@ To ensure a smooth and consistent development process, please follow these steps
 
 
 
-2\.  \*\*Log Your Progress:\*\* As you work on features, please update the `rokct/paas/roadmap\_progress.txt` file to reflect your progress. Mark completed tasks and add notes where necessary.
+2\.  \*\*Log Your Progress & Maintain Sync:\*\* As you work on features, please update the `rokct/paas/roadmap_progress.txt` file to reflect your progress. It is crucial that this file is kept in sync with `rokct/paas/TODO.md`. When a task status is updated in one file, it must be updated in the other to ensure consistency. Mark completed tasks and add notes where necessary.
 
 
 

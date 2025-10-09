@@ -7,6 +7,7 @@ import json
 import os
 import re
 import urllib.parse
+import traceback
 
 import frappe
 from pydantic import BaseModel
@@ -52,7 +53,7 @@ def get_pydantic_model_schema(model_name, module):
             return model.model_json_schema()
     return None
 
-def process_function(app_name, module_name, func_name, func, swagger, module):
+def process_function(app_name, module_name, func_name, func, swagger, module, app_rename_map):
     """Process each function to update the Swagger paths.
 
     Args:
@@ -137,8 +138,9 @@ def process_function(app_name, module_name, func_name, func, swagger, module):
             }
         }
 
+        display_app_name = app_rename_map.get(app_name, app_name)
         # Assign tags for the Swagger documentation
-        tags = [module_name]
+        tags = [f"{display_app_name} - {module_name}"]
 
         # Initialize the path if not already present
         if path not in swagger["paths"]:
@@ -322,13 +324,19 @@ def generate_swagger_json():
     swagger_settings = frappe.get_single("Swagger Settings")
     swagger_settings.generation_status = "In Progress"
     swagger_settings.last_generation_time = frappe.utils.now_datetime()
+    swagger_settings.generation_log = ""  # Clear previous logs
     swagger_settings.save(ignore_permissions=True)
     frappe.db.commit()
 
+    skipped_items_log = []
+    app_to_modules_map = {}
+
     try:
-        # Get the list of excluded modules and doctypes from Swagger Settings
+        # Get settings
         excluded_modules = {d.module.lower() for d in swagger_settings.get("excluded_modules", [])}
         excluded_doctypes = {d.doctype for d in swagger_settings.get("excluded_doctypes", [])}
+        app_rename_map = {rule.original_name.lower(): rule.new_name for rule in swagger_settings.get("app_renaming_rules", [])}
+
 
         # Define the output directory and ensure it exists
         output_dir = os.path.join(frappe.get_app_path('rokct'), 'public', 'api')
@@ -484,7 +492,6 @@ def generate_swagger_json():
                 continue
 
         # Initialize data structures for modular and full spec generation
-        modules_list = []
         full_swagger = base_swagger.copy()
         full_swagger["paths"] = {}
         full_swagger["tags"] = []
@@ -502,7 +509,14 @@ def generate_swagger_json():
 
                     # Skip excluded modules
                     if module_name.lower() in excluded_modules:
+                        skipped_items_log.append(f"Skipped API Module '{module_name}': Module is in exclusion list.")
                         continue
+
+                    # Group modules by app for the dropdown
+                    display_app_name = app_rename_map.get(app, app)
+                    if display_app_name not in app_to_modules_map:
+                        app_to_modules_map[display_app_name] = set()
+                    app_to_modules_map[display_app_name].add(module_name)
 
                     module_spec = {
                         "openapi": "3.0.0",
@@ -516,13 +530,14 @@ def generate_swagger_json():
                         "security": base_swagger["security"]
                     }
 
-                    module_spec["tags"].append({"name": module_name, "description": f"Endpoints for the **{module_name}** module in the **{app}** app."})
-                    modules_list.append(f"{app}-{module_name}")
+                    tag_name = f"{display_app_name} - {module_name}"
+                    description_app_name = display_app_name if display_app_name.lower().endswith(" app") else f"{display_app_name} app"
+                    module_spec["tags"].append({"name": tag_name, "description": f"Endpoints for the **{module_name}** module in the **{description_app_name}**."})
 
                     for func_name, func in inspect.getmembers(module, inspect.isfunction):
-                        process_function(app, module_name, func_name, func, module_spec, module)
+                        process_function(app, module_name, func_name, func, module_spec, module, app_rename_map)
 
-                    safe_module_name = re.sub(r'[^a-zA-Z0-9\-_]', '', f"{app}-{module_name}")
+                    safe_module_name = re.sub(r'[^a-zA-Z0-9\-_]', '', f"{display_app_name}-{module_name}")
                     module_file_path = os.path.join(output_dir, f"module-{safe_module_name}.json")
                     with open(module_file_path, "w") as module_file:
                         json.dump(module_spec, module_file, indent=4)
@@ -536,10 +551,21 @@ def generate_swagger_json():
                 frappe.log_error(f"Error loading or processing file {file_path}: {str(e)}")
 
         # Add DocType endpoints to the full swagger spec and create module-specific DocType JSONs
-        for app_name, doctypes in app_doctypes.items():
+        for module_name, doctypes in app_doctypes.items():
             # Skip excluded modules
-            if app_name.lower() in excluded_modules:
+            if module_name.lower() in excluded_modules:
+                skipped_items_log.append(f"Skipped DocType Module '{module_name}': Module is in exclusion list.")
                 continue
+
+            try:
+                module_def = frappe.get_doc("Module Def", module_name)
+                app = module_def.app_name
+                display_app_name = app_rename_map.get(app, app)
+                if display_app_name not in app_to_modules_map:
+                    app_to_modules_map[display_app_name] = set()
+                app_to_modules_map[display_app_name].add(module_name)
+            except frappe.DoesNotExistError:
+                display_app_name = "unknown" # Fallback app
 
             module_spec = {
                 "openapi": "3.0.0",
@@ -553,13 +579,12 @@ def generate_swagger_json():
                 "security": base_swagger["security"]
             }
 
-            modules_list.append(app_name)
-
             for doctype in doctypes:
                 try:
-                # Skip excluded doctypes
-                if doctype in excluded_doctypes:
-                    continue
+                    # Skip excluded doctypes
+                    if doctype in excluded_doctypes:
+                        skipped_items_log.append(f"Skipped DocType '{doctype}': DocType is in exclusion list.")
+                        continue
 
                     doctype_meta = frappe.get_meta(doctype)
                     sanitized_doctype = doctype.replace(" ", "_")
@@ -576,7 +601,7 @@ def generate_swagger_json():
                         try:
                             # Dynamically find the app name from the module definition
                             module_def = frappe.get_doc("Module Def", doctype_meta.module)
-                            app_name_for_path = module_def.app_name
+                            app_name_for_path = app_rename_map.get(module_def.app_name, module_def.app_name)
 
                             # Construct the custom prefix for the operationId
                             prefix = f"/api/v1/method/{app_name_for_path}.{doctype_meta.module.lower()}"
@@ -594,7 +619,8 @@ def generate_swagger_json():
                             pass
 
                     tag_name = f"{doctype} DocType"
-                    tag_description = f"Endpoints for the **{doctype}** DocType in the **{app_name}** module."
+                    description_app_name = display_app_name if display_app_name.lower().endswith(" app") else f"{display_app_name} app"
+                    tag_description = f"Endpoints for the **{doctype}** DocType in the **{module_name}** module in the **{description_app_name}**."
                     module_spec["tags"].append({"name": tag_name, "description": tag_description})
                     full_swagger["tags"].append({"name": tag_name, "description": tag_description})
 
@@ -851,12 +877,15 @@ def generate_swagger_json():
                     failed_doctypes.append({"doctype": doctype, "error": str(e)})
                     continue
 
-            safe_module_name = re.sub(r'[^a-zA-Z0-9\-_]', '', app_name)
-            module_file_path = os.path.join(output_dir, f"module-{safe_module_name}.json")
+            safe_module_name = re.sub(r'[^a-zA-Z0-9\-_]', '', module_name)
+            module_file_path = os.path.join(output_dir, f"module-{display_app_name}-{safe_module_name}.json")
             with open(module_file_path, "w") as module_file:
                 json.dump(module_spec, module_file, indent=4)
 
             full_swagger["paths"].update(module_spec["paths"])
+
+        # Convert sets to sorted lists for consistent JSON output
+        final_app_map = {app: sorted(list(modules)) for app, modules in app_to_modules_map.items()}
 
         full_swagger["info"]["title"] = "PLATFORM API"
         full_swagger["x-total-doctypes"] = total_doctypes
@@ -868,30 +897,37 @@ def generate_swagger_json():
 
         modules_file_path = os.path.join(output_dir, "modules.json")
         with open(modules_file_path, "w") as modules_file:
-            json.dump({"modules": modules_list}, modules_file, indent=4)
+            json.dump({"apps": final_app_map}, modules_file, indent=4)
+
+        log_summary = f"Processed: {processed_doctypes_count}, Skipped: {len(skipped_items_log)}, Failed: {len(failed_doctypes)}, Total Found: {total_doctypes}"
+
+        full_log = f"--- Generation Summary ---\n{log_summary}\n\n"
+
+        if skipped_items_log:
+            full_log += "--- Skipped Items ---\n" + "\n".join(skipped_items_log) + "\n\n"
 
         if failed_doctypes:
+            swagger_settings.generation_status = "Failed"
+            full_log += "--- Failures ---\n"
+            for failure in failed_doctypes:
+                full_log += f"- DocType: {failure['doctype']}\n  Error: {failure['error']}\n\n"
+
             frappe.log_error(
                 title=f"Swagger Generation: Failed to process {len(failed_doctypes)} DocTypes.",
-                message=str(failed_doctypes)
+                message=full_log
             )
+        else:
+            swagger_settings.generation_status = "Success"
 
-        frappe.msgprint(f"""
-            <b>Swagger Generation Complete</b><br><br>
-            Successfully processed: {processed_doctypes_count}<br>
-            Failed: {len(failed_doctypes)}<br>
-            Total found: {total_doctypes}<br><br>
-            <i>Check the Error Log for details on failed DocTypes.</i>
-        """)
-
-        # On success
-        swagger_settings.generation_status = "Success"
+        swagger_settings.generation_log = full_log
+        frappe.msgprint(f"<b>Swagger Generation Complete</b><br><br>{log_summary.replace(', ', '<br>')}<br><br><i>Check the Generation Log for details.</i>")
         swagger_settings.save(ignore_permissions=True)
         frappe.db.commit()
 
     except Exception as e:
         # On failure
         swagger_settings.generation_status = "Failed"
+        swagger_settings.generation_log = f"A critical error occurred during generation:\n\n{traceback.format_exc()}"
         swagger_settings.save(ignore_permissions=True)
         frappe.db.commit()
         frappe.log_error(f"Swagger Generation Failed: {str(e)}", "Swagger Generator")

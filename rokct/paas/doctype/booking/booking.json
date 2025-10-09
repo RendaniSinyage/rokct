@@ -2,59 +2,46 @@
     "doctype": "DocType",
     "name": "Booking",
     "engine": "InnoDB",
-    "is_submittable": 0,
-    "issingle": 0,
     "istable": 0,
-    "module": "paas",
-    "permissions": [
-        {
-            "create": 1,
-            "delete": 1,
-            "email": 1,
-            "export": 1,
-            "print": 1,
-            "read": 1,
-            "report": 1,
-            "role": "System Manager",
-            "share": 1,
-            "write": 1
-        }
-    ],
-    "sort_field": "modified",
-    "sort_order": "DESC",
-    "track_changes": 1,
+    "module": "PaaS",
     "fields": [
-        {
-            "fieldname": "user",
-            "fieldtype": "Link",
-            "label": "User",
-            "options": "User",
-            "reqd": 1
-        },
         {
             "fieldname": "shop",
             "fieldtype": "Link",
             "label": "Shop",
-            "options": "Company",
-            "reqd": 1
+            "options": "Shop",
+            "reqd": 1,
+            "in_list_view": 1
         },
         {
-            "fieldname": "booking_date",
-            "fieldtype": "Datetime",
-            "label": "Booking Date",
-            "reqd": 1
-        },
-        {
-            "fieldname": "number_of_guests",
+            "fieldname": "max_time",
             "fieldtype": "Int",
-            "label": "Number of Guests"
+            "label": "Max Time"
         },
         {
-            "fieldname": "status",
-            "fieldtype": "Select",
-            "label": "Status",
-            "options": "Requested\nConfirmed\nCancelled",
-            "default": "Requested"
+            "fieldname": "start_time",
+            "fieldtype": "Time",
+            "label": "Start Time"
+        },
+        {
+            "fieldname": "end_time",
+            "fieldtype": "Time",
+            "label": "End Time"
+        },
+        {
+            "fieldname": "active",
+            "fieldtype": "Check",
+            "label": "Active",
+            "default": "0"
+        }
+    ],
+    "permissions": [
+        {
+            "role": "System Manager",
+            "read": 1,
+            "create": 1,
+            "write": 1,
+            "delete": 1
         }
     ]
 }

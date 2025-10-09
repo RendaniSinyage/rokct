@@ -14,13 +14,22 @@ def create_parcel_order(order_data):
     if user == "Guest":
         frappe.throw("You must be logged in to create a parcel order.", frappe.AuthenticationError)
 
-    # Basic parcel document setup
-    new_parcel_doc = {
+    paas_settings = frappe.get_single("PaaS Settings")
+    initial_status = "Accepted" if paas_settings.auto_approve_parcel_orders else "New"
+
+    parcel_order = frappe.get_doc({
         "doctype": "Parcel Order",
         "user": user,
         "note": order_data.get("note"),
-        "status": "New",
-        # Add other common fields here
+        "tax": order_data.get("tax"),
+        "status": initial_status,
+        "address_from": json.dumps(order_data.get("address_from")),
+        "phone_from": order_data.get("phone_from"),
+        "username_from": order_data.get("username_from"),
+        "address_to": json.dumps(order_data.get("address_to")),
+        "phone_to": order_data.get("phone_to"),
+        "username_to": order_data.get("username_to"),
+        "delivery_fee": order_data.get("delivery_fee"),
         "delivery_date": order_data.get("delivery_date"),
         "delivery_time": order_data.get("delivery_time"),
     }

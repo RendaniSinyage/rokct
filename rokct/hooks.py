@@ -30,8 +30,8 @@ app_license = "mit"
 # ------------------
 
 # include js, css files in header of desk.html
-# app_include_css = "/assets/rokct/css/rokct.css"
-# app_include_js = "/assets/rokct/js/rokct.js"
+app_include_css = "/assets/rokct/css/ui_theme.css"
+app_include_js = []
 
 # include js, css files in header of web template
 # web_include_css = "/assets/rokct/css/rokct.css"
@@ -88,9 +88,9 @@ doctype_list_js = {
 before_install = "rokct.install.before_install"
 after_install = "rokct.install.after_install"
 
-on_install = "rokct.rokct.doctype.swagger_settings.swagger_settings.run_swagger_generation_on_control_site"
-on_migrate = "rokct.rokct.doctype.swagger_settings.swagger_settings.run_swagger_generation_on_control_site"
-on_update = "rokct.rokct.doctype.swagger_settings.swagger_settings.run_swagger_generation_on_control_site"
+on_install = "rokct.rokct.doctype.swagger_settings.swagger_settings.run_swagger_related_hooks"
+on_migrate = "rokct.rokct.doctype.swagger_settings.swagger_settings.run_swagger_related_hooks"
+on_update = "rokct.rokct.doctype.swagger_settings.swagger_settings.run_swagger_related_hooks"
 
 # Uninstallation
 # ------------
@@ -221,7 +221,8 @@ whitelisted_methods = {
     "rokct.rokct.tenant.api.log_frontend_error": "rokct.rokct.tenant.api.log_frontend_error",
     "rokct.rokct.tenant.api.get_subscription_details": "rokct.rokct.tenant.api.get_subscription_details",
     "rokct.rokct.tenant.api.record_token_usage": "rokct.rokct.tenant.api.record_token_usage",
-    "rokct.rokct.scripts.setup_control_panel.configure_control_panel": "rokct.rokct.scripts.setup_control_panel.configure_control_panel"
+    "rokct.rokct.scripts.setup_control_panel.configure_control_panel": "rokct.rokct.scripts.setup_control_panel.configure_control_panel",
+    "rokct.rokct.api.get_weather": "rokct.rokct.api.get_weather"
 }
 #
 # each overriding function accepts a `data` argument;
