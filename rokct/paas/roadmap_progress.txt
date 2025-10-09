@@ -60,7 +60,7 @@
   - [x] Update Order Status
   - [x] Review Order
 - [x] REST: Push Notifications
-- [ ] REST: Parcel Orders (Incomplete - Creation and listing APIs implemented, but full management is missing)
+- [~] REST: Parcel Orders (Partially Implemented - Core APIs for create, list, and update status are present. Full management, options, and settings are missing)
 - [x] REST: Payment Gateways
   - [x] Implemented PayFast (including tokenization)
   - [x] Implemented PayPal integration.

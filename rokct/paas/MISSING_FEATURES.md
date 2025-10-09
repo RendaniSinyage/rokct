@@ -33,12 +33,7 @@ The original Laravel application had a rich set of booking features, as defined 
 -   **Description:** The original Laravel application had a feature for creating recurring or scheduled orders. This functionality has not been implemented in the Frappe `paas` module.
 -   **Status:** This feature was noted as "To Be Discussed" in the `rokct/paas/TODO.md` file, indicating that it is a known missing feature.
 
-## 4. Auto-Approve Orders
-
--   **Description:** The Laravel application had a setting to automatically approve orders. This feature has not been ported to the Frappe `paas` module.
--   **Status:** This was also noted as a pending feature in the `rokct/paas/TODO.md` file.
-
-## 5. Intentionally Excluded Features
+## 4. Intentionally Excluded Features
 
 The following features were present in the original Laravel application but have been intentionally excluded from the Frappe `paas` module, as noted in the `roadmap_progress.txt` file:
 

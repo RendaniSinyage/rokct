@@ -3,7 +3,7 @@
 
 import frappe
 from frappe.tests.utils import FrappeTestCase
-from rokct.paas.api.parcel.parcel import create_parcel_order, get_parcel_orders, update_parcel_status
+from rokct.paas.api.parcel.parcel import create_parcel_order, get_parcel_orders, get_user_parcel_order, update_parcel_status
 import json
 
 class TestParcelOrderAPI(FrappeTestCase):
@@ -77,6 +77,37 @@ class TestParcelOrderAPI(FrappeTestCase):
         self.assertTrue(isinstance(orders, list))
         self.assertEqual(len(orders), 1)
         self.assertEqual(orders[0].get("status"), "New")
+
+    def test_get_user_parcel_order(self):
+        # Create a parcel order first
+        order_data = {"type": self.parcel_setting.name, "total_price": 123.45}
+        created_order = create_parcel_order(order_data=json.dumps(order_data))
+
+        order = get_user_parcel_order(name=created_order.get("name"))
+        self.assertEqual(order.get("name"), created_order.get("name"))
+        self.assertEqual(order.get("total_price"), 123.45)
+
+    def test_get_other_user_parcel_order_permission(self):
+        # Create another user and an order for them
+        other_user = frappe.get_doc({
+            "doctype": "User", "email": "other@example.com", "first_name": "Other"
+        }).insert(ignore_permissions=True)
+
+        # Switch to other user to create order
+        frappe.set_user(other_user.name)
+        order_data = {"type": self.parcel_setting.name}
+        other_order = create_parcel_order(order_data=json.dumps(order_data))
+
+        # Switch back to test_user
+        frappe.set_user(self.test_user.name)
+
+        # test_user should not be able to get other_user's order
+        with self.assertRaises(frappe.PermissionError):
+            get_user_parcel_order(name=other_order.get("name"))
+
+        # Clean up other user
+        frappe.set_user("Administrator")
+        other_user.delete(ignore_permissions=True)
 
     def test_update_parcel_status(self):
         # Create a parcel order first

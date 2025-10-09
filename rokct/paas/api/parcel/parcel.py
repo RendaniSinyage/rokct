@@ -14,18 +14,21 @@ def create_parcel_order(order_data):
     if user == "Guest":
         frappe.throw("You must be logged in to create a parcel order.", frappe.AuthenticationError)
 
+    # Get PaaS Settings for auto-approval
     paas_settings = frappe.get_single("PaaS Settings")
     initial_status = "Accepted" if paas_settings.auto_approve_parcel_orders else "New"
 
+    # Start building the new parcel document
     new_parcel_doc = {
         "doctype": "Parcel Order",
         "user": user,
+        "status": initial_status,
+        # Fields from version-15
         "total_price": order_data.get("total_price"),
         "currency": order_data.get("currency"),
         "type": order_data.get("type"),
         "note": order_data.get("note"),
         "tax": order_data.get("tax"),
-        "status": initial_status,
         "phone_from": order_data.get("phone_from"),
         "username_from": order_data.get("username_from"),
         "phone_to": order_data.get("phone_to"),
@@ -33,15 +36,19 @@ def create_parcel_order(order_data):
         "delivery_fee": order_data.get("delivery_fee"),
         "delivery_date": order_data.get("delivery_date"),
         "delivery_time": order_data.get("delivery_time"),
+        # Default address values, can be overwritten by destination logic
+        "address_from": json.dumps(order_data.get("address_from")),
+        "address_to": json.dumps(order_data.get("address_to")),
     }
 
-    # Handle different destination types
+    # Handle different destination types from the feature branch
     destination_type = order_data.get("destination_type")
 
     if destination_type == "customer" and order_data.get("customer_id"):
         customer = frappe.get_doc("User", order_data.get("customer_id"))
         new_parcel_doc["username_to"] = customer.get("full_name")
         new_parcel_doc["phone_to"] = customer.get("phone")
+        # In a real scenario, you'd fetch the customer's primary address
         new_parcel_doc["address_to"] = f"Customer: {customer.get('full_name')}"
 
     elif destination_type == "delivery_point" and order_data.get("delivery_point_id"):
@@ -51,25 +58,21 @@ def create_parcel_order(order_data):
         new_parcel_doc["username_to"] = f"Pickup Point: {delivery_point.name}"
 
     elif destination_type == "custom_location" and order_data.get("address_to"):
-        new_parcel_doc["address_to"] = json.dumps(order_data.get("address_to"))
-        new_parcel_doc["address_from"] = json.dumps(order_data.get("address_from"))
-
-    else:
-        # Handle reverse logistics or other cases
-        new_parcel_doc["address_from"] = json.dumps(order_data.get("address_from"))
+        # This overwrites the default address_to if provided
         new_parcel_doc["address_to"] = json.dumps(order_data.get("address_to"))
 
-    # Link Sales Order if provided
+    # Link Sales Order if provided (from feature branch)
     if order_data.get("sales_order_id"):
         new_parcel_doc["sales_order"] = order_data.get("sales_order_id")
 
-    # Link Parcel Option if provided
+    # Link Parcel Option if provided (from feature branch)
     if order_data.get("parcel_option_id"):
         new_parcel_doc["parcel_option"] = order_data.get("parcel_option_id")
 
+    # Create the parcel order document
     parcel_order = frappe.get_doc(new_parcel_doc)
 
-    # Add items if they exist
+    # Add items if they exist (from feature branch)
     items = order_data.get("items", [])
     for item in items:
         parcel_order.append("items", {
@@ -79,6 +82,7 @@ def create_parcel_order(order_data):
             "sales_order_item": item.get("sales_order_item")
         })
 
+    # Insert the document and return it
     parcel_order.insert(ignore_permissions=True)
     return parcel_order.as_dict()
 
@@ -102,6 +106,25 @@ def get_parcel_orders(limit=20, offset=0):
     )
 
     return parcel_orders
+
+
+@frappe.whitelist()
+def get_user_parcel_order(name):
+    """
+    Retrieves a single parcel order for the current user.
+    """
+    user = frappe.session.user
+    if user == "Guest":
+        frappe.throw("You must be logged in to view a parcel order.", frappe.AuthenticationError)
+
+    try:
+        parcel_order = frappe.get_doc("Parcel Order", name)
+        if parcel_order.user != user:
+            frappe.throw("You are not authorized to view this parcel order.", frappe.PermissionError)
+        return parcel_order.as_dict()
+    except frappe.DoesNotExistError:
+        frappe.throw(f"Parcel Order {name} not found.", frappe.DoesNotExistError)
+
 
 @frappe.whitelist()
 def update_parcel_status(parcel_order_id, status):
