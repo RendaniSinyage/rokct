@@ -17,16 +17,17 @@ def create_parcel_order(order_data):
     paas_settings = frappe.get_single("PaaS Settings")
     initial_status = "Accepted" if paas_settings.auto_approve_parcel_orders else "New"
 
-    parcel_order = frappe.get_doc({
+    new_parcel_doc = {
         "doctype": "Parcel Order",
         "user": user,
+        "total_price": order_data.get("total_price"),
+        "currency": order_data.get("currency"),
+        "type": order_data.get("type"),
         "note": order_data.get("note"),
         "tax": order_data.get("tax"),
         "status": initial_status,
-        "address_from": json.dumps(order_data.get("address_from")),
         "phone_from": order_data.get("phone_from"),
         "username_from": order_data.get("username_from"),
-        "address_to": json.dumps(order_data.get("address_to")),
         "phone_to": order_data.get("phone_to"),
         "username_to": order_data.get("username_to"),
         "delivery_fee": order_data.get("delivery_fee"),
@@ -39,10 +40,8 @@ def create_parcel_order(order_data):
 
     if destination_type == "customer" and order_data.get("customer_id"):
         customer = frappe.get_doc("User", order_data.get("customer_id"))
-        # Assuming customer has an address field or we construct it
         new_parcel_doc["username_to"] = customer.get("full_name")
         new_parcel_doc["phone_to"] = customer.get("phone")
-        # In a real scenario, you'd fetch the customer's primary address
         new_parcel_doc["address_to"] = f"Customer: {customer.get('full_name')}"
 
     elif destination_type == "delivery_point" and order_data.get("delivery_point_id"):
@@ -53,6 +52,7 @@ def create_parcel_order(order_data):
 
     elif destination_type == "custom_location" and order_data.get("address_to"):
         new_parcel_doc["address_to"] = json.dumps(order_data.get("address_to"))
+        new_parcel_doc["address_from"] = json.dumps(order_data.get("address_from"))
 
     else:
         # Handle reverse logistics or other cases

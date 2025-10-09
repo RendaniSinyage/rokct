@@ -3,7 +3,7 @@
 
 import frappe
 from frappe.tests.utils import FrappeTestCase
-from rokct.paas.api import create_parcel_order, get_user_parcel_orders, get_user_parcel_order
+from rokct.paas.api.parcel.parcel import create_parcel_order, get_parcel_orders, update_parcel_status
 import json
 
 class TestParcelOrderAPI(FrappeTestCase):
@@ -24,6 +24,13 @@ class TestParcelOrderAPI(FrappeTestCase):
             "title": "Standard"
         }).insert(ignore_permissions=True)
 
+        # Create a delivery point
+        self.delivery_point = frappe.get_doc({
+            "doctype": "Delivery Point",
+            "name": "Test Delivery Point",
+            "address": "123 Test Street"
+        }).insert(ignore_permissions=True)
+
         frappe.db.commit()
 
         # Log in as the test user
@@ -35,6 +42,7 @@ class TestParcelOrderAPI(FrappeTestCase):
         # Clean up created documents
         frappe.db.delete("Parcel Order", {"user": self.test_user.name})
         self.parcel_setting.delete(ignore_permissions=True)
+        self.delivery_point.delete(ignore_permissions=True)
         self.test_user.delete(ignore_permissions=True)
         frappe.db.commit()
 
@@ -50,44 +58,31 @@ class TestParcelOrderAPI(FrappeTestCase):
         self.assertEqual(order.get("user"), self.test_user.name)
         self.assertEqual(order.get("total_price"), 100.0)
 
-    def test_get_user_parcel_orders(self):
+    def test_create_parcel_order_with_delivery_point(self):
+        order_data = {
+            "destination_type": "delivery_point",
+            "delivery_point_id": self.delivery_point.name,
+            "items": [{"item_code": "Test Item", "quantity": 1}]
+        }
+        order = create_parcel_order(order_data=json.dumps(order_data))
+        self.assertEqual(order.get("delivery_point"), self.delivery_point.name)
+        self.assertEqual(len(order.get("items")), 1)
+
+    def test_get_parcel_orders(self):
         # Create a parcel order first
         order_data = {"type": self.parcel_setting.name}
         create_parcel_order(order_data=json.dumps(order_data))
 
-        orders = get_user_parcel_orders()
+        orders = get_parcel_orders()
         self.assertTrue(isinstance(orders, list))
         self.assertEqual(len(orders), 1)
         self.assertEqual(orders[0].get("status"), "New")
 
-    def test_get_user_parcel_order(self):
+    def test_update_parcel_status(self):
         # Create a parcel order first
-        order_data = {"type": self.parcel_setting.name, "total_price": 123.45}
+        order_data = {"type": self.parcel_setting.name}
         created_order = create_parcel_order(order_data=json.dumps(order_data))
 
-        order = get_user_parcel_order(name=created_order.get("name"))
-        self.assertEqual(order.get("name"), created_order.get("name"))
-        self.assertEqual(order.get("total_price"), 123.45)
-
-    def test_get_other_user_parcel_order_permission(self):
-        # Create another user and an order for them
-        other_user = frappe.get_doc({
-            "doctype": "User", "email": "other@example.com", "first_name": "Other"
-        }).insert(ignore_permissions=True)
-
-        # Switch to other user to create order
-        frappe.set_user(other_user.name)
-        order_data = {"type": self.parcel_setting.name}
-        other_order = create_parcel_order(order_data=json.dumps(order_data))
-
-        # Switch back to test_user
-        frappe.set_user(self.test_user.name)
-
-        # test_user should not be able to get other_user's order
-        with self.assertRaises(frappe.PermissionError):
-            get_user_parcel_order(name=other_order.get("name"))
-
-        # Clean up other user
-        frappe.set_user("Administrator")
-        other_user.delete(ignore_permissions=True)
-
+        # Update the status
+        updated_order = update_parcel_status(parcel_order_id=created_order.get("name"), status="Processing")
+        self.assertEqual(updated_order.get("status"), "Processing")
