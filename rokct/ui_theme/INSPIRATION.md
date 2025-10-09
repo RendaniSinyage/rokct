@@ -7,7 +7,7 @@ The primary goal is to create a cohesive and consistent user experience between 
 ## Source of Inspiration
 
 The source code for the reference POS application can be found within this repository at the following path:
-`rokct/paas/juvo/pos`
+`rokct/rokct/flutter_builder/source_code/pos`
 
 Key areas of inspiration include:
 - The dark theme and color palette.

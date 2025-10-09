@@ -16,7 +16,7 @@ The key components of the application are located in the following directories:
 
 *   **Primary Frappe App:** `rokct/rokct` - This is the main application where all business logic, customizations, and the PaaS module are implemented.
 *   **PaaS Module (Source of Truth):** `rokct/paas/juvo/backend` - The original Laravel backend. This serves as the reference for the features and logic you will be converting for the PaaS module.
-*   **Flutter Frontend Apps:** `rokct/paas/juvo/customer` and `rokct/paas/juvo/pos` - These are the customer-facing and Point-of-Sale (POS) applications that will connect to the new Frappe backend.
+*   **Flutter Frontend Apps:** `rokct/rokct/flutter_builder/source_code/customer` and `rokct/rokct/flutter_builder/source_code/pos` - These are the customer-facing and Point-of-Sale (POS) applications that will connect to the new Frappe backend.
 
 
 
@@ -58,7 +58,7 @@ Please adhere to the following rules when working on this repository:
 
 *   **Resetting the Environment:** Do **not** use the `reset_all` tool without explicit permission from the user. This is a destructive action that will revert all changes.
 
-*   **Frontend Changes:** Do not make any changes to the frontend Flutter applications (`rokct/paas/juvo/customer` and `rokct/paas/juvo/pos`) beyond what is necessary for API compatibility, without explicit permission from the user.
+*   **Frontend Changes:** Do not make any changes to the frontend Flutter applications (`rokct/rokct/flutter_builder/source_code/customer` and `rokct/rokct/flutter_builder/source_code/pos`) beyond what is necessary for API compatibility, without explicit permission from the user.
 
 *   **Pull Requests:** All pull requests must follow the checklist provided in the `.github/pull_request_template.md` file. This template will be automatically applied when you create a pull request on GitHub.
 
