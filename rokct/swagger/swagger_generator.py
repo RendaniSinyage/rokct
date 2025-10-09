@@ -325,14 +325,21 @@ def copy_api_files():
 
     # Priority 1: Get destination from Swagger Settings UI
     dest = swagger_settings.rsync_destination
+    log_source = "Swagger Settings UI"
 
     # Priority 2: If not in UI, get from site_config.json
     if not dest:
         dest = frappe.conf.get("rsync_destination")
+        log_source = "site_config.json"
 
     if not dest:
         frappe.log_info("Swagger rsync", "Rsync destination is not set in Swagger Settings or site_config.json. Skipping file copy.")
         return
+
+    frappe.log_info(
+        "Swagger rsync",
+        f"Using destination from {log_source}: {dest}"
+    )
 
     try:
         # Ensure the destination directory exists
