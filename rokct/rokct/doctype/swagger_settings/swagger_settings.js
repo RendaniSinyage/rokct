@@ -7,6 +7,14 @@ frappe.ui.form.on("Swagger Settings", {
         frm.dashboard.clear_messages();
         frm.dashboard.clear_indicators();
 
+        // Programmatically add the click handler for the refresh button.
+        // This is a more robust way to ensure the event is captured, as the
+        // declarative handler seems to be failing intermittently.
+        frm.get_field('refresh_app_list').$input.off('click').on('click', () => {
+            // We call the function from the events object to keep the logic organized.
+            frm.events.refresh_app_list(frm);
+        });
+
         // Remove existing custom buttons to prevent duplicates on refresh
         if(frm.custom_buttons["View Log"]) {
             frm.remove_custom_button("View Log");
