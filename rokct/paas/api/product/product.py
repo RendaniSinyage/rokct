@@ -22,6 +22,7 @@ def get_products(
         # Assuming is_visible_in_website is the correct field for frontend visibility
         "t_item.is_visible_in_website = 1",
         "t_item.status = 'Published'",
+        "t_item.approval_status = 'Approved'",
     ]
 
     if category_id:

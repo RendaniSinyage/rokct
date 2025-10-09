@@ -1,6 +1,6 @@
 {
     "doctype": "DocType",
-    "name": "Booking",
+    "name": "Shop Subscription",
     "engine": "InnoDB",
     "istable": 0,
     "module": "PaaS",
@@ -14,19 +14,29 @@
             "in_list_view": 1
         },
         {
-            "fieldname": "max_time",
-            "fieldtype": "Int",
-            "label": "Max Time"
+            "fieldname": "subscription",
+            "fieldtype": "Link",
+            "label": "Subscription",
+            "options": "Subscription",
+            "reqd": 1,
+            "in_list_view": 1
         },
         {
-            "fieldname": "start_time",
-            "fieldtype": "Time",
-            "label": "Start Time"
+            "fieldname": "expired_at",
+            "fieldtype": "Date",
+            "label": "Expired At",
+            "in_list_view": 1
         },
         {
-            "fieldname": "end_time",
-            "fieldtype": "Time",
-            "label": "End Time"
+            "fieldname": "price",
+            "fieldtype": "Currency",
+            "label": "Price"
+        },
+        {
+            "fieldname": "type",
+            "fieldtype": "Select",
+            "label": "Type",
+            "options": "orders\nproducts"
         },
         {
             "fieldname": "active",
@@ -42,6 +52,10 @@
             "create": 1,
             "write": 1,
             "delete": 1
+        },
+        {
+            "role": "Seller",
+            "read": 1
         }
     ]
 }

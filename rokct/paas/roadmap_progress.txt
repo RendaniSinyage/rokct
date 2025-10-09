@@ -60,7 +60,7 @@
   - [x] Update Order Status
   - [x] Review Order
 - [x] REST: Push Notifications
-- [x] REST: Parcel Orders
+- [ ] REST: Parcel Orders (Incomplete - API only supports creation)
 - [x] REST: Payment Gateways
   - [x] Implemented PayFast (including tokenization)
   - [x] Implemented PayPal integration.
@@ -72,9 +72,10 @@
 - [x] Dashboard (User): Profile
 - [ ] Dashboard (User): Loan Management (exclude this feature)
 - [ ] Dashboard (User): Loan Documents (exclude this feature)
+- [x] Dashboard (User): Booking Management
 - [x] Dashboard (User): Membership
 - [x] Dashboard (User): Orders
-- [x] Dashboard (User): Parcel Orders
+- [ ] Dashboard (User): Parcel Orders (Incomplete)
 - [x] Dashboard (User): Addresses
 - [x] Dashboard (User): Invites
 - [x] Dashboard (User): Wallet
@@ -95,13 +96,14 @@
 - [x] Dashboard (Deliveryman): Shop Bans
 - [x] Dashboard (Deliveryman): Payouts
 - [x] Dashboard (Deliveryman): Order Reports
-- [x] Dashboard (Deliveryman): Parcel Orders
+- [ ] Dashboard (Deliveryman): Parcel Orders (Incomplete)
 - [x] Dashboard (Deliveryman): Payment to Partners
 - [x] Dashboard (Deliveryman): Delivery Zones
 
 ## Waiter Dashboard
 - [x] Dashboard (Waiter): Orders
 - [x] Dashboard (Waiter): Order Reports
+- [x] Dashboard (Waiter): Booking Management
 
 ## Cook Dashboard
 - [x] Dashboard (Cook): Orders
@@ -149,6 +151,8 @@
 - [x] Dashboard (Seller): User Addresses
 - [x] Dashboard (Seller): Delivery Man Delivery Zones
 - [x] Dashboard (Seller): Combos
+- [x] Dashboard (Seller): Booking Management
+- [x] Dashboard (Seller): Subscription Management
 
 ## Admin Dashboard
 - [x] Dashboard (Admin): Dashboard & Statistics
@@ -166,9 +170,9 @@
 - [x] Dashboard (Admin): Extras (Groups & Values)
 - [x] Dashboard (Admin): Products
 - [x] Dashboard (Admin): Orders
-- [x] Dashboard (Admin): Parcel Orders
-- [x] Dashboard (Admin): Parcel Options
-- [x] Dashboard (Admin): Parcel Order Settings
+- [ ] Dashboard (Admin): Parcel Orders (Incomplete)
+- [ ] Dashboard (Admin): Parcel Options (Missing)
+- [ ] Dashboard (Admin): Parcel Order Settings (Incomplete)
 - [x] Dashboard (Admin): Users
 - [x] Dashboard (Admin): Roles
 - [x] Dashboard (Admin): Wallet Histories
@@ -209,6 +213,7 @@
 - [x] Dashboard (Admin): Careers
 - [x] Dashboard (Admin): Pages
 - [x] Dashboard (Admin): Booking Module
+- [x] Dashboard (Admin): Subscription Management
 - [x] Dashboard (Admin): Model Logs
 - [x] Dashboard (Admin): Inventory
 - [x] Dashboard (Admin): Ads Packages

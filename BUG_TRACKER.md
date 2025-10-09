@@ -97,3 +97,78 @@ This document tracks the list of identified bugs in the `rokct` repository. Each
 -   **Location:** `rokct/rokct/control_panel/tasks.py`
 -   **Issue:** The `frappe.sendmail` function fails because the specified email template, "New User Welcome," does not exist.
 -   **Impact:** This prevents the welcome email from being sent to new users after provisioning.
+
+---
+
+## PaaS Module Bugs
+
+### Bug 13: Insecure Amount Verification in Payment Callbacks
+-   **Status:** To Be Discussed
+-   **Location:** `rokct/paas/api/payment/payment.py`
+-   **Functions:** `flutterwave_callback`, `handle_payfast_callback`, `handle_paypal_callback`, `handle_paystack_callback`
+-   **Issue:** The payment callback functions do not rigorously verify that the amount paid by the user matches the total amount of the order. An attacker could modify the payment request to pay a smaller amount, and the system would still mark the order as "Paid".
+-   **Impact:** This is a critical security vulnerability that could lead to significant financial losses for the platform and its vendors.
+
+---
+
+### Bug 14: Coupon Usage Race Condition
+-   **Status:** To Be Discussed
+-   **Location:** `rokct/paas/api/order/order.py` (in `create_order`) and `rokct/paas/doctype/coupon_usage/coupon_usage.json`
+-   **Issue:** The system checks for coupon validity in the `check_coupon` function but does not re-validate it within the `create_order` function. Furthermore, the `Coupon Usage` doctype lacks a unique constraint on the combination of `user` and `coupon`. This creates a race condition where a user could apply the same single-use coupon to multiple orders simultaneously.
+-   **Impact:** This can lead to financial losses, as customers could exploit this to receive multiple discounts with a single-use coupon.
+
+---
+
+### Bug 15: Incorrect Authorization in Order Status Updates
+-   **Status:** To Be Discussed
+-   **Location:** `rokct/paas/api/order/order.py` (in `update_order_status`)
+-   **Issue:** The function only allows the user who created the order or a "System Manager" to update the order's status. This overlooks other critical roles like the seller, cook, or delivery person, who are essential for order fulfillment.
+-   **Impact:** This is a severe workflow bug that would prevent the order fulfillment process from functioning correctly.
+
+---
+
+### Bug 16: Incorrect Stock Replenishment for Cancelled Orders
+-   **Status:** To Be Discussed
+-   **Location:** `rokct/paas/api/order/order.py` (in `cancel_order`)
+-   **Issue:** The stock replenishment logic for cancelled orders is flawed. It uses a "Stock Reconciliation" entry instead of a "Sales Return" or a reversal of a "Delivery Note", which will lead to inaccurate accounting and stock ledgers. It also hardcodes the warehouse name to "Stores", which will cause failures if the warehouse has a different name.
+-   **Impact:** This will lead to incorrect stock levels and accounting data, causing operational issues for sellers.
+
+---
+
+### Bug 17: Missing Transaction Record for PayFast Payments
+-   **Status:** To Be Discussed
+-   **Location:** `rokct/paas/api/payment/payment.py` (in `handle_payfast_callback`)
+-   **Issue:** The `handle_payfast_callback` function attempts to retrieve a `Transaction` document that is never created in the payment initiation flow.
+-   **Impact:** This will cause all PayFast payment callbacks to fail, preventing orders from being marked as paid.
+
+---
+
+### Bug 18: Inconsistent Order Status Updates in Payment Callbacks
+-   **Status:** To Be Discussed
+-   **Location:** `rokct/paas/api/payment/payment.py`
+-   **Issue:** The payment callbacks inconsistently use both `order.status = "Paid"` and `order.payment_status = "Paid"`. The `Order` doctype only has a `payment_status` field.
+-   **Impact:** This will cause errors and prevent the order's payment status from being correctly updated.
+
+---
+
+### Bug 19: Authorization Flaw in Flutterwave Payment Initiation
+-   **Status:** To Be Discussed
+-   **Location:** `rokct/paas/api/payment/payment.py` (in `initiate_flutterwave_payment`)
+-   **Issue:** The authorization check `if order.owner != user:` is incorrect. It should be `if order.user != user:`.
+-   **Impact:** This could prevent legitimate users from paying for their orders via Flutterwave.
+
+---
+
+### Bug 20: CSRF Vulnerability in Flutterwave Callback
+-   **Status:** To Be Discussed
+-   **Location:** `rokct/paas/api/payment/payment.py` (in `flutterwave_callback`)
+-   **Issue:** The `flutterwave_callback` is marked with `allow_guest=True` and lacks any CSRF protection.
+-   **Impact:** This makes the endpoint potentially vulnerable to Cross-Site Request Forgery attacks.
+
+---
+
+### Bug 21: Insufficient Status Check for Order Reviews
+-   **Status:** To Be Discussed
+-   **Location:** `rokct/paas/api/order/order.py` (in `add_order_review`)
+-   **Issue:** The function checks if an order is "Delivered" before allowing a review, but it does not account for orders that might have been returned after delivery.
+-   **Impact:** This could allow users to leave reviews for orders that have been returned, which may not be the desired behavior.

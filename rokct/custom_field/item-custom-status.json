@@ -1,0 +1,14 @@
+{
+    "dt": "Item",
+    "doctype": "Custom Field",
+    "fieldname": "approval_status",
+    "fieldtype": "Select",
+    "label": "Approval Status",
+    "options": "Pending\nApproved\nRejected",
+    "default": "Pending",
+    "insert_after": "item_name",
+    "print_hide": 1,
+    "report_hide": 0,
+    "reqd": 1,
+    "search_index": 1
+}
