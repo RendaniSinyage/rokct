@@ -6,7 +6,7 @@ app_name = "rokct"
 app_title = "ROKCT"
 app_publisher = "ROKCT Holdings"
 app_description = "All custom work lives here"
-app_logo_url = "/assets/rokct/images/logo_dark.svg"
+app_logo_url = "rokct.rokct.utils.get_dynamic_logo_url"
 app_email = "admin@rokct.ai"
 app_license = "mit"
 
@@ -31,10 +31,7 @@ app_license = "mit"
 
 # include js, css files in header of desk.html
 app_include_css = "/assets/rokct/css/ui_theme.css"
-app_include_js = [
-    "/assets/rokct/js/custom_sidebar.js",
-    "/assets/rokct/js/custom_top_bar.js"
-]
+app_include_js = []
 
 # include js, css files in header of web template
 # web_include_css = "/assets/rokct/css/rokct.css"
