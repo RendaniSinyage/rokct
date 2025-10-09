@@ -42,7 +42,7 @@
  "links": [],
  "modified": "2024-08-26 17:14:09.741647",
  "modified_by": "Administrator",
- "module": "Rokct",
+ "module": "rokct",
  "name": "API Error Log",
  "owner": "Administrator",
  "permissions": [
