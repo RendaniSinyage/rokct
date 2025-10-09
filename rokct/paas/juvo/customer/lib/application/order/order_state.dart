@@ -6,6 +6,7 @@ import 'package:foodyman/infrastructure/models/data/get_calculate_data.dart';
 import 'package:foodyman/infrastructure/models/data/order_active_model.dart';
 import 'package:foodyman/infrastructure/models/data/order_data.dart';
 import 'package:foodyman/infrastructure/models/response/branches_response.dart';
+import 'package:foodyman/infrastructure/models/data/delivery_point_data.dart';
 import 'package:foodyman/infrastructure/models/data/shop_data.dart';
 part 'order_state.freezed.dart';
 
@@ -32,6 +33,7 @@ class OrderState with _$OrderState {
     @Default(null) String? phoneNumber,
     @Default(TimeOfDay(hour: 0, minute: 0)) TimeOfDay selectTime,
     @Default(null) DateTime? selectDate,
+    @Default(null) DeliveryPointData? selectedDeliveryPoint,
     @Default(0) int tabIndex,
     @Default(-1) int branchIndex,
     @Default(null) OrderActiveModel? orderData,

@@ -28,6 +28,10 @@ import '../../presentation/pages/main/widgets/JuvoONE/widgets/expenses/repositor
 import '../../repository/impl/gallery_repository.dart';
 import '../../repository/repository.dart';
 import '../handlers/handlers.dart';
+import 'package:admin_desktop/src/repository/delivery_points_repository.dart';
+import 'package:admin_desktop/src/repository/impl/delivery_points_repository_impl.dart';
+import 'package:admin_desktop/src/repository/parcel_repository.dart';
+import 'package:admin_desktop/src/repository/impl/parcel_repository_impl.dart';
 
 
 final GetIt getIt = GetIt.instance;
@@ -56,11 +60,13 @@ void setUpDependencies() {
   getIt.registerSingleton<TaskRepository>(TaskRepositoryImpl(dioHttp));
   getIt.registerSingleton<PersonalMasteryRepository>(PersonalMasteryRepositoryImpl(dioHttp));
   getIt.registerSingleton<RoadmapRepository>(RoadmapRepositoryImpl(dioHttp));
+  getIt.registerSingleton<DeliveryPointsRepository>(DeliveryPointsRepositoryImpl());
 
   getIt.registerSingleton<PlanProvider>(PlanProvider(getIt<PlanRepository>()));
   getIt.registerSingleton<TaskProvider>(TaskProvider(getIt<TaskRepository>()));
   getIt.registerSingleton<PersonalMasteryProvider>(PersonalMasteryProvider(getIt<PersonalMasteryRepository>()));
   getIt.registerSingleton<RoadmapProvider>(RoadmapProvider(getIt<RoadmapRepository>()));
+  getIt.registerSingleton<ParcelRepository>(ParcelRepositoryImpl());
   //getIt.registerSingleton<TenderRepository>(TenderRepository());
   //getIt.registerSingleton<TenderProvider>(TenderProvider(getIt<TenderRepository>(),getIt<TaskProvider>()));
 
@@ -88,6 +94,8 @@ final planRepository = getIt.get<PlanRepository>();
 final personalMasteryRepository = getIt.get<PersonalMasteryRepository>();
 final roadmapRepository = getIt.get<RoadmapRepository>();
 final taskRepository = getIt.get<TaskRepository>();
+final deliveryPointsRepository = getIt.get<DeliveryPointsRepository>();
+final parcelRepository = getIt.get<ParcelRepository>();
 //final tenderRepository = getIt.get<TenderRepository>();
 //final tenderProvider = getIt.get<TenderProvider>();
 

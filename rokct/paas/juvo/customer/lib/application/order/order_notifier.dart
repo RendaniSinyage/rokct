@@ -16,6 +16,7 @@ import 'package:foodyman/presentation/routes/app_router.dart';
 import 'package:foodyman/domain/interface/orders.dart';
 import 'package:foodyman/domain/interface/payments.dart';
 import 'package:foodyman/domain/interface/shops.dart';
+import 'package:foodyman/infrastructure/models/data/delivery_point_data.dart';
 import 'package:foodyman/infrastructure/models/models.dart';
 import 'package:foodyman/infrastructure/models/request/cart_request.dart';
 import 'package:foodyman/infrastructure/services/app_connectivity.dart';
@@ -115,6 +116,10 @@ class OrderNotifier extends StateNotifier<OrderState> {
 
   void setTimeAndDay(TimeOfDay timeOfDay, DateTime day) {
     state = state.copyWith(selectTime: timeOfDay, selectDate: day);
+  }
+
+  void setDeliveryPoint(DeliveryPointData? point) {
+    state = state.copyWith(selectedDeliveryPoint: point);
   }
 
   void checkWorkingDay() {

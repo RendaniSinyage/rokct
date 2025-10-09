@@ -48,9 +48,16 @@
    "label": "Address"
   },
   {
-   "fieldname": "location",
-   "fieldtype": "Small Text",
-   "label": "Location"
+   "fieldname": "latitude",
+   "fieldtype": "Float",
+   "label": "Latitude",
+   "precision": "8"
+  },
+  {
+   "fieldname": "longitude",
+   "fieldtype": "Float",
+   "label": "Longitude",
+   "precision": "8"
   },
   {
    "fieldname": "img",

@@ -17,7 +17,7 @@ enum ListAlignment { singleBig, vertically, horizontally }
 
 enum ExtrasType { color, text, image }
 
-enum DeliveryTypeEnum { delivery, pickup }
+enum DeliveryTypeEnum { delivery, pickup, pickupPoint }
 
 enum ShippingDeliveryVisibilityType {
   cantOrder,

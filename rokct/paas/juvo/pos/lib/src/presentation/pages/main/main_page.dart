@@ -53,6 +53,7 @@ import 'widgets/JuvoONE/widgets/expenses/add_expense.dart';
 import 'widgets/JuvoONE/widgets/roSystem/maintenance/maintenance_alerts.dart';
 import 'widgets/JuvoONE/widgets/weather/weather_widget.dart';
 import 'widgets/inventory/inventory_page.dart';
+import 'widgets/parcels/parcels_page.dart';
 import 'widgets/orders_table/orders/accepted/accepted_orders_provider.dart';
 import 'widgets/orders_table/orders/new/new_orders_provider.dart';
 import 'widgets/orders_table/orders/on_a_way/on_a_way_orders_provider.dart';
@@ -114,6 +115,7 @@ class _MainPageState extends ConsumerState<MainPage>
     IndexedStackChild(child: const TablesPage()),
     IndexedStackChild(child: const SaleHistory()),
     IndexedStackChild(child: const InComePage()),
+    IndexedStackChild(child: const ParcelsPage()),
     if (AppConstants.enableJuvoONE) ...[
       IndexedStackChild(child: const InventoryPage()),
       IndexedStackChild(child: const DashboardEntry(), preload: true)
@@ -1089,6 +1091,28 @@ class _MainPageState extends ConsumerState<MainPage>
                     ? Remix.pie_chart_fill
                     : Remix.pie_chart_line,
                 color: state.selectIndex == 5 ? AppStyle.white : AppStyle.black,
+              ),
+            ),
+          ),
+          12.verticalSpace,
+          Container(
+            decoration: BoxDecoration(
+              color: state.selectIndex == 6
+                  ? (AppConstants.enableJuvoONE
+                      ? AppStyle.blueBonus
+                      : AppStyle.brandGreen)
+                  : AppStyle.transparent,
+              borderRadius: BorderRadius.circular(10.r),
+            ),
+            child: IconButton(
+              onPressed: () {
+                ref.read(mainProvider.notifier).changeIndex(6);
+              },
+              icon: Icon(
+                state.selectIndex == 6
+                    ? Remix.truck_fill
+                    : Remix.truck_line,
+                color: state.selectIndex == 6 ? AppStyle.white : AppStyle.black,
               ),
             ),
           ),

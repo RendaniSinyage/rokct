@@ -117,6 +117,3 @@ This is because the test runner expects to be run within a Frappe "bench" contex
 
 
 \*\*Note:\*\* The tests could not be successfully run in the current environment due to this configuration issue. A full `bench init` and `new-site` setup may be required to get the tests to pass.
-
-
-

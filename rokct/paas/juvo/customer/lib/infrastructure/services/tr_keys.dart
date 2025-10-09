@@ -322,6 +322,7 @@ class TrKeys {
   static const String allShops = 'all_shops';
   static const String work247 = 'work_247';
   static const String pickup = 'pickup';
+  static const String pickup_point = 'pickup_point';
   static const String pickupAt = 'pickup_at';
   static const String language = 'languages';
   static const String currency = 'currency';

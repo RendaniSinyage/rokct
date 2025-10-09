@@ -5,6 +5,7 @@ import 'package:foodyman/infrastructure/services/local_storage.dart';
 
 class OrderBodyData {
   final int cartId;
+  final int? deliveryPointId;
   final String? note;
   final int shopId;
   final int? paymentId;
@@ -22,6 +23,7 @@ class OrderBodyData {
 
   OrderBodyData({
     required this.cartId,
+    this.deliveryPointId,
     required this.shopId,
     required this.paymentId,
     required this.deliveryFee,
@@ -44,6 +46,7 @@ class OrderBodyData {
       "currency_id": LocalStorage.getSelectedCurrency()?.id ?? 0,
       "rate": LocalStorage.getSelectedCurrency()?.rate ?? 1,
       "shop_id": shopId,
+      if (deliveryPointId != null) "delivery_point_id": deliveryPointId,
       if (username != null) "username": username,
       if (phone?.isNotEmpty ?? false) "phone": phone,
       if (email?.isNotEmpty ?? false) "email": email,  // Include email in JSON
