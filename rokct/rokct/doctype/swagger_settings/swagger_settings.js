@@ -3,41 +3,29 @@
 
 frappe.ui.form.on("Swagger Settings", {
     refresh: function(frm) {
-        // Clear previous messages and indicators
-        frm.dashboard.clear_messages();
-        frm.dashboard.clear_indicators();
-
-        // Remove existing custom buttons to prevent duplicates on refresh
-        if(frm.custom_buttons["View Log"]) {
-            frm.remove_custom_button("View Log");
-        }
-
-        // Show the generation status
+        // Use the modern frm.set_indicator API to show generation status
         if (frm.doc.generation_status) {
             let color = {
                 "Success": "green",
                 "Failed": "red",
                 "In Progress": "blue"
             }[frm.doc.generation_status];
-
-            frm.dashboard.add_indicator(
-                __('Generation Status: {0}', [frm.doc.generation_status]) +
-                (frm.doc.last_generation_time ? ` (${frappe.datetime.comment_when(frm.doc.last_generation_time)})` : ''),
-                color
-            );
-
-            // Add "View Log" button if there is a log to show
-            if (frm.doc.generation_log) {
-                frm.add_custom_button(__('View Log'), function() {
-                    frappe.msgprint({
-                        title: __('Generation Log'),
-                        indicator: frm.doc.generation_status === 'Failed' ? 'red' : 'blue',
-                        message: `<pre style="white-space: pre-wrap; word-wrap: break-word;">${frm.doc.generation_log}</pre>`
-                    });
-                });
-            }
+            let message = __('Generation Status: {0}', [frm.doc.generation_status]) +
+                          (frm.doc.last_generation_time ? ` (${frappe.datetime.comment_when(frm.doc.last_generation_time)})` : '');
+            frm.set_indicator(message, color);
         } else {
-            frm.dashboard.add_indicator(__('Status not available. Generate documentation to see the status.'), 'gray');
+            frm.set_indicator(__('Status not available. Generate documentation to see the status.'), 'gray');
+        }
+
+        // Add a "View Log" button if there is a log to show
+        if (frm.doc.generation_log) {
+            frm.add_custom_button(__('View Log'), function() {
+                frappe.msgprint({
+                    title: __('Generation Log'),
+                    indicator: frm.doc.generation_status === 'Failed' ? 'red' : 'blue',
+                    message: `<pre style="white-space: pre-wrap; word-wrap: break-word;">${frm.doc.generation_log}</pre>`
+                });
+            });
         }
 
         frappe.call({
@@ -50,17 +38,12 @@ frappe.ui.form.on("Swagger Settings", {
 
                 if (!is_control_panel) {
                     // If not the control site, make everything read-only
-                    frm.dashboard.add_warning_message(
-                        __('Swagger settings can only be managed on the control site. This site has the role: <b>{0}</b>. All fields are read-only.', [r.message || 'tenant'])
-                    );
-
                     frm.fields.forEach(function(field) {
                         frm.set_df_property(field.df.fieldname, 'read_only', 1);
                     });
                     frm.disable_save();
                 } else {
                     // If it is the control site, ensure fields are writable
-                    // Keep status fields read-only
                     const read_only_fields = ['last_generation_time', 'generation_status', 'generation_log'];
                     frm.fields.forEach(function(field) {
                         if (field.df.fieldname !== 'generate_swagger_json' && !read_only_fields.includes(field.df.fieldname)) {
