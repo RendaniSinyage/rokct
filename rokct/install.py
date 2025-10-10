@@ -288,20 +288,10 @@ def setup_flutter_build_tools():
             print(doctor_output)
             print("-" * 80)
 
-        # --- 6. Final Success Message and Instructions ---
+        # --- 6. Final Success Message ---
         print("\n" + "="*80)
         print("✅ SUCCESS: Flutter and Android build tools are installed and ready for the system.")
         print("="*80)
-        print("\nNOTE FOR DEVELOPERS (Optional Step):")
-        print("To run 'flutter' and 'adb' commands directly from your terminal, you may need to update your shell profile.")
-        print("Add the following lines to your shell configuration file (e.g., ~/.profile or ~/.bashrc):")
-        print("\n" + "-" * 50)
-        print(f'export FLUTTER_HOME="{flutter_sdk_path}"')
-        print(f'export ANDROID_HOME="{android_sdk_path}"')
-        print('export PATH="$PATH:$FLUTTER_HOME/bin"')
-        print('export PATH="$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools"')
-        print("-" * 50 + "\n")
-        print("After adding these lines, run 'source ~/.profile' (or your shell's equivalent) or restart your terminal.")
 
     except (subprocess.CalledProcessError, FileNotFoundError) as e:
         print(f"\nERROR: A command failed during Flutter setup. Reason: {e}")
