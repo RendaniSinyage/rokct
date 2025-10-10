@@ -317,43 +317,47 @@ def get_child_table_schema(child_doctype, example_data=None):
 
 def copy_api_files():
     """
-    Copies the generated Swagger API files from the app's public directory
-    to the destination specified in the Swagger Settings or site_config.json.
+    Copies the generated Swagger API files and returns log messages for the UI.
     """
+    log_messages = []
     swagger_settings = frappe.get_single("Swagger Settings")
     source = os.path.join(frappe.get_app_path('rokct'), 'public', 'api/')
 
-    # Priority 1: Get destination from Swagger Settings UI
     dest = swagger_settings.rsync_destination
+    log_source = "Swagger Settings UI"
 
-    # Priority 2: If not in UI, get from site_config.json
     if not dest:
         dest = frappe.conf.get("rsync_destination")
+        log_source = "site_config.json"
 
     if not dest:
-        frappe.log_info("Swagger rsync", "Rsync destination is not set in Swagger Settings or site_config.json. Skipping file copy.")
-        return
+        log_messages.append("--- Rsync Status ---")
+        log_messages.append("Skipped: rsync destination is not set in the UI or site_config.json.")
+        return log_messages
+
+    log_messages.append("--- Rsync Status ---")
+    log_messages.append(f"Destination ({log_source}): {dest}")
 
     try:
-        # Ensure the destination directory exists
         os.makedirs(dest, exist_ok=True)
 
         command = ["rsync", "-av", "--delete", source, dest]
         result = subprocess.run(command, capture_output=True, text=True)
 
         if result.returncode == 0:
-            frappe.log_info("Swagger rsync", f"Successfully copied API files to {dest}")
+            log_messages.append("Success: Files copied successfully.")
+            frappe.logger().info(f"Swagger rsync to {dest} completed successfully.")
         else:
-            frappe.log_error(
-                title="Swagger rsync Failed",
-                message=f"Error copying API files: {result.stderr}"
-            )
+            error_message = f"Error during rsync: {result.stderr}"
+            log_messages.append(f"Failed: {error_message}")
+            frappe.log_error(title="Swagger rsync Failed", message=error_message)
 
     except Exception as e:
-        frappe.log_error(
-            title="Swagger rsync Exception",
-            message=f"An exception occurred during rsync: {str(e)}"
-        )
+        error_message = f"An exception occurred during rsync: {str(e)}"
+        log_messages.append(f"Failed: {error_message}")
+        frappe.log_error(title="Swagger rsync Exception", message=error_message)
+
+    return log_messages
 
 @frappe.whitelist(allow_guest=True)
 def generate_swagger_json():
@@ -960,13 +964,14 @@ def generate_swagger_json():
         else:
             swagger_settings.generation_status = "Success"
 
+        # After successful generation, copy the files and get logs
+        rsync_logs = copy_api_files()
+        full_log += "\n\n" + "\n".join(rsync_logs)
+
         swagger_settings.generation_log = full_log
         frappe.msgprint(f"<b>Swagger Generation Complete</b><br><br>{log_summary.replace(', ', '<br>')}<br><br><i>Check the Generation Log for details.</i>")
         swagger_settings.save(ignore_permissions=True)
         frappe.db.commit()
-
-        # After successful generation, copy the files
-        copy_api_files()
 
     except Exception as e:
         # On failure
