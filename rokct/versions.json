@@ -1,5 +1,11 @@
 {
   "rokct": "1.3.7",
-  "paas": "0.2.1"
+  "paas": "0.2.1",
+  "flutter_sdk_version": "3.22.2-stable",
+  "android_platform": "34",
+  "android_build_tools": "34.0.0",
+  "cmake_version": "3.14",
+  "pdfium_version": "4929",
+  "cxx_standard": "17",
+  "jdk_package": "openjdk-17-jdk"
 }
-
