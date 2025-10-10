@@ -276,16 +276,22 @@ def setup_flutter_build_tools():
 
         # --- 4. Install Android dependencies and accept licenses ---
         print("INFO: Installing required Android SDK packages and accepting licenses...")
-        packages_to_install = " ".join(["platform-tools", "platforms;android-34", "build-tools;34.0.0"])
+        packages_to_install = ["platform-tools", "platforms;android-34", "build-tools;34.0.0"]
 
         print("Accepting Android licenses...")
+        # Using shell=True is a standard, if brittle, way to handle this interactive command.
         license_process = subprocess.run(f"yes | {sdkmanager_path} --licenses", shell=True, capture_output=True, text=True, env=env, check=True)
         print(license_process.stdout)
 
-        print(f"Installing SDK packages: {packages_to_install}...")
-        install_process = subprocess.run(f"{sdkmanager_path} {packages_to_install}", shell=True, capture_output=True, text=True, env=env, check=True)
-        print(install_process.stdout)
-        print("SUCCESS: Android SDK packages installed and licenses accepted.")
+        print("Installing SDK packages one by one to ensure stability...")
+        for package in packages_to_install:
+            print(f"--- Installing {package} ---")
+            # We install packages individually to prevent shell interpretation issues with the package strings.
+            install_command = [sdkmanager_path, package]
+            install_process = subprocess.run(install_command, capture_output=True, text=True, env=env, check=True)
+            print(install_process.stdout)
+
+        print("SUCCESS: All Android SDK packages installed and licenses accepted.")
 
         # --- 5. Final check with flutter doctor ---
         print("INFO: Running 'flutter doctor' to verify installation...")
