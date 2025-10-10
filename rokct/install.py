@@ -181,18 +181,25 @@ def setup_flutter_build_tools():
 
         # --- 2. Check and Install System Dependencies ---
         print("INFO: Checking for required system dependencies...")
-        deps = ["wget", "tar", "unzip", "clang", "cmake", "ninja-build", jdk_package]
-        missing_deps = [dep for dep in deps if not shutil.which(dep.split('-')[0])] # Simple check for cmake, etc.
 
-        if missing_deps:
-            print(f"INFO: The following dependencies are missing: {', '.join(missing_deps)}. Attempting to install...")
+        deps_to_install = []
+        if not shutil.which("java"):
+            deps_to_install.append(jdk_package)
+
+        other_deps = ["wget", "tar", "unzip", "clang", "cmake", "ninja-build"]
+        for dep in other_deps:
+            if not shutil.which(dep):
+                deps_to_install.append(dep)
+
+        if deps_to_install:
+            print(f"INFO: The following dependencies are missing: {', '.join(deps_to_install)}. Attempting to install...")
             try:
                 subprocess.run(["sudo", "apt-get", "update", "-y"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
-                subprocess.run(["sudo", "apt-get", "install", "-y"] + missing_deps, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+                subprocess.run(["sudo", "apt-get", "install", "-y"] + deps_to_install, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
                 print("SUCCESS: All system dependencies installed.")
             except (subprocess.CalledProcessError, Exception) as e:
                 print("\nERROR: Automatic installation of system dependencies failed.")
-                print(f"Please install the following packages manually: {', '.join(missing_deps)}")
+                print(f"Please install the following packages manually: {', '.join(deps_to_install)}")
                 return
         else:
             print("SUCCESS: All system dependencies are present.")
@@ -239,7 +246,9 @@ def setup_flutter_build_tools():
 
         # --- 6. Install Android Packages ---
         env = os.environ.copy()
-        env["PATH"] = f"{os.path.join(flutter_sdk_path, 'bin')}:{sdkmanager_path.rsplit('/', 1)[0]}:{os.path.join(android_sdk_path, 'platform-tools')}:{env['PATH']}"
+        env["ANDROID_HOME"] = android_sdk_path
+        env["FLUTTER_HOME"] = flutter_sdk_path
+        env["PATH"] = f"{os.path.join(flutter_sdk_path, 'bin')}:{os.path.dirname(sdkmanager_path)}:{os.path.join(android_sdk_path, 'platform-tools')}:{env['PATH']}"
 
         print("INFO: Installing required Android SDK packages and accepting licenses...")
         packages_to_install = ["platform-tools", f"platforms;android-{android_platform}", f"build-tools;{android_build_tools}"]
@@ -272,6 +281,18 @@ def setup_flutter_build_tools():
             print("SUCCESS: ~/.bashrc created and PATH variables added.")
 
         # --- 8. Final Verification and Instructions ---
+        print("INFO: Running 'flutter doctor' to verify installation...")
+        doctor_process = subprocess.run([os.path.join(flutter_sdk_path, "bin", "flutter"), "doctor"], capture_output=True, text=True, env=env)
+        doctor_output = doctor_process.stdout
+
+        # Check for the critical component's success, instead of printing the whole noisy output.
+        if "[✓] Android toolchain" in doctor_output:
+            print("SUCCESS: Flutter doctor reports a healthy Android toolchain.")
+        else:
+            with open(bashrc_path, "w") as f:
+                f.write("\n".join(exports) + "\n")
+            print("SUCCESS: ~/.bashrc created and PATH variables added.")
+
         print("\n" + "="*80)
         print("✅ SUCCESS: Flutter and Android build tools are installed and ready for the system.")
         print("\nIMPORTANT: To apply the new environment variables, you must either:")
