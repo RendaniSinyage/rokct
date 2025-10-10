@@ -166,6 +166,16 @@ def setup_flutter_build_tools():
 
     print("--- Running Post-Install Step: Setup Flutter Build Tools ---")
 
+    # --- Setup SDK Directories for lock file check ---
+    bench_path = frappe.utils.get_bench_path()
+    sdk_dir = os.path.join(bench_path, "sdks")
+    lock_file_path = os.path.join(sdk_dir, ".flutter_setup_complete")
+
+    if os.path.exists(lock_file_path):
+        print("INFO: Flutter and Android build tools are already installed and verified. Skipping setup.")
+        # Optional: Add a quick verification step here if needed
+        return
+
     try:
         # --- 1. Read Configuration ---
         print("INFO: Reading required versions from versions.json...")
@@ -315,6 +325,11 @@ def setup_flutter_build_tools():
         print("  1. Close and reopen your terminal session.")
         print("  2. Run the command: source ~/.bashrc")
         print("="*80)
+
+        # --- 9. Create Lock File ---
+        with open(lock_file_path, "w") as f:
+            f.write("Setup completed successfully.")
+        print(f"INFO: Created lock file at {lock_file_path}")
 
     except Exception as e:
         print(f"\nFATAL ERROR during Flutter setup: {e}")
