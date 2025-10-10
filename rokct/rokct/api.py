@@ -133,8 +133,31 @@ def deprecated_signup_with_company(email, password, first_name, last_name, compa
 def get_weather(location: str):
     """
     Get weather data for a given location, with caching.
-    This endpoint is intended to be called by tenant sites.
+    This endpoint is intended to be called by tenant sites and requires authentication.
     """
+    # This API should only ever run on the control panel.
+    if frappe.conf.get("app_role") != "control_panel":
+        frappe.throw("This action can only be performed on the control panel.", title="Action Not Allowed")
+
+    # 1. Authenticate the request
+    tenant_site = frappe.local.request.host
+    received_secret = frappe.local.request.headers.get("X-Rokct-Secret")
+
+    if not tenant_site:
+        frappe.throw("Could not identify tenant site from request.")
+    if not received_secret:
+        frappe.throw("Missing or invalid X-Rokct-Secret header.")
+
+    subscription_name = frappe.db.get_value("Company Subscription", {"site_name": tenant_site}, "name")
+    if not subscription_name:
+        frappe.throw(f"No subscription found for site {tenant_site}")
+
+    stored_secret = frappe.utils.get_password(doctype="Company Subscription", name=subscription_name, fieldname="api_secret")
+
+    if not stored_secret or received_secret != stored_secret:
+        frappe.throw("Authentication failed.")
+
+    # 2. Proceed with the API logic if authenticated
     if not location:
         frappe.throw("Location is a required parameter.")
 
