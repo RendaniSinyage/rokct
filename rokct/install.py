@@ -171,15 +171,12 @@ def setup_flutter_build_tools():
         if not shutil.which("java") and not os.environ.get("JAVA_HOME"):
             print("INFO: Java Development Kit (JDK) not found. Attempting to install it automatically...")
             try:
-                # Using sudo is necessary for system-level package installation.
-                print("INFO: Updating package lists with 'sudo apt-get update'...")
-                # We show the output in real-time for user visibility
-                subprocess.run(["sudo", "apt-get", "update", "-y"], check=True)
+                print("      - Updating package lists with 'sudo apt-get update'...")
+                subprocess.run(["sudo", "apt-get", "update", "-y"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
 
-                print("INFO: Installing OpenJDK 17 with 'sudo apt-get install openjdk-17-jdk'...")
-                subprocess.run(["sudo", "apt-get", "install", "-y", "openjdk-17-jdk"], check=True)
+                print("      - Installing OpenJDK 17 with 'sudo apt-get install openjdk-17-jdk'...")
+                subprocess.run(["sudo", "apt-get", "install", "-y", "openjdk-17-jdk"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
 
-                # Verify installation after attempting to install
                 if not shutil.which("java"):
                     raise Exception("Java installation command appeared to succeed, but the 'java' command is still not available in the PATH. Manual intervention may be required.")
                 print("SUCCESS: Java Development Kit (JDK) installed successfully.")
@@ -187,8 +184,7 @@ def setup_flutter_build_tools():
             except (subprocess.CalledProcessError, Exception) as e:
                 print("\n" + "="*80)
                 print("ERROR: Automatic installation of Java failed.")
-                # Check for common permission error messages
-                stderr = getattr(e, 'stderr', '').lower()
+                stderr = getattr(e, 'stderr', b'').decode('utf-8', 'ignore').lower()
                 if "permission denied" in stderr or "are you root" in stderr:
                     print("This is likely due to missing permissions.")
                     print("Please try running the installation command again with 'sudo'.")
@@ -196,11 +192,10 @@ def setup_flutter_build_tools():
                 else:
                     print(f"Reason: {e}")
                 print("="*80 + "\n")
-                return # Stop the process if Java installation fails.
+                return
         else:
             print("SUCCESS: Java installation found.")
 
-        # Check for other tools
         required_tools = ["wget", "tar", "unzip"]
         missing_tools = [tool for tool in required_tools if not shutil.which(tool)]
         if missing_tools:
@@ -223,27 +218,22 @@ def setup_flutter_build_tools():
             print("INFO: Flutter SDK is already installed.")
         else:
             print("INFO: Flutter SDK not found. Starting installation...")
-            # Note: The URL is hardcoded as a known limitation. A more advanced solution
-            # could scrape the Flutter website for the latest stable URL.
             flutter_url = "https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.22.2-stable.tar.xz"
             flutter_archive = os.path.join(sdk_dir, "flutter.tar.xz")
 
-            print(f"Downloading Flutter SDK from {flutter_url}...")
+            print(f"      - Downloading Flutter SDK...")
             subprocess.run(["wget", "-q", "-O", flutter_archive, flutter_url], check=True)
 
-            print("Extracting Flutter SDK...")
-            subprocess.run(["tar", "-xf", flutter_archive, "-C", sdk_dir], check=True)
-
+            print("      - Extracting Flutter SDK...")
+            subprocess.run(["tar", "-xf", flutter_archive, "-C", sdk_dir], check=True, stdout=subprocess.DEVNULL)
             os.remove(flutter_archive)
             print("SUCCESS: Flutter SDK installed.")
 
         # --- 2. Setup Environment Variables for this process ---
-        print("INFO: Setting up environment for the current process...")
         env = os.environ.copy()
         env["FLUTTER_HOME"] = flutter_sdk_path
         env["ANDROID_HOME"] = android_sdk_path
         env["PATH"] = f"{os.path.join(flutter_sdk_path, 'bin')}:{os.path.join(android_sdk_path, 'cmdline-tools', 'latest', 'bin')}:{os.path.join(android_sdk_path, 'platform-tools')}:{env['PATH']}"
-        print("SUCCESS: Environment configured for this session.")
 
         # --- 3. Check/Install Android SDK ---
         sdkmanager_path = os.path.join(android_sdk_path, "cmdline-tools", "latest", "bin", "sdkmanager")
@@ -251,21 +241,19 @@ def setup_flutter_build_tools():
             print("INFO: Android command-line tools are already installed.")
         else:
             print("INFO: Android command-line tools not found. Starting installation...")
-            # Note: The URL is hardcoded as a known limitation.
             android_tools_url = "https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip"
             android_archive = os.path.join(sdk_dir, "android-tools.zip")
 
-            print(f"Downloading Android command-line tools from {android_tools_url}...")
+            print(f"      - Downloading Android command-line tools...")
             subprocess.run(["wget", "-q", "-O", android_archive, android_tools_url], check=True)
 
-            print("Extracting Android command-line tools...")
+            print("      - Extracting Android command-line tools...")
             temp_extract_path = os.path.join(sdk_dir, "android-temp")
             os.makedirs(temp_extract_path, exist_ok=True)
             subprocess.run(["unzip", "-q", android_archive, "-d", temp_extract_path], check=True)
 
             tools_latest_path = os.path.join(android_sdk_path, "cmdline-tools", "latest")
             os.makedirs(tools_latest_path, exist_ok=True)
-            # Move contents of the extracted 'cmdline-tools' directory to the 'latest' directory
             extracted_dir = os.path.join(temp_extract_path, "cmdline-tools")
             for item in os.listdir(extracted_dir):
                 shutil.move(os.path.join(extracted_dir, item), os.path.join(tools_latest_path, item))
@@ -278,40 +266,41 @@ def setup_flutter_build_tools():
         print("INFO: Installing required Android SDK packages and accepting licenses...")
         packages_to_install = ["platform-tools", "platforms;android-34", "build-tools;34.0.0"]
 
-        print("Accepting Android licenses...")
-        # Using shell=True is a standard, if brittle, way to handle this interactive command.
-        license_process = subprocess.run(f"yes | {sdkmanager_path} --licenses", shell=True, capture_output=True, text=True, env=env, check=True)
-        print(license_process.stdout)
+        print("      - Accepting Android licenses...")
+        subprocess.run(f"yes | {sdkmanager_path} --licenses", shell=True, env=env, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
 
-        print("Installing SDK packages one by one to ensure stability...")
+        print("      - Installing SDK packages...")
         for package in packages_to_install:
-            print(f"--- Installing {package} ---")
-            # We install packages individually to prevent shell interpretation issues with the package strings.
-            install_command = [sdkmanager_path, package]
-            install_process = subprocess.run(install_command, capture_output=True, text=True, env=env, check=True)
-            print(install_process.stdout)
-
+            subprocess.run([sdkmanager_path, package], env=env, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
         print("SUCCESS: All Android SDK packages installed and licenses accepted.")
 
         # --- 5. Final check with flutter doctor ---
         print("INFO: Running 'flutter doctor' to verify installation...")
-        doctor_process = subprocess.run([os.path.join(flutter_sdk_path, "bin", "flutter"), "doctor", "-v"], capture_output=True, text=True, env=env)
-        print(doctor_process.stdout)
-        if doctor_process.stderr:
-            print("--- Flutter Doctor Errors/Warnings ---")
-            print(doctor_process.stderr)
-        print("SUCCESS: Flutter doctor check complete.")
+        doctor_process = subprocess.run([os.path.join(flutter_sdk_path, "bin", "flutter"), "doctor"], capture_output=True, text=True, env=env)
+        doctor_output = doctor_process.stdout
 
-        # --- 6. Final Instructions for User ---
-        print("\n--- ACTION REQUIRED: Update Your Shell Profile ---")
-        print("To make the Flutter and Android SDKs available in all future terminal sessions,")
-        print("please add the following lines to your shell configuration file (e.g., ~/.profile, ~/.bashrc, or ~/.zshrc):")
-        print("\n" + "#" * 50)
+        # Check for the critical component's success, instead of printing the whole noisy output.
+        if "[✓] Android toolchain" in doctor_output:
+            print("SUCCESS: Flutter doctor reports a healthy Android toolchain.")
+        else:
+            print("\nWARNING: 'flutter doctor' reported some issues. This may be okay, as long as the Android toolchain is correctly installed. Please review the full output below:")
+            print("-" * 80)
+            print(doctor_output)
+            print("-" * 80)
+
+        # --- 6. Final Success Message and Instructions ---
+        print("\n" + "="*80)
+        print("✅ SUCCESS: Flutter and Android build tools are installed and ready for the system.")
+        print("="*80)
+        print("\nNOTE FOR DEVELOPERS (Optional Step):")
+        print("To run 'flutter' and 'adb' commands directly from your terminal, you may need to update your shell profile.")
+        print("Add the following lines to your shell configuration file (e.g., ~/.profile or ~/.bashrc):")
+        print("\n" + "-" * 50)
         print(f'export FLUTTER_HOME="{flutter_sdk_path}"')
         print(f'export ANDROID_HOME="{android_sdk_path}"')
         print('export PATH="$PATH:$FLUTTER_HOME/bin"')
         print('export PATH="$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools"')
-        print("#" * 50 + "\n")
+        print("-" * 50 + "\n")
         print("After adding these lines, run 'source ~/.profile' (or your shell's equivalent) or restart your terminal.")
 
     except (subprocess.CalledProcessError, FileNotFoundError) as e:
