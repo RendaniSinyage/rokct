@@ -106,7 +106,7 @@ def get_sites_to_migrate(sites):
 
 def update_rokct_app(bench_path):
     try:
-        app_path = os.path.join(bench_path, "apps", "rokct")
+        app_path = frappe.get_app_path("rokct")
 
         current_branch = subprocess.check_output(
             ["git", "rev-parse", "--abbrev-ref", "HEAD"],
@@ -192,8 +192,57 @@ def update_rokct_app(bench_path):
         else:
             logging.info("Rokct app and its sub-modules are up to date.")
 
+        # Always check for frontend package updates
+        check_frontend_updates(frappe.get_app_path("rokct", "..", ".."))
+
     except Exception as e:
         logging.error(f"An unexpected error occurred during the update process: {e}", exc_info=True)
+
+
+def check_frontend_updates(app_path):
+    """Checks for outdated npm packages and logs them."""
+    package_json_path = os.path.join(app_path, "package.json")
+    if not os.path.exists(package_json_path):
+        logging.info("No package.json found, skipping frontend update check.")
+        return
+
+    logging.info("Checking for frontend dependency updates...")
+    try:
+        result = subprocess.run(
+            ["yarn", "outdated", "--json"],
+            cwd=app_path,
+            capture_output=True,
+            text=True,
+            encoding='utf-8'
+        )
+
+        if result.stdout:
+            outdated_packages = []
+            # The output is a stream of JSON objects, one per line.
+            for line in result.stdout.strip().split('\n'):
+                try:
+                    data = json.loads(line)
+                    if data.get("type") == "table":
+                        outdated_packages = data.get("data", {}).get("body", [])
+                        break
+                except json.JSONDecodeError:
+                    continue # Ignore lines that are not valid JSON
+
+            if not outdated_packages:
+                logging.info("All frontend dependencies are up to date.")
+                return
+
+            message = "Found outdated frontend packages:\n"
+            for pkg_info in outdated_packages:
+                name, current, wanted, latest, url = pkg_info
+                message += f"- {name}: Current: {current}, Latest: {latest}\n"
+
+            logging.warning(message)
+
+    except FileNotFoundError:
+        logging.error("'yarn' command not found. Cannot check for frontend updates.")
+    except Exception as e:
+        logging.error(f"An error occurred while checking for frontend updates: {e}", exc_info=True)
 
 
 def notify_pending_approvals(sites_pending_approval):
@@ -270,4 +319,3 @@ def migrate_control_panel_site(bench_path):
     finally:
         if os.path.exists(lock_path):
             os.remove(lock_path)
-

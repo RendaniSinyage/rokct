@@ -12,6 +12,30 @@ bench get-app $URL_OF_THIS_REPO --branch develop
 bench install-app rokct
 ```
 
+### Frontend Development
+
+This app uses a modern frontend stack built on [Frappe UI](https://github.com/frappe/frappe-ui), which is a component library based on Vue 3 and Tailwind CSS. This replaces the standard Frappe Desk interface with a custom, modern UI.
+
+*   **Source Code:** All frontend source code is located in the `/ui` directory.
+*   **Build Process:** The frontend assets are built automatically when the app is installed or updated on a `control_panel` site. This process is handled by a script in `rokct/build.py`.
+
+#### `frappe-ui` Resources
+
+The official `frappe-ui` repository is an excellent resource for documentation and understanding the available components.
+
+*   **Official Repository:** [https://github.com/frappe/frappe-ui](https://github.com/frappe/frappe-ui)
+
+#### Projects Using Frappe UI
+
+Many modern Frappe projects use `frappe-ui`. These repositories serve as great real-world examples:
+
+*   [Frappe Builder](https://github.com/frappe/builder)
+*   [Frappe Insights](https://github.com/frappe/insights)
+*   [Gameplan](https://github.com/frappe/gameplan)
+*   [Helpdesk](https://github.com/frappe/helpdesk)
+*   [Frappe Drive](https://github.com/frappe/drive)
+*   Frappe Cloud (not open source)
+
 ### Debugging with the AI Agent
 
 The owner of this repository is not a developer and relies on an AI software engineer for maintenance and development.

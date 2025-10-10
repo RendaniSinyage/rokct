@@ -18,3 +18,8 @@ venv/
 # IDE settings
 .vscode/
 .idea/
+
+# Frontend
+node_modules/
+dist/
+.DS_Store
