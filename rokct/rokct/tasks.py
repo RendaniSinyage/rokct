@@ -25,6 +25,16 @@ def manage_daily_tenders():
     print("Daily Tender Management Job Complete.")
 
 
+def _format_datetime_str(datetime_obj):
+    """
+    Formats a datetime object into a string ('YYYY-MM-DD HH:MM:SS')
+    for database insertion, stripping any timezone info.
+    """
+    if not datetime_obj:
+        return None
+    return datetime_obj.strftime('%Y-%m-%d %H:%M:%S')
+
+
 def _fetch_and_upsert_tenders():
     """
     Fetches tender data from the eTenders API, parses it, and upserts it
@@ -77,9 +87,9 @@ def _fetch_and_upsert_tenders():
                         "title": tender_data.get("title"),
                         "status": tender_data.get("status"),
                         "publisher_name": release.get("publisher", {}).get("name"),
-                        "published_date": get_datetime(release.get("date")),
-                        "tender_start_date": get_datetime(tender_data.get("tenderPeriod", {}).get("startDate")),
-                        "tender_end_date": get_datetime(tender_data.get("tenderPeriod", {}).get("endDate")),
+                        "published_date": _format_datetime_str(get_datetime(release.get("date"))),
+                        "tender_start_date": _format_datetime_str(get_datetime(tender_data.get("tenderPeriod", {}).get("startDate"))),
+                        "tender_end_date": _format_datetime_str(get_datetime(tender_data.get("tenderPeriod", {}).get("endDate"))),
                         "value_amount": tender_data.get("value", {}).get("amount"),
                         "value_currency": tender_data.get("value", {}).get("currency"),
                         "description": tender_data.get("description"),
