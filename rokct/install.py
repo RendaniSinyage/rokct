@@ -227,7 +227,7 @@ def setup_flutter_build_tools():
 
         if deps_to_install:
             print(f"INFO: The following dependencies are missing: {', '.join(deps_to_install)}. Attempting to install...")
-            
+
             # --- Automated Password Handling (as per user instruction) ---
             db_root_password = None
             try:
@@ -238,7 +238,7 @@ def setup_flutter_build_tools():
                     db_root_password = common_config.get("db_root_password")
             except Exception as e:
                 print(f"WARNING: Could not read database password. Will fall back to interactive prompt. Reason: {e}")
-            
+
             install_successful = False
             if db_root_password:
                 print("INFO: Attempting automatic installation using stored password...")
@@ -279,7 +279,7 @@ def setup_flutter_build_tools():
         print(f"INFO: Ensuring Flutter SDK version {flutter_version} is installed...")
         if os.path.exists(flutter_sdk_path):
             shutil.rmtree(flutter_sdk_path)
-        
+
         archive = os.path.join(sdk_dir, "flutter.tar.xz")
         subprocess.run(["wget", "-q", "-O", archive, flutter_url], check=True)
         subprocess.run(["tar", "-xf", archive, "-C", sdk_dir], check=True, stdout=subprocess.DEVNULL)
@@ -308,6 +308,11 @@ def setup_flutter_build_tools():
 
         os.remove(archive)
         shutil.rmtree(temp_extract_path)
+
+        # Grant execute permissions to the sdkmanager to prevent exit code 126
+        if os.path.exists(sdkmanager_path):
+            os.chmod(sdkmanager_path, 0o755)
+
         print("SUCCESS: Android command-line tools installed.")
 
 
