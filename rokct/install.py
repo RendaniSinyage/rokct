@@ -262,26 +262,39 @@ def setup_flutter_build_tools():
 
         # --- 7. Configure User's PATH ---
         print("INFO: Configuring user's PATH in ~/.bashrc...")
-        bashrc_path = os.path.expanduser("~/.bashrc")
-        exports = [
-            f'\n# ROKCT Build Environment',
-            f'export ANDROID_HOME="{android_sdk_path}"',
-            f'export FLUTTER_HOME="{flutter_sdk_path}"',
-            f'export PATH="$FLUTTER_HOME/bin:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"',
-        ]
+        try:
+            import pwd
+            # Get the user who owns the bench directory, which is more reliable
+            uid = os.stat(bench_path).st_uid
+            user_info = pwd.getpwuid(uid)
+            home_dir = user_info.pw_dir
+            bashrc_path = os.path.join(home_dir, ".bashrc")
 
-        if os.path.exists(bashrc_path):
+            exports = [
+                f'\n# ROKCT Build Environment',
+                f'export ANDROID_HOME="{android_sdk_path}"',
+                f'export FLUTTER_HOME="{flutter_sdk_path}"',
+                f'export PATH="$FLUTTER_HOME/bin:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"',
+            ]
+
+            # Create .bashrc if it doesn't exist and set owner
+            if not os.path.exists(bashrc_path):
+                open(bashrc_path, 'a').close()
+                os.chown(bashrc_path, uid, user_info.pw_gid)
+                print(f"INFO: ~/.bashrc not found. Created a new one at {bashrc_path}")
+
             with open(bashrc_path, "r+") as f:
                 content = f.read()
                 if exports[0] not in content:
                     f.write("\n".join(exports) + "\n")
-                    print("SUCCESS: PATH variables added to ~/.bashrc.")
+                    print(f"SUCCESS: PATH variables added to {bashrc_path}.")
                 else:
-                    print("INFO: PATH variables already exist in ~/.bashrc.")
-        else:
-            with open(bashrc_path, "w") as f:
-                f.write("\n".join(exports) + "\n")
-            print("SUCCESS: ~/.bashrc created and PATH variables added.")
+                    print(f"INFO: PATH variables already exist in {bashrc_path}.")
+
+        except (ImportError, KeyError, OSError) as e:
+            print(f"WARNING: Could not automatically update shell configuration. Reason: {e}")
+            print("Please add the following lines to your shell configuration file (e.g., ~/.bashrc):")
+            print("\n".join(exports))
 
         # --- 8. Final Verification and Instructions ---
         print("INFO: Running 'flutter doctor' to verify installation...")
