@@ -166,16 +166,6 @@ def setup_flutter_build_tools():
 
     print("--- Running Post-Install Step: Setup Flutter Build Tools ---")
 
-    # --- Setup SDK Directories for lock file check ---
-    bench_path = frappe.utils.get_bench_path()
-    sdk_dir = os.path.join(bench_path, "sdks")
-    lock_file_path = os.path.join(sdk_dir, ".flutter_setup_complete")
-
-    if os.path.exists(lock_file_path):
-        print("INFO: Flutter and Android build tools are already installed and verified. Skipping setup.")
-        # Optional: Add a quick verification step here if needed
-        return
-
     try:
         # --- 1. Version and Path Setup ---
         bench_path = frappe.utils.get_bench_path()
@@ -237,7 +227,7 @@ def setup_flutter_build_tools():
 
         if deps_to_install:
             print(f"INFO: The following dependencies are missing: {', '.join(deps_to_install)}. Attempting to install...")
-
+            
             # --- Automated Password Handling (as per user instruction) ---
             db_root_password = None
             try:
@@ -248,7 +238,7 @@ def setup_flutter_build_tools():
                     db_root_password = common_config.get("db_root_password")
             except Exception as e:
                 print(f"WARNING: Could not read database password. Will fall back to interactive prompt. Reason: {e}")
-
+            
             install_successful = False
             if db_root_password:
                 print("INFO: Attempting automatic installation using stored password...")
@@ -289,7 +279,7 @@ def setup_flutter_build_tools():
         print(f"INFO: Ensuring Flutter SDK version {flutter_version} is installed...")
         if os.path.exists(flutter_sdk_path):
             shutil.rmtree(flutter_sdk_path)
-
+        
         archive = os.path.join(sdk_dir, "flutter.tar.xz")
         subprocess.run(["wget", "-q", "-O", archive, flutter_url], check=True)
         subprocess.run(["tar", "-xf", archive, "-C", sdk_dir], check=True, stdout=subprocess.DEVNULL)
