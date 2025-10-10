@@ -165,14 +165,27 @@ def setup_flutter_build_tools():
 
     try:
         # --- 0. Check for System Dependencies ---
-        print("INFO: Checking for required system dependencies (wget, tar, unzip)...")
+        print("INFO: Checking for required system dependencies...")
+
+        # Check for Java first, as it's a critical dependency for the Android SDK.
+        if not shutil.which("java") and not os.environ.get("JAVA_HOME"):
+            print("\n" + "="*80)
+            print("ERROR: Java Development Kit (JDK) not found.")
+            print("The Android SDK requires Java to be installed on your system.")
+            print("Please install a JDK (version 11 or higher is recommended) and run the installation again.")
+            print("Example command for Debian/Ubuntu: sudo apt-get install openjdk-17-jdk")
+            print("="*80 + "\n")
+            return # Stop the process if Java is missing.
+        print("SUCCESS: Java installation found.")
+
+        # Check for other tools
         required_tools = ["wget", "tar", "unzip"]
         missing_tools = [tool for tool in required_tools if not shutil.which(tool)]
         if missing_tools:
             print(f"ERROR: The following required system tools are missing: {', '.join(missing_tools)}.")
             print("Please install them using your system's package manager (e.g., 'sudo apt-get install wget tar unzip') and run the installation again.")
             return
-        print("SUCCESS: All system dependencies are present.")
+        print("SUCCESS: All other system dependencies are present.")
 
         bench_path = frappe.utils.get_bench_path()
         sdk_dir = os.path.join(bench_path, "sdks")
