@@ -38,6 +38,10 @@ def before_install():
 
 def after_install():
     print("\n--- Frappe Installation Process Finished ---")
+
+    # Run configs first to ensure database password is set
+    set_control_panel_configs()
+
     print("\n--- Manually Executing Data Seeders ---")
     try:
         from rokct.patches import seed_map_data, seed_subscription_plans_v4
@@ -49,7 +53,6 @@ def after_install():
         frappe.log_error(message=frappe.get_traceback(), title="Manual Seeder Execution Error")
 
     update_site_apps_txt_with_error_handling()
-    set_control_panel_configs()
     setup_flutter_build_tools()
     set_website_homepage()
     print("\n--- ROKCT App Installation Complete ---")
