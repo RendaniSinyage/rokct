@@ -169,14 +169,36 @@ def setup_flutter_build_tools():
 
         # Check for Java first, as it's a critical dependency for the Android SDK.
         if not shutil.which("java") and not os.environ.get("JAVA_HOME"):
-            print("\n" + "="*80)
-            print("ERROR: Java Development Kit (JDK) not found.")
-            print("The Android SDK requires Java to be installed on your system.")
-            print("Please install a JDK (version 11 or higher is recommended) and run the installation again.")
-            print("Example command for Debian/Ubuntu: sudo apt-get install openjdk-17-jdk")
-            print("="*80 + "\n")
-            return # Stop the process if Java is missing.
-        print("SUCCESS: Java installation found.")
+            print("INFO: Java Development Kit (JDK) not found. Attempting to install it automatically...")
+            try:
+                # Using sudo is necessary for system-level package installation.
+                print("INFO: Updating package lists with 'sudo apt-get update'...")
+                # We show the output in real-time for user visibility
+                subprocess.run(["sudo", "apt-get", "update", "-y"], check=True)
+
+                print("INFO: Installing OpenJDK 17 with 'sudo apt-get install openjdk-17-jdk'...")
+                subprocess.run(["sudo", "apt-get", "install", "-y", "openjdk-17-jdk"], check=True)
+
+                # Verify installation after attempting to install
+                if not shutil.which("java"):
+                    raise Exception("Java installation command appeared to succeed, but the 'java' command is still not available in the PATH. Manual intervention may be required.")
+                print("SUCCESS: Java Development Kit (JDK) installed successfully.")
+
+            except (subprocess.CalledProcessError, Exception) as e:
+                print("\n" + "="*80)
+                print("ERROR: Automatic installation of Java failed.")
+                # Check for common permission error messages
+                stderr = getattr(e, 'stderr', '').lower()
+                if "permission denied" in stderr or "are you root" in stderr:
+                    print("This is likely due to missing permissions.")
+                    print("Please try running the installation command again with 'sudo'.")
+                    print("Example: sudo bench --site your_site_name install-app rokct")
+                else:
+                    print(f"Reason: {e}")
+                print("="*80 + "\n")
+                return # Stop the process if Java installation fails.
+        else:
+            print("SUCCESS: Java installation found.")
 
         # Check for other tools
         required_tools = ["wget", "tar", "unzip"]
