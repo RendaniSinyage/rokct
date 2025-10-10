@@ -64,6 +64,19 @@ Please adhere to the following rules when working on this repository:
 
 
 
+## Modern Frontend (Frappe UI)
+
+This application has been updated to use a modern frontend stack consisting of Vue 3 and the `frappe-ui` component library, replacing the standard Frappe Desk interface.
+
+*   **Source Code:** All frontend source code (Vue components, etc.) is located in the `/ui` directory at the root of the repository. This is the primary location for all frontend development work.
+*   **Dependencies:** Frontend dependencies are managed in `package.json` and installed using `yarn`.
+*   **Build Process:** The frontend is compiled using Vite (`vite.config.js`). The build process is **automated** and **conditional**.
+    *   A Python script at `rokct/build.py` handles running `yarn install` and `yarn build`.
+    *   This script is triggered by the `on_install` and `on_update` hooks in `rokct/hooks.py`.
+    *   **Crucially, the build only runs on sites designated as the `control_panel`**. This prevents unnecessary builds on tenant sites. The compiled assets are placed in `rokct/public/dist/` and are part of the app's code, used by all sites.
+
+
+
 \## Agent Setup Instructions
 
 
