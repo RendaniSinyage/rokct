@@ -52,9 +52,20 @@ The following scripts are available for debugging common complex processes:
 
 This app includes an automated setup process that runs when you install it.
 
+#### Automated Build Environment Setup
+
+**This is a critical feature for developers.** If the app is installed on a site designated as the "control panel" (`platform.rokct.ai`), the installation script will perform a comprehensive setup of the development environment required to build the Flutter mobile apps.
+
+This process includes:
+*   **Installing System Packages:** It will use `apt-get` to install necessary build tools like `clang`, `cmake`, and `ninja-build`, as well as a specific version of the OpenJDK.
+*   **Downloading SDKs:** It will download and install specific, version-locked releases of the Flutter and Android SDKs into a local `sdks` directory within your bench.
+*   **Automated PATH Configuration:** The script will automatically and safely modify your user's `~/.bashrc` file to include the necessary environment variables (`FLUTTER_HOME`, `ANDROID_HOME`) and update the system `PATH`.
+
+**All versions for these tools are managed in the `rokct/versions.json` file.** This ensures a consistent, reproducible build environment. After the installation, you must reload your shell (`source ~/.bashrc`) for the changes to take effect.
+
 **Control Panel Site Setup:**
 
-If you are installing this app on your main **Control Panel** site (which must be named `platform.rokct.ai`), the `after_install` script will automatically configure all the necessary values in your `site_config.json`. This includes setting the `app_role`, `tenant_domain`, and other critical values. No manual editing of configuration files is required.
+If you are installing this app on your main **Control Panel** site (which must be named `platform.rokct.ai`), the `after_install` script will also automatically configure all the necessary values in your `site_config.json`. This includes setting the `app_role`, `tenant_domain`, and other critical values. No manual editing of configuration files is required.
 
 **Tenant Site Setup:**
 
