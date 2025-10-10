@@ -30,8 +30,10 @@ app_license = "mit"
 # ------------------
 
 # include js, css files in header of desk.html
-app_include_css = "/assets/rokct/css/ui_theme.css"
-app_include_js = []
+app_include_css = [
+    "/assets/rokct/dist/style.css"
+]
+app_include_js = ["/assets/rokct/dist/main.js"]
 
 # include js, css files in header of web template
 # web_include_css = "/assets/rokct/css/rokct.css"
@@ -60,7 +62,7 @@ doctype_list_js = {
 # ----------
 
 # application home page (will override Website Settings)
-# home_page = "swagger"
+home_page = "app"
 
 # website user home page (by Role)
 # role_home_page = {
@@ -88,9 +90,15 @@ doctype_list_js = {
 before_install = "rokct.install.before_install"
 after_install = "rokct.install.after_install"
 
-on_install = "rokct.rokct.doctype.swagger_settings.swagger_settings.run_swagger_related_hooks"
+on_install = [
+    "rokct.rokct.doctype.swagger_settings.swagger_settings.run_swagger_related_hooks",
+    "rokct.build.build_frontend"
+]
 on_migrate = "rokct.rokct.doctype.swagger_settings.swagger_settings.run_swagger_related_hooks"
-on_update = "rokct.rokct.doctype.swagger_settings.swagger_settings.run_swagger_related_hooks"
+on_update = [
+    "rokct.rokct.doctype.swagger_settings.swagger_settings.run_swagger_related_hooks",
+    "rokct.build.build_frontend"
+]
 
 # Uninstallation
 # ------------
