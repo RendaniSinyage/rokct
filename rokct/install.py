@@ -5,6 +5,62 @@ import os
 import json
 import subprocess
 import shutil
+import urllib.request
+
+
+def check_for_new_flutter_version(required_versions):
+    """
+    Checks for the latest stable Flutter SDK version online and compares it
+    with the version in versions.json. This is a notification-only check.
+    """
+    print("\n--- Checking for Flutter SDK Updates ---")
+    try:
+        url = "https://storage.googleapis.com/flutter_infra_release/releases/releases_linux.json"
+        # Set a timeout to prevent the script from hanging indefinitely
+        with urllib.request.urlopen(url, timeout=10) as response:
+            data = json.loads(response.read().decode())
+
+        current_release_hash = data.get("current_release", {}).get("stable")
+        if not current_release_hash:
+            print("WARNING: Could not find 'stable' release hash in the online data.")
+            return
+
+        latest_stable_version_str = None
+        for release in data.get("releases", []):
+            if release.get("hash") == current_release_hash:
+                latest_stable_version_str = release.get("version")
+                break
+
+        if not latest_stable_version_str:
+            print("WARNING: Could not determine the latest stable Flutter version from the release data.")
+            return
+
+        # Normalize versions for comparison (e.g., "v3.22.2" -> "3.22.2")
+        latest_stable_version_str = latest_stable_version_str.lstrip('v')
+        required_version_str = required_versions.get("flutter_sdk_version", "0.0.0").split('-')[0]
+
+        # Compare versions numerically to handle cases like 3.10.0 vs 3.9.0
+        req_parts = [int(p) for p in required_version_str.split('.')]
+        latest_parts = [int(p) for p in latest_stable_version_str.split('.')]
+
+        # Pad with zeros for safe comparison, e.g., [3, 22, 2] vs [3, 23]
+        max_len = max(len(req_parts), len(latest_parts))
+        req_parts.extend([0] * (max_len - len(req_parts)))
+        latest_parts.extend([0] * (max_len - len(latest_parts)))
+
+        if latest_parts > req_parts:
+            print("\n" + "*"*80)
+            print(f"INFO: A newer version of the Flutter SDK is available!")
+            print(f"      Latest Stable Version: {latest_stable_version_str}")
+            print(f"      Your Required Version: {required_version_str}")
+            print("      To upgrade, please update 'flutter_sdk_version' in your app's 'versions.json' file.")
+            print("*"*80 + "\n")
+        else:
+            print("INFO: Your required Flutter SDK version is up-to-date.")
+
+    except Exception as e:
+        print(f"WARNING: Could not check for new Flutter version online. This check will be skipped. Reason: {e}")
+
 
 def before_install():
     print("--- Starting ROKCT App Installation ---")
@@ -179,7 +235,10 @@ def setup_flutter_build_tools():
         with open(required_versions_path, 'r') as f:
             required_versions = json.load(f)
 
-        # --- 2. Version Comparison ---
+        # --- 2. Online Version Check (Notification Only) ---
+        check_for_new_flutter_version(required_versions)
+
+        # --- 3. Version Comparison ---
         installed_versions = {}
         if os.path.exists(installed_versions_path):
             try:
