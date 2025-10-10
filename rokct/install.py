@@ -289,10 +289,9 @@ def setup_flutter_build_tools():
         if "[✓] Android toolchain" in doctor_output:
             print("SUCCESS: Flutter doctor reports a healthy Android toolchain.")
         else:
-            print("\nWARNING: 'flutter doctor' reported some issues. This may be okay, as long as the Android toolchain is correctly installed. Please review the full output below:")
-            print("-" * 80)
-            print(doctor_output)
-            print("-" * 80)
+            with open(bashrc_path, "w") as f:
+                f.write("\n".join(exports) + "\n")
+            print("SUCCESS: ~/.bashrc created and PATH variables added.")
 
         print("\n" + "="*80)
         print("✅ SUCCESS: Flutter and Android build tools are installed and ready for the system.")
