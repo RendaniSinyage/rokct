@@ -37,3 +37,32 @@ The flow will be as follows:
 5.  **Create the Engram:** The Frappe endpoint will call the `brain.record_event` function, passing the AI-generated summary as the `message`. This will create a new `Engram` record, permanently storing a memory of the conversation's purpose and outcome in our long-term operational brain.
 
 This architecture creates a powerful feedback loop, allowing the system to have a memory of not just *what* happened, but *why* it happened, based on user intent.
+
+---
+
+## 4. Frontend Implementation Guide
+
+To integrate the Next.js frontend with the Frappe backend, the following steps should be taken:
+
+### Step 1: Identify Chat Session "Type"
+
+The frontend application should be aware of the context or "type" of each chat session. Examples include:
+-   `"Onboarding"`: The initial series of questions to set up a user's account.
+-   `"General Inquiry"`: A user asking questions or requesting information.
+-   `"Support Request"`: A user asking for help with a problem.
+-   `"Data Entry"`: A user asking the AI to create or modify data (e.g., "create an invoice").
+
+### Step 2: Implement Conditional Summarization
+
+At the end of a chat session, the frontend should decide **whether or not** to create a summary based on the session type.
+
+-   **DO NOT Summarize:** Sessions where the primary outcome is a series of successful API calls to create or update data (e.g., `"Onboarding"`, `"Data Entry"`). The `brain` module's document hooks will have already recorded these actions. A summary would be redundant.
+-   **DO Summarize:** Sessions where the user's intent and the AI's response are not captured by other means (e.g., `"General Inquiry"`, `"Support Request"`).
+
+### Step 3: Call the Backend API
+
+If a summary is required, the frontend server should:
+1.  Use the Gemini AI to generate a concise summary of the conversation.
+2.  Make a `POST` request to the `rokct.brain.api.record_chat_summary` endpoint.
+3.  Send the `summary_text` in the request body.
+4.  (Optional) If the conversation was about a specific document (e.g., a specific project or invoice), include the `reference_doctype` and `reference_name` in the request body to link the memory correctly. If not, the memory will be automatically linked to the user who initiated the chat.
