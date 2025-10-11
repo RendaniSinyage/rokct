@@ -149,11 +149,13 @@ override_doctype_class = {
 # Hook on document methods and events
 
 doc_events = {
-    "Customer": {
-        "on_trash": "rokct.rokct.utils.customer.on_trash_customer"
+    "*": {
+        "on_update": "rokct.rokct.brain.utils.event_logger.process_event_in_realtime",
+        "on_submit": "rokct.rokct.brain.utils.event_logger.process_event_in_realtime",
+        "on_trash": "rokct.rokct.brain.utils.event_logger.process_event_in_realtime"
     },
-    "Company Subscription": {
-        "on_update": "rokct.rokct.utils.company_subscription.on_update_company_subscription"
+    "Email Queue": {
+        "on_submit": "rokct.rokct.brain.utils.event_logger.process_event_in_realtime"
     }
 }
 
@@ -230,7 +232,10 @@ whitelisted_methods = {
     "rokct.rokct.tenant.api.get_subscription_details": "rokct.rokct.tenant.api.get_subscription_details",
     "rokct.rokct.tenant.api.record_token_usage": "rokct.rokct.tenant.api.record_token_usage",
     "rokct.rokct.scripts.setup_control_panel.configure_control_panel": "rokct.rokct.scripts.setup_control_panel.configure_control_panel",
-    "rokct.rokct.api.get_weather": "rokct.rokct.api.get_weather"
+    "rokct.rokct.api.get_weather": "rokct.rokct.api.get_weather",
+
+    # Brain Module API
+    "rokct.rokct.brain.api.query": "rokct.rokct.brain.api.query"
 }
 #
 # each overriding function accepts a `data` argument;
