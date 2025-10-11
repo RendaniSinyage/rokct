@@ -150,12 +150,12 @@ override_doctype_class = {
 
 doc_events = {
     "*": {
-        "on_update": "rokct.rokct.brain.utils.event_logger.process_event_in_realtime",
-        "on_submit": "rokct.rokct.brain.utils.event_logger.process_event_in_realtime",
-        "on_trash": "rokct.rokct.brain.utils.event_logger.process_event_in_realtime"
+        "on_update": "rokct.brain.utils.engram_builder.process_event_in_realtime",
+        "on_submit": "rokct.brain.utils.engram_builder.process_event_in_realtime",
+        "on_trash": "rokct.brain.utils.engram_builder.process_event_in_realtime"
     },
     "Email Queue": {
-        "on_submit": "rokct.rokct.brain.utils.event_logger.process_event_in_realtime"
+        "on_submit": "rokct.brain.utils.engram_builder.process_event_in_realtime"
     }
 }
 
@@ -235,7 +235,7 @@ whitelisted_methods = {
     "rokct.rokct.api.get_weather": "rokct.rokct.api.get_weather",
 
     # Brain Module API
-    "rokct.rokct.brain.api.query": "rokct.rokct.brain.api.query"
+    "rokct.brain.api.query": "rokct.brain.api.query"
 }
 #
 # each overriding function accepts a `data` argument;
