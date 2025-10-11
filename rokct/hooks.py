@@ -149,11 +149,13 @@ override_doctype_class = {
 # Hook on document methods and events
 
 doc_events = {
-    "Customer": {
-        "on_trash": "rokct.rokct.utils.customer.on_trash_customer"
+    "*": {
+        "on_update": "rokct.rokct.brain.utils.event_logger.process_event_in_realtime",
+        "on_submit": "rokct.rokct.brain.utils.event_logger.process_event_in_realtime",
+        "on_trash": "rokct.rokct.brain.utils.event_logger.process_event_in_realtime"
     },
-    "Company Subscription": {
-        "on_update": "rokct.rokct.utils.company_subscription.on_update_company_subscription"
+    "Email Queue": {
+        "on_submit": "rokct.rokct.brain.utils.event_logger.process_event_in_realtime"
     }
 }
 
