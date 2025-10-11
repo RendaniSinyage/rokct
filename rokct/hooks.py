@@ -230,7 +230,10 @@ whitelisted_methods = {
     "rokct.rokct.tenant.api.get_subscription_details": "rokct.rokct.tenant.api.get_subscription_details",
     "rokct.rokct.tenant.api.record_token_usage": "rokct.rokct.tenant.api.record_token_usage",
     "rokct.rokct.scripts.setup_control_panel.configure_control_panel": "rokct.rokct.scripts.setup_control_panel.configure_control_panel",
-    "rokct.rokct.api.get_weather": "rokct.rokct.api.get_weather"
+    "rokct.rokct.api.get_weather": "rokct.rokct.api.get_weather",
+
+    # Brain Module API
+    "rokct.rokct.brain.api.query": "rokct.rokct.brain.api.query"
 }
 #
 # each overriding function accepts a `data` argument;
