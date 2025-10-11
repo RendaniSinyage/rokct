@@ -149,11 +149,14 @@ override_doctype_class = {
 # Hook on document methods and events
 
 doc_events = {
-    "Customer": {
-        "on_trash": "rokct.rokct.utils.customer.on_trash_customer"
+    "*": {
+        "before_save": "rokct.rokct.brain.utils.event_logger.cache_document_before_save",
+        "on_update": "rokct.rokct.brain.utils.event_logger.log_document_event",
+        "on_submit": "rokct.rokct.brain.utils.event_logger.log_document_event",
+        "on_trash": "rokct.rokct.brain.utils.event_logger.log_document_event"
     },
-    "Company Subscription": {
-        "on_update": "rokct.rokct.utils.company_subscription.on_update_company_subscription"
+    "Email Queue": {
+        "on_submit": "rokct.rokct.brain.utils.event_logger.log_email_sent"
     }
 }
 
@@ -172,6 +175,11 @@ def get_safe_scheduler_events():
 	app_role = frappe.conf.get("app_role", "tenant")
 	events = {
 		"all": ["rokct.roadmap.tasks.process_pending_ai_sessions"],
+        "cron": {
+            "*/10 * * * *": [
+                "rokct.rokct.brain.utils.timeline_processor.process_event_log"
+            ]
+        },
 		"hourly": ["rokct.roadmap.tasks.jules_task_monitor"],
 		"daily": ["rokct.roadmap.tasks.populate_roadmap_with_ai_ideas"]
 	}
@@ -308,6 +316,7 @@ on_login = "rokct.rokct.permissions.sync_user_roles_on_login"
 # auth_hooks = [
 #       "rokct.auth.validate"
 # ]
+
 
 # Automatically update python controller files with type annotations for this app.
 # export_python_type_annotations = True
