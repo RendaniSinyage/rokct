@@ -5,6 +5,62 @@ import os
 import json
 import subprocess
 import shutil
+import urllib.request
+
+
+def check_for_new_flutter_version(required_versions):
+    """
+    Checks for the latest stable Flutter SDK version online and compares it
+    with the version in versions.json. This is a notification-only check.
+    """
+    print("\n--- Checking for Flutter SDK Updates ---")
+    try:
+        url = "https://storage.googleapis.com/flutter_infra_release/releases/releases_linux.json"
+        # Set a timeout to prevent the script from hanging indefinitely
+        with urllib.request.urlopen(url, timeout=10) as response:
+            data = json.loads(response.read().decode())
+
+        current_release_hash = data.get("current_release", {}).get("stable")
+        if not current_release_hash:
+            print("WARNING: Could not find 'stable' release hash in the online data.")
+            return
+
+        latest_stable_version_str = None
+        for release in data.get("releases", []):
+            if release.get("hash") == current_release_hash:
+                latest_stable_version_str = release.get("version")
+                break
+
+        if not latest_stable_version_str:
+            print("WARNING: Could not determine the latest stable Flutter version from the release data.")
+            return
+
+        # Normalize versions for comparison (e.g., "v3.22.2" -> "3.22.2")
+        latest_stable_version_str = latest_stable_version_str.lstrip('v')
+        required_version_str = required_versions.get("flutter_sdk_version", "0.0.0").split('-')[0]
+
+        # Compare versions numerically to handle cases like 3.10.0 vs 3.9.0
+        req_parts = [int(p) for p in required_version_str.split('.')]
+        latest_parts = [int(p) for p in latest_stable_version_str.split('.')]
+
+        # Pad with zeros for safe comparison, e.g., [3, 22, 2] vs [3, 23]
+        max_len = max(len(req_parts), len(latest_parts))
+        req_parts.extend([0] * (max_len - len(req_parts)))
+        latest_parts.extend([0] * (max_len - len(latest_parts)))
+
+        if latest_parts > req_parts:
+            print("\n" + "*"*80)
+            print(f"INFO: A newer version of the Flutter SDK is available!")
+            print(f"      Latest Stable Version: {latest_stable_version_str}")
+            print(f"      Your Required Version: {required_version_str}")
+            print("      To upgrade, please update 'flutter_sdk_version' in your app's 'versions.json' file.")
+            print("*"*80 + "\n")
+        else:
+            print("INFO: Your required Flutter SDK version is up-to-date.")
+
+    except Exception as e:
+        print(f"WARNING: Could not check for new Flutter version online. This check will be skipped. Reason: {e}")
+
 
 def before_install():
     print("--- Starting ROKCT App Installation ---")
@@ -156,9 +212,9 @@ def update_site_apps_txt_with_error_handling():
 
 def setup_flutter_build_tools():
     """
-    Checks for and installs a complete Flutter build environment, including system
-    dependencies, and automatically configures the user's PATH.
+    Checks for and installs a complete Flutter build environment based on versions.json.
     This is intended to run only on the control panel.
+    It will skip the setup if the currently installed versions match the required versions.
     """
     if frappe.conf.get("app_role") != "control_panel":
         print("--- SKIPPED: Flutter Build Tools setup is only for control panel sites. ---")
@@ -167,22 +223,56 @@ def setup_flutter_build_tools():
     print("--- Running Post-Install Step: Setup Flutter Build Tools ---")
 
     try:
-        # --- 1. Read Configuration ---
-        print("INFO: Reading required versions from versions.json...")
-        app_path = frappe.get_app_path("rokct")
-        versions_path = os.path.join(app_path, "versions.json")
-        with open(versions_path, 'r') as f:
-            versions = json.load(f)
+        # --- 1. Version and Path Setup ---
+        bench_path = frappe.utils.get_bench_path()
+        sdk_dir = os.path.join(bench_path, "sdks")
+        os.makedirs(sdk_dir, exist_ok=True) # Ensure sdks dir exists
 
-        flutter_version = versions["flutter_sdk_version"]
-        android_platform = versions["android_platform"]
-        android_build_tools = versions["android_build_tools"]
-        jdk_package = versions["jdk_package"]
+        app_path = frappe.get_app_path("rokct")
+        required_versions_path = os.path.join(app_path, "versions.json")
+        installed_versions_path = os.path.join(sdk_dir, ".flutter_versions_installed.json")
+
+        with open(required_versions_path, 'r') as f:
+            required_versions = json.load(f)
+
+        # --- 2. Online Version Check (Notification Only) ---
+        check_for_new_flutter_version(required_versions)
+
+        # --- 3. Version Comparison ---
+        installed_versions = {}
+        if os.path.exists(installed_versions_path):
+            try:
+                with open(installed_versions_path, 'r') as f:
+                    installed_versions = json.load(f)
+                print("INFO: Currently installed versions:")
+                for key, value in installed_versions.items():
+                    print(f"  - {key}: {value}")
+            except (json.JSONDecodeError, IOError):
+                print("WARNING: Could not read installed versions file. Assuming fresh install.")
+                installed_versions = {}
+
+        print("INFO: Required versions:")
+        for key, value in required_versions.items():
+            print(f"  - {key}: {value}")
+
+        if required_versions == installed_versions:
+            print("\n✅ SUCCESS: Required versions are already installed and up-to-date. Skipping setup.")
+            return
+        else:
+            print("\nINFO: New versions detected or previous installation was incomplete. Proceeding with setup...")
+
+
+        # --- 3. Read Configuration ---
+        flutter_version = required_versions["flutter_sdk_version"]
+        android_platform = required_versions["android_platform"]
+        android_build_tools = required_versions["android_build_tools"]
+        jdk_package = required_versions["jdk_package"]
 
         flutter_url = f"https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_{flutter_version}.tar.xz"
         android_tools_url = "https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip"
 
-        # --- 2. Check and Install System Dependencies ---
+
+        # --- 4. Check and Install System Dependencies ---
         print("INFO: Checking for required system dependencies...")
 
         deps_to_install = []
@@ -196,58 +286,96 @@ def setup_flutter_build_tools():
 
         if deps_to_install:
             print(f"INFO: The following dependencies are missing: {', '.join(deps_to_install)}. Attempting to install...")
+
+            # --- Automated Password Handling (as per user instruction) ---
+            db_root_password = None
             try:
-                subprocess.run(["sudo", "apt-get", "update", "-y"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
-                subprocess.run(["sudo", "apt-get", "install", "-y"] + deps_to_install, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
-                print("SUCCESS: All system dependencies installed.")
-            except (subprocess.CalledProcessError, Exception) as e:
-                print("\nERROR: Automatic installation of system dependencies failed.")
-                print(f"Please install the following packages manually: {', '.join(deps_to_install)}")
-                return
+                common_config_path = os.path.join(bench_path, "sites", "common_site_config.json")
+                if os.path.exists(common_config_path):
+                    with open(common_config_path, 'r') as f:
+                        common_config = json.load(f)
+                    db_root_password = common_config.get("db_root_password")
+            except Exception as e:
+                print(f"WARNING: Could not read database password. Will fall back to interactive prompt. Reason: {e}")
+
+            install_successful = False
+            if db_root_password:
+                print("INFO: Attempting automatic installation using stored password...")
+                # Use shell=True to allow the pipe to work. Note the security implications.
+                update_proc = subprocess.run(f'echo "{db_root_password}" | sudo -S apt-get update -y', shell=True, capture_output=True, text=True)
+                if update_proc.returncode == 0:
+                    install_proc = subprocess.run(f'echo "{db_root_password}" | sudo -S apt-get install -y {" ".join(deps_to_install)}', shell=True, capture_output=True, text=True)
+                    if install_proc.returncode == 0:
+                        install_successful = True
+                        print("SUCCESS: Automatic installation of system dependencies was successful.")
+                    else:
+                        print("WARNING: Automatic installation failed. The provided password might be incorrect.")
+                        print(f"         Stderr: {install_proc.stderr.strip()}")
+                else:
+                    print("WARNING: Automatic repository update failed. The provided password might be incorrect.")
+                    print(f"         Stderr: {update_proc.stderr.strip()}")
+
+            if not install_successful:
+                print("INFO: Falling back to standard interactive password prompt for installation.")
+                try:
+                    # Run commands interactively, allowing user to see prompts.
+                    subprocess.run(["sudo", "apt-get", "update", "-y"], check=True)
+                    subprocess.run(["sudo", "apt-get", "install", "-y"] + deps_to_install, check=True)
+                    print("SUCCESS: All system dependencies installed via interactive prompt.")
+                except (subprocess.CalledProcessError, Exception) as e:
+                    print(f"\nERROR: Interactive installation of system dependencies failed. Stderr: {e.stderr.decode() if hasattr(e, 'stderr') else e}")
+                    print(f"Please install the following packages manually: {', '.join(deps_to_install)}")
+                    return
         else:
             print("SUCCESS: All system dependencies are present.")
 
-        # --- 3. Setup SDK Directories ---
-        bench_path = frappe.utils.get_bench_path()
-        sdk_dir = os.path.join(bench_path, "sdks")
+        # --- 5. Setup SDK Directories ---
         flutter_sdk_path = os.path.join(sdk_dir, "flutter")
         android_sdk_path = os.path.join(sdk_dir, "android")
-        os.makedirs(sdk_dir, exist_ok=True)
-        os.makedirs(android_sdk_path, exist_ok=True)
 
-        # --- 4. Install Flutter SDK ---
-        if not os.path.exists(os.path.join(flutter_sdk_path, "bin", "flutter")):
-            print(f"INFO: Flutter SDK v{flutter_version} not found. Installing...")
-            archive = os.path.join(sdk_dir, "flutter.tar.xz")
-            subprocess.run(["wget", "-q", "-O", archive, flutter_url], check=True)
-            subprocess.run(["tar", "-xf", archive, "-C", sdk_dir], check=True, stdout=subprocess.DEVNULL)
-            os.remove(archive)
-            print("SUCCESS: Flutter SDK installed.")
-        else:
-            print("INFO: Flutter SDK is already installed.")
+        # --- 6. Install Flutter SDK ---
+        # This is a destructive but reliable way to ensure the correct version is installed.
+        print(f"INFO: Ensuring Flutter SDK version {flutter_version} is installed...")
+        if os.path.exists(flutter_sdk_path):
+            shutil.rmtree(flutter_sdk_path)
 
-        # --- 5. Install Android SDK ---
+        archive = os.path.join(sdk_dir, "flutter.tar.xz")
+        subprocess.run(["wget", "-q", "-O", archive, flutter_url], check=True)
+        subprocess.run(["tar", "-xf", archive, "-C", sdk_dir], check=True, stdout=subprocess.DEVNULL)
+        os.remove(archive)
+        print("SUCCESS: Flutter SDK installed.")
+
+
+        # --- 7. Install Android SDK ---
         sdkmanager_path = os.path.join(android_sdk_path, "cmdline-tools", "latest", "bin", "sdkmanager")
-        if not os.path.exists(sdkmanager_path):
-            print("INFO: Android command-line tools not found. Installing...")
-            archive = os.path.join(sdk_dir, "android-tools.zip")
-            subprocess.run(["wget", "-q", "-O", archive, android_tools_url], check=True)
-            temp_extract_path = os.path.join(sdk_dir, "android-temp")
-            shutil.unpack_archive(archive, temp_extract_path)
+        # This is a destructive but reliable way to ensure the correct version is installed.
+        print("INFO: Ensuring Android command-line tools are installed...")
+        if os.path.exists(os.path.join(android_sdk_path, "cmdline-tools")):
+            shutil.rmtree(os.path.join(android_sdk_path, "cmdline-tools"))
 
-            tools_latest_path = os.path.join(android_sdk_path, "cmdline-tools", "latest")
-            os.makedirs(tools_latest_path, exist_ok=True)
-            extracted_dir = os.path.join(temp_extract_path, "cmdline-tools")
-            for item in os.listdir(extracted_dir):
-                shutil.move(os.path.join(extracted_dir, item), os.path.join(tools_latest_path, item))
+        archive = os.path.join(sdk_dir, "android-tools.zip")
+        subprocess.run(["wget", "-q", "-O", archive, android_tools_url], check=True)
+        temp_extract_path = os.path.join(sdk_dir, "android-temp")
+        os.makedirs(temp_extract_path, exist_ok=True)
+        shutil.unpack_archive(archive, temp_extract_path)
 
-            os.remove(archive)
-            shutil.rmtree(temp_extract_path)
-            print("SUCCESS: Android command-line tools installed.")
-        else:
-            print("INFO: Android command-line tools are already installed.")
+        tools_latest_path = os.path.join(android_sdk_path, "cmdline-tools", "latest")
+        os.makedirs(tools_latest_path, exist_ok=True)
+        extracted_dir = os.path.join(temp_extract_path, "cmdline-tools")
+        for item in os.listdir(extracted_dir):
+            shutil.move(os.path.join(extracted_dir, item), os.path.join(tools_latest_path, item))
 
-        # --- 6. Install Android Packages ---
+        os.remove(archive)
+        shutil.rmtree(temp_extract_path)
+
+        # Grant execute permissions to the sdkmanager to prevent exit code 126
+        if os.path.exists(sdkmanager_path):
+            os.chmod(sdkmanager_path, 0o755)
+
+        print("SUCCESS: Android command-line tools installed.")
+
+
+        # --- 8. Install Android Packages ---
         env = os.environ.copy()
         env["ANDROID_HOME"] = android_sdk_path
         env["FLUTTER_HOME"] = flutter_sdk_path
@@ -260,11 +388,10 @@ def setup_flutter_build_tools():
             subprocess.run([sdkmanager_path, package], env=env, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
         print("SUCCESS: All Android SDK packages installed and licenses accepted.")
 
-        # --- 7. Configure User's PATH ---
+        # --- 9. Configure User's PATH ---
         print("INFO: Configuring user's PATH in ~/.bashrc...")
         try:
             import pwd
-            # Get the user who owns the bench directory, which is more reliable
             uid = os.stat(bench_path).st_uid
             user_info = pwd.getpwuid(uid)
             home_dir = user_info.pw_dir
@@ -277,7 +404,6 @@ def setup_flutter_build_tools():
                 f'export PATH="$FLUTTER_HOME/bin:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"',
             ]
 
-            # Create .bashrc if it doesn't exist and set owner
             if not os.path.exists(bashrc_path):
                 open(bashrc_path, 'a').close()
                 os.chown(bashrc_path, uid, user_info.pw_gid)
@@ -296,18 +422,16 @@ def setup_flutter_build_tools():
             print("Please add the following lines to your shell configuration file (e.g., ~/.bashrc):")
             print("\n".join(exports))
 
-        # --- 8. Final Verification and Instructions ---
+        # --- 10. Final Verification ---
         print("INFO: Running 'flutter doctor' to verify installation...")
         doctor_process = subprocess.run([os.path.join(flutter_sdk_path, "bin", "flutter"), "doctor"], capture_output=True, text=True, env=env)
         doctor_output = doctor_process.stdout
 
-        # Check for the critical component's success, instead of printing the whole noisy output.
         if "[✓] Android toolchain" in doctor_output:
             print("SUCCESS: Flutter doctor reports a healthy Android toolchain.")
         else:
-            with open(bashrc_path, "w") as f:
-                f.write("\n".join(exports) + "\n")
-            print("SUCCESS: ~/.bashrc created and PATH variables added.")
+            print("WARNING: Flutter doctor reported issues. Please review the output below:")
+            print(doctor_output)
 
         print("\n" + "="*80)
         print("✅ SUCCESS: Flutter and Android build tools are installed and ready for the system.")
@@ -316,6 +440,13 @@ def setup_flutter_build_tools():
         print("  2. Run the command: source ~/.bashrc")
         print("="*80)
 
+        # --- 11. Create/Update Lock File ---
+        with open(installed_versions_path, "w") as f:
+            json.dump(required_versions, f, indent=4)
+        print(f"INFO: Updated version lock file at {installed_versions_path}")
+
     except Exception as e:
         print(f"\nFATAL ERROR during Flutter setup: {e}")
+        import traceback
+        traceback.print_exc()
         frappe.log_error(message=frappe.get_traceback(), title="Flutter Build Tools Setup Error")
