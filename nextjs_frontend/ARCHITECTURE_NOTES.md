@@ -66,3 +66,22 @@ If a summary is required, the frontend server should:
 2.  Make a `POST` request to the `rokct.brain.api.record_chat_summary` endpoint.
 3.  Send the `summary_text` in the request body.
 4.  (Optional) If the conversation was about a specific document (e.g., a specific project or invoice), include the `reference_doctype` and `reference_name` in the request body to link the memory correctly. If not, the memory will be automatically linked to the user who initiated the chat.
+
+---
+
+## 5. Proactive Cognitive Assistant Workflow
+
+To elevate the user experience from a simple reactive chatbot to a proactive, cognitive assistant, the following workflow should be implemented:
+
+### Onboarding Rule
+
+This workflow should **only** be activated for users who have completed their initial onboarding session. The proactive greeting is not suitable for a brand new user.
+
+### Proactive Greeting Flow
+
+1.  **User Opens Chat (Post-Onboarding):** The moment a user who has completed onboarding opens the chat window, the frontend should initiate this flow.
+2.  **Frontend Queries the Backend Brain:** The Next.js server should make a `POST` request to the `rokct.brain.api.query` endpoint. The request body should specify the current user (e.g., `{"doctype": "User", "name": "john.doe@example.com"}`).
+3.  **Brain Provides the User's Memory:** The Frappe backend will return the `Engram` for that user, containing a summary of their recent activities and chat summaries.
+4.  **Frontend Injects Context into the AI:** The Next.js server will take the `summary` text from the Engram and inject it into the initial prompt for the Gemini AI.
+    -   **Example Prompt:** *"You are a helpful assistant. The user, John Doe, has just opened the chat window. Here is a summary of their recent activity: '[Engram summary text goes here]'. Greet the user and ask how you can help them, keeping this context in mind."*
+5.  **AI Delivers a Personalized Greeting:** The result is a highly personalized and context-aware greeting that demonstrates the AI's memory of the user's past interactions, creating a more intelligent and helpful experience.

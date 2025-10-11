@@ -159,7 +159,7 @@ The `brain` module provides endpoints for an authenticated AI agent (like Jules)
 -   **Endpoint:** `POST https://[site_name]/api/method/rokct.brain.api.query`
 -   **Method:** `POST`
 -   **Authentication:** Requires the standard `Authorization: token [api_key]:[api_secret]` header for the AI user.
--   **Description:** Fetches the `Engram` (memory) for a specific document.
+-   **Description:** Fetches the `Engram` (memory) for a specific document. This is the key endpoint for powering the **Proactive Cognitive Assistant** workflow by retrieving a user's past activity.
 -   **Request Body (JSON):**
     ```json
     {
