@@ -204,6 +204,30 @@ This endpoint is used to log events that are not captured by standard document h
     }
     ```
 
+### Recording a Chat Summary
+
+This endpoint is used by the frontend to store a permanent memory of a user's conversation with the AI.
+
+-   **Endpoint:** `POST https://[site_name]/api/method/rokct.brain.api.record_chat_summary`
+-   **Method:** `POST`
+-   **Authentication:** Requires the standard `Authorization: token [api_key]:[api_secret]` header for the user.
+-   **Description:** Creates a new `Engram` record from an AI-generated summary of a chat.
+-   **Request Body (JSON):**
+    ```json
+    {
+        "summary_text": "User asked to create an invoice for Customer Y. Action was successful (INV-00124).",
+        "reference_doctype": "Customer",
+        "reference_name": "CUSTOMER-001"
+    }
+    ```
+-   **Successful Response (200 OK):**
+    ```json
+    {
+        "status": "success",
+        "message": "Chat summary recorded in Engram Customer-CUSTOMER-001."
+    }
+    ```
+
 ---
 
 ## Summary of Frontend Logic

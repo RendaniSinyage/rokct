@@ -236,7 +236,8 @@ whitelisted_methods = {
 
     # Brain Module API
     "rokct.brain.api.query": "rokct.brain.api.query",
-    "rokct.brain.api.record_event": "rokct.brain.api.record_event"
+    "rokct.brain.api.record_event": "rokct.brain.api.record_event",
+    "rokct.brain.api.record_chat_summary": "rokct.brain.api.record_chat_summary"
 }
 #
 # each overriding function accepts a `data` argument;

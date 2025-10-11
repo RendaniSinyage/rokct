@@ -7,6 +7,7 @@
     "field_order": [
         "reference_doctype",
         "reference_name",
+            "source",
         "summary_section",
         "summary",
         "details_section",
@@ -34,6 +35,14 @@
             "label": "Reference Name",
             "reqd": 1,
             "hidden": 1
+        },
+        {
+            "fieldname": "source",
+            "fieldtype": "Select",
+            "in_list_view": 1,
+            "label": "Source",
+            "options": "Document Hook\nChat Summary",
+            "default": "Document Hook"
         },
         {
             "fieldname": "summary_section",
