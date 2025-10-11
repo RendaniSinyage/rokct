@@ -27,7 +27,7 @@ def process_event_in_realtime(doc, method):
     instantly updates the Engram for a document in real-time.
     """
     # --- Exclusion Logic ---
-    ignored_doctypes = ["Engram", "API Error Log", "Frontend Error Log"]
+    ignored_doctypes = ["Engram", "API Error Log"]
     if doc.doctype in ignored_doctypes:
         return
     try:

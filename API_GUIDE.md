@@ -124,25 +124,6 @@ Instead of using the standard `/api/resource/Sales%20Invoice` endpoint, a unifie
 
 ---
 
-## 4. Logging Frontend Errors
-
-To help with monitoring and debugging, the frontend can send its caught errors to the backend to be stored in a log.
-
--   **Endpoint:** `POST https://[site_name]/api/method/rokct.tenant.api.log_frontend_error`
--   **Method:** `POST`
--   **Authentication:** Requires the standard `Authorization: token [api_key]:[api_secret]` header.
--   **Description:** Creates a new "Frontend Error Log" document. This is a "fire and forget" endpoint; the frontend doesn't need to do anything with the response.
-
--   **Request Body (JSON):**
-    ```json
-    {
-        "error_message": "Could not connect to API: Network Error",
-        "context": "{\"url\": \"/api/resource/Customer\", \"user_agent\": \"Chrome/108.0.0.0\"}"
-    }
-    ```
-
----
-
 ## 5. Checking Subscription Status & Enabled Modules
 
 The `on_login` hook on the backend automatically syncs the user's permissions. However, the frontend needs a way to know which UI elements to show or hide based on the user's subscription plan. This is done by calling a secure proxy API on the tenant site.

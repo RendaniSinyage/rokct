@@ -476,7 +476,7 @@ def create_sales_invoice(invoice_data, recurring=False, frequency=None, end_date
 @frappe.whitelist()
 def log_frontend_error(error_message, context=None):
     """
-    Logs an error from the frontend to the backend.
+    Logs an error from the frontend to the backend, now integrated with the Brain module.
     """
     if frappe.conf.get("app_role") != "tenant":
         frappe.throw("This action can only be performed on a tenant site.", title="Action Not Allowed")
@@ -485,12 +485,36 @@ def log_frontend_error(error_message, context=None):
         return {"status": "error", "message": "error_message must be a non-empty string."}
 
     try:
-        frappe.get_doc({
-            "doctype": "Frontend Error Log", "error_message": error_message, "context": context,
-            "user": frappe.session.user, "timestamp": frappe.utils.now_datetime()
-        }).insert(ignore_permissions=True)
+        # Default document to link the error to is the user's profile
+        reference_doctype = "User"
+        reference_name = frappe.session.user
 
-        frappe.db.commit()
+        # Construct a more descriptive message for the brain
+        brain_message = f"Frontend Error: {error_message}"
+
+        if context:
+            try:
+                context_data = json.loads(context)
+                if isinstance(context_data, dict):
+                    # If the context provides a more specific document, use it
+                    reference_doctype = context_data.get("doctype", reference_doctype)
+                    reference_name = context_data.get("name", reference_name)
+
+                    url = context_data.get("url")
+                    if url:
+                        brain_message += f" at URL: {url}"
+            except json.JSONDecodeError:
+                # If context is not valid JSON, just append it to the message
+                brain_message += f" | Context: {context}"
+
+        # Call the brain's API to record the event
+        frappe.call(
+            "rokct.brain.api.record_event",
+            message=brain_message,
+            reference_doctype=reference_doctype,
+            reference_name=reference_name
+        )
+
         return {"status": "success", "message": "Error logged successfully."}
 
     except Exception:
