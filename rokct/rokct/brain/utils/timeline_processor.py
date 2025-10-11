@@ -68,7 +68,11 @@ def process_event_log():
                     email_summary = "Emailed."
 
                 if actions:
-                    action_str = ", ".join(actions[:-1]) + f" and {actions[-1]}" if len(actions) > 1 else actions[0]
+                    if len(actions) > 1:
+                        action_str = ", ".join(actions[:-1]) + f" and {actions[-1]}"
+                    else:
+                        action_str = actions[0]
+
                     line = f"{action_str} by {user} on {date}."
                     if email_summary:
                         line = f"{line} {email_summary}"
