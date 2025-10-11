@@ -37,9 +37,14 @@
         {
             "fieldname": "summary",
             "fieldtype": "Text Editor",
-            "in_list_view": 1,
             "label": "Summary",
-            "read_only": 1
+            "read_only": 1,
+            "hidden": 1
+        },
+        {
+            "fieldname": "summary_display",
+            "fieldtype": "HTML",
+            "label": "Summary Display"
         },
         {
             "fieldname": "details_section",
