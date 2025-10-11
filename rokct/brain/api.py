@@ -2,6 +2,7 @@
 # For license information, please see license.txt
 
 import frappe
+from rokct.brain import __version__ as brain_version
 
 @frappe.whitelist()
 def query(doctype, name):
@@ -24,7 +25,9 @@ def query(doctype, name):
     try:
         engram_name = f"{doctype}-{name}"
         engram_doc = frappe.get_doc("Engram", engram_name)
-        return engram_doc.as_dict()
+        response_data = engram_doc.as_dict()
+        response_data['brain_version'] = brain_version
+        return response_data
     except frappe.DoesNotExistError:
         frappe.throw(f"No Engram found for {doctype} {name}", frappe.NotFound)
     except Exception as e:
