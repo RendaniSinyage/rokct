@@ -169,6 +169,62 @@ The frontend should use the `modules` array in this response to dynamically rend
 
 ---
 
+## 6. Interacting with the Brain Module (For AI Agents)
+
+The `brain` module provides endpoints for an authenticated AI agent (like Jules) to interact with the application's memory (`Engrams`).
+
+### Querying a Document's Memory
+
+-   **Endpoint:** `POST https://[site_name]/api/method/rokct.brain.api.query`
+-   **Method:** `POST`
+-   **Authentication:** Requires the standard `Authorization: token [api_key]:[api_secret]` header for the AI user.
+-   **Description:** Fetches the `Engram` (memory) for a specific document.
+-   **Request Body (JSON):**
+    ```json
+    {
+        "doctype": "Sales Invoice",
+        "name": "ACC-SINV-2025-00001"
+    }
+    ```
+-   **Successful Response (200 OK):**
+    ```json
+    {
+        "name": "Sales Invoice-ACC-SINV-2025-00001",
+        "reference_doctype": "Sales Invoice",
+        "reference_name": "ACC-SINV-2025-00001",
+        "summary": "Created by Test User on 2025-10-11.\nUpdated by AI User on 2025-10-11.",
+        "involved_users": "AI User, Test User",
+        "last_activity_date": "2025-10-11 09:30:00",
+        "brain_version": "2.5.0"
+    }
+    ```
+
+### Recording a Custom Event
+
+This endpoint is used to log events that are not captured by standard document hooks, such as a failed action.
+
+-   **Endpoint:** `POST https://[site_name]/api/method/rokct.brain.api.record_event`
+-   **Method:** `POST`
+-   **Authentication:** Requires the standard `Authorization: token [api_key]:[api_secret]` header for the AI user.
+-   **Description:** Records a custom event message and associates it with a specific document's memory.
+-   **Request Body (JSON):**
+    ```json
+    {
+        "message": "Action Failed: Insufficient Permissions",
+        "reference_doctype": "Sales Invoice",
+        "reference_name": "ACC-SINV-2025-00001"
+    }
+    ```
+-   **Successful Response (200 OK):**
+    ```json
+    {
+        "status": "success",
+        "message": "Event recorded."
+    }
+    ```
+
+---
+
 ## Summary of Frontend Logic
 
 1.  **On Signup:** Call the Control Panel to provision a new site. Save the returned `site_name`.

@@ -235,7 +235,8 @@ whitelisted_methods = {
     "rokct.rokct.api.get_weather": "rokct.rokct.api.get_weather",
 
     # Brain Module API
-    "rokct.brain.api.query": "rokct.brain.api.query"
+    "rokct.brain.api.query": "rokct.brain.api.query",
+    "rokct.brain.api.record_event": "rokct.brain.api.record_event"
 }
 #
 # each overriding function accepts a `data` argument;
