@@ -15,6 +15,12 @@
     ],
     "fields": [
         {
+            "fieldname": "reference_title",
+            "fieldtype": "Data",
+            "in_list_view": 1,
+            "label": "Reference Title"
+        },
+        {
             "fieldname": "reference_doctype",
             "fieldtype": "Link",
             "in_list_view": 1,
@@ -25,9 +31,9 @@
         {
             "fieldname": "reference_name",
             "fieldtype": "Data",
-            "in_list_view": 1,
             "label": "Reference Name",
-            "reqd": 1
+            "reqd": 1,
+            "hidden": 1
         },
         {
             "fieldname": "summary_section",
@@ -38,13 +44,7 @@
             "fieldname": "summary",
             "fieldtype": "Text Editor",
             "label": "Summary",
-            "read_only": 1,
-            "hidden": 1
-        },
-        {
-            "fieldname": "summary_display",
-            "fieldtype": "HTML",
-            "label": "Summary Display"
+            "read_only": 1
         },
         {
             "fieldname": "details_section",
